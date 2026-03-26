@@ -1,9 +1,13 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
+import os
 
 app = Flask(__name__)
 CORS(app)
 
 @app.route("/")
 def home():
-    return {"message": "Backend is running!"}
+    return jsonify({"message": "Backend is running!"})
+
+if __name__ == "__main__":
+    app.run(debug=False)
