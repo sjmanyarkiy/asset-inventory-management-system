@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from .models import db, User, Asset, Assignment, Repair, Access
+from .schemas import AssignmentSchema, RepairSchema, UserSchema
 from .auth import requires_roles
 from io import StringIO
 import csv
@@ -49,7 +50,8 @@ def get_assigned():
             }
         )
 
-    return jsonify({"items": items, "total": len(items)})
+    schema = AssignmentSchema(many=True)
+    return jsonify({"items": schema.dump(items), "total": len(items)})
 
 
 @bp.route("/access", methods=["GET"])
@@ -69,7 +71,8 @@ def get_access():
     for access, user in rows:
         items.append({"user_id": user.id, "user_name": user.name, "access_level": access.access_level})
 
-    return jsonify({"items": items, "total": len(items)})
+    schema = UserSchema(many=True)
+    return jsonify({"items": schema.dump(items), "total": len(items)})
 
 
 @bp.route("/repaired", methods=["GET"])
@@ -88,7 +91,8 @@ def get_repaired():
     for r in rows:
         items.append({"repair_id": r.id, "asset_id": r.asset_id, "status": r.status, "reported_at": r.reported_at.isoformat()})
 
-    return jsonify({"items": items, "total": len(items)})
+    schema = RepairSchema(many=True)
+    return jsonify({"items": schema.dump(items), "total": len(items)})
 
 
 @bp.route("/export", methods=["POST"])

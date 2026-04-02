@@ -19,7 +19,11 @@ def create_app(config_object=None):
     if config_object:
         app.config.update(config_object)
 
+    # allow marshmallow to be initialized with app
+    from backend.schemas import ma
+
     db.init_app(app)
+    ma.init_app(app)
     # JWT setup
     app.config.setdefault("JWT_SECRET_KEY", os.getenv("JWT_SECRET_KEY", "dev-secret"))
     jwt = JWTManager()

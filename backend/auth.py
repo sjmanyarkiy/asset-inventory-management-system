@@ -21,6 +21,40 @@ def login():
     return jsonify({"access_token": access_token, "user": {"id": user.id, "name": user.name, "role": user.role}})
 
 
+@bp.route("/register", methods=["POST"])
+def register():
+    data = request.get_json() or {}
+    name = data.get("name")
+    email = data.get("email")
+    password = data.get("password")
+    role = data.get("role", "EMPLOYEE")
+
+    if not name or not email or not password:
+        return jsonify({"msg": "name, email, and password required"}), 400
+
+    if User.query.filter_by(email=email).first():
+        return jsonify({"msg": "email already in use"}), 400
+
+    # only allow creating privileged roles if request is authenticated and caller is admin
+    caller = None
+    try:
+        caller_id = get_jwt_identity()
+        if caller_id:
+            caller = User.query.get(caller_id)
+    except Exception:
+        caller = None
+
+    if role in ("ADMIN", "PROCUREMENT", "FINANCE") and (caller is None or caller.role != "ADMIN"):
+        return jsonify({"msg": "only admins can assign privileged roles"}), 403
+
+    u = User(name=name, email=email, role=role)
+    u.set_password(password)
+    db.session.add(u)
+    db.session.commit()
+
+    return jsonify({"msg": "user created", "user": {"id": u.id, "email": u.email, "role": u.role}}), 201
+
+
 def requires_roles(*roles):
     def decorator(fn):
         @jwt_required()
