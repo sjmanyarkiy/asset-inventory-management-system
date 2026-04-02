@@ -4,7 +4,10 @@ import { Provider } from 'react-redux';
 import store from './redux/store';
 import './api/axiosConfig';
 
-import RegisterPage from './pages/RegistrationPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const App = () => {
   return (
@@ -12,7 +15,8 @@ const App = () => {
       <Router>
         <Routes>
           {/* public route */}
-          <Route path="registration" element={<RegistrationPage />}/>
+          <Route path="/registration" element={<RegistrationPage />}/>
+          <Route path="/registration" element={<LoginPage />}/>
 
           {/* protected route */}
           <Route path="/dashboard" element={
