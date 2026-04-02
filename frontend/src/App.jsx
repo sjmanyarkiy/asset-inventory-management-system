@@ -5,7 +5,7 @@ import store from './redux/store';
 import './api/axiosConfig';
 
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
+import RegistrationPage from './pages/RegistrationPage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
