@@ -14,6 +14,7 @@ def client(tmp_path):
         db.create_all()
         # seed some data
         u = User(name="Alice", email="alice@example.com", role="EMPLOYEE")
+        u.set_password("testpass")
         a = Asset(barcode="BC123", tag="TAG1", name="Laptop")
         db.session.add_all([u, a])
         db.session.commit()
@@ -26,7 +27,12 @@ def client(tmp_path):
 
 
 def test_get_assigned(client):
-    rv = client.get("/api/reports/assigned")
+    # login to get token
+    resp = client.post("/api/auth/login", json={"email": "alice@example.com", "password": "testpass"})
+    assert resp.status_code == 200
+    token = resp.get_json()["access_token"]
+
+    rv = client.get("/api/reports/assigned", headers={"Authorization": f"Bearer {token}"})
     assert rv.status_code == 200
     data = rv.get_json()
     assert "items" in data

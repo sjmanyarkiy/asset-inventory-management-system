@@ -4,6 +4,8 @@ import os
 
 from backend.models import db
 from backend.reports import bp as reports_bp
+from backend.auth import bp as auth_bp
+from flask_jwt_extended import JWTManager
 
 
 def create_app(config_object=None):
@@ -18,7 +20,13 @@ def create_app(config_object=None):
         app.config.update(config_object)
 
     db.init_app(app)
+    # JWT setup
+    app.config.setdefault("JWT_SECRET_KEY", os.getenv("JWT_SECRET_KEY", "dev-secret"))
+    jwt = JWTManager()
+    jwt.init_app(app)
+
     app.register_blueprint(reports_bp)
+    app.register_blueprint(auth_bp)
 
     @app.route("/")
     def home():

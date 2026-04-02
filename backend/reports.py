@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify, send_file
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from .models import db, User, Asset, Assignment, Repair, Access
+from .auth import requires_roles
 from io import StringIO
 import csv
 
@@ -16,10 +18,22 @@ def get_assigned():
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", 20))
     user_id = request.args.get("user_id")
-
     q = db.session.query(Assignment, Asset).join(Asset, Assignment.asset_id == Asset.id)
     if user_id:
         q = q.filter(Assignment.user_id == int(user_id))
+
+    # Authorization: if requesting other user's assignments, require manager/admin role
+    current_uid = None
+    try:
+        current_uid = get_jwt_identity()
+    except Exception:
+        current_uid = None
+
+    if user_id and current_uid and int(user_id) != int(current_uid):
+        # only allow managers/admins to view other users' assignments
+        user = User.query.get(current_uid)
+        if not user or user.role not in ("ADMIN", "PROCUREMENT", "FINANCE"):
+            return jsonify({"msg": "Forbidden"}), 403
 
     rows = _paginate_query(q, page, per_page)
     items = []
@@ -39,6 +53,8 @@ def get_assigned():
 
 
 @bp.route("/access", methods=["GET"])
+@jwt_required()
+@requires_roles("ADMIN", "PROCUREMENT", "FINANCE")
 def get_access():
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", 20))
@@ -57,6 +73,7 @@ def get_access():
 
 
 @bp.route("/repaired", methods=["GET"])
+@jwt_required()
 def get_repaired():
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", 20))
@@ -75,6 +92,7 @@ def get_repaired():
 
 
 @bp.route("/export", methods=["POST"])
+@jwt_required()
 def export_report():
     body = request.get_json() or {}
     rtype = body.get("type")
