@@ -13,6 +13,9 @@ def create_app(config_object=None):
         "SQLALCHEMY_DATABASE_URI": os.getenv("DATABASE_URL", "sqlite:///data.db"),
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
     })
+    # allow overriding config for tests or deployments
+    if config_object:
+        app.config.update(config_object)
 
     db.init_app(app)
     app.register_blueprint(reports_bp)
