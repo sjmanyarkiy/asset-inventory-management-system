@@ -7,9 +7,8 @@ from backend.models import db, User, Asset, Assignment
 
 @pytest.fixture
 def client(tmp_path):
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    # create app with test config to ensure in-memory DB is used
+    app = create_app({"TESTING": True, "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:"})
 
     with app.app_context():
         db.create_all()
