@@ -105,7 +105,7 @@ function LoginPage() {
                         required
                         size="lg"
                       />
-                      <button
+                      {/* <button
                         type="button"
                         className="btn btn-link position-absolute end-0 top-50 translate-middle-y"
                         onClick={() => setShowPassword(!showPassword)}
@@ -113,7 +113,7 @@ function LoginPage() {
                         style={{ textDecoration: 'none', fontSize: '18px' }}
                       >
                         {showPassword ? '🙈' : '👁️'}
-                      </button>
+                      </button> */}
                     </div>
                   </Form.Group>
 
@@ -136,6 +136,12 @@ function LoginPage() {
                 </Form>
 
                 {/* Footer */}
+                <div className="text-center mt-4">
+                  <p className="text-muted mb-2">
+                    Don't have an account? <Link to="/register" className="text-primary fw-bold text-decoration-none">Create one</Link>
+                  </p>
+                  <Link to="/forgot-password" className="text-muted text-decoration-none small">Forgot password?</Link>
+                </div>
               </div>
             </div>
           </Col>
