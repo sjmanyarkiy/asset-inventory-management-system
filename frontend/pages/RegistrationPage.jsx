@@ -231,8 +231,40 @@ const RegistrationPage = () => {
                                     <small className="text-muted d-block mt-2">
                                         Must contain uppercase, lowercase and numbers
                                     </small> 
-                                    {/* Continue here */}
                                 </Form.Group>
+                                <Form.Group className='mb-3'>
+                                    <Form.Label className='fw-500'>Confirm Password</Form.Label>
+                                    <Form.Control 
+                                        type={showPassword ? 'text' : 'password'}
+                                        name="password_confirm"
+                                        value={formData.password_confirm}
+                                        onChange={handleChange}
+                                        placeholder="Confirm your password"
+                                        disabled={loading}
+                                        required
+                                        isInvalid={!!errors.password_confirm}
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.password_confirm}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                                <Button
+                                    type="submit"
+                                    variant="primary"
+                                    size="lg"
+                                    className="w-100 fw-bold mt-3"
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Spinner animation='border' size='sm' className='me-2'/>
+                                            Creating account...
+                                        </>
+                                    ) : (
+                                        'Creating Account'
+
+                                    )}
+                                </Button>
                             </Form>
                         </div>
                     </Col>
