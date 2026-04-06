@@ -1,10 +1,9 @@
-import React, { use, useState } from 'react'
+import React, { useState } from 'react'
 import { useDispatch } from 'react-redux';
-import { useNavigate, Link, Form } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { setUser, setToken } from '../redux/slices/authSlice';
-// import './RegisterPage.css';
-import { Alert, Container, FormControl, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Alert, Spinner } from 'react-bootstrap';
 
 
 const RegistrationPage = () => {
@@ -68,7 +67,7 @@ const RegistrationPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if(!validateForm){
+        if(!validateForm()){
             return;
         }
 
@@ -216,7 +215,13 @@ const RegistrationPage = () => {
                                             required
                                             isInvalid={!!errors.password}
                                         />
-                                        <button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-link position-absolute end-0 top-50 translate-middle-y"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            tabIndex="-1"
+                                            style={{ textDecoration: 'none', fontSize: '18px' }}
+                                        >
                                             {showPassword ? 'x' : '|'}
                                         </button>
                                         <Form.Control.Feedback type="invalid" style={{ display: errors.password ? 'block' : 'none' }}>
