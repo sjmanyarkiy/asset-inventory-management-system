@@ -266,6 +266,10 @@ const RegistrationPage = () => {
                                     )}
                                 </Button>
                             </Form>
+
+                            <div className="text-center mt-4">
+                                <p className="text-muted">Already have an account? <Link to="/login" className="text-primary fw-bold text-decoration-none">Sign In</Link></p>
+                            </div>
                         </div>
                     </Col>
                 </Row>
