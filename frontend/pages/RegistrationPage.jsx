@@ -4,7 +4,7 @@ import { useNavigate, Link, Form } from 'react-router-dom';
 import axios from 'axios';
 import { setUser, setToken } from '../redux/slices/authSlice';
 // import './RegisterPage.css';
-import { Alert, Container, FormControl, Row } from 'react-bootstrap';
+import { Alert, Container, FormControl, Row, Col } from 'react-bootstrap';
 
 
 const RegistrationPage = () => {
@@ -74,7 +74,45 @@ const RegistrationPage = () => {
 
         setLoading(true);
 
-    }
+        try {
+            const response = await axios.post(
+                `${import.meta.env.VITE_API_URL}/api/auth/register`,
+                formData
+            );
+
+            const { user, token } = response.data;
+
+            dispatch(setUser(user));
+            dispatch(setToken(token))
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+            navigate('/dashboard')
+
+        } catch (err) {
+            const serverErrors = {};
+            const errorMessage = err.response?.data?.error;
+
+            if(errorMessage) {
+                if (errorMessage.includes('Email')){
+                    serverErrors.email = errorMessage;
+                } else if (errorMessage.includes('Username')) {
+                    serverErrors.username = errorMessage;
+                } else if (errorMessage.includes('Password')) {
+                    serverErrors.password = errorMessage
+                } else {
+                    serverErrors.general = errorMessage
+                }
+            }
+
+            setErrors(serverErrors);
+
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
@@ -172,8 +210,23 @@ const RegistrationPage = () => {
                                             type={showPassword ? 'text' : 'password'}
                                             name="password"
                                             value={formData.password}
+                                            onChange={handleChange}
+                                            placeholder="At least 8 characters"
+                                            disabled={loading}
+                                            required
+                                            isInvalid={!!errors.password}
                                         />
+                                        <button>
+                                            {showPassword ? 'x' : '|'}
+                                        </button>
+                                        <Form.Control.Feedback type="invalid" style={{ display: errors.password ? 'block' : 'none' }}>
+                                            {errors.password}
+                                        </Form.Control.Feedback>
                                     </div>
+                                    <small className="text-muted d-block mt-2">
+                                        Must contain uppercase, lowercase and numbers
+                                    </small> 
+                                    {/* Continue here */}
                                 </Form.Group>
                             </Form>
                         </div>
