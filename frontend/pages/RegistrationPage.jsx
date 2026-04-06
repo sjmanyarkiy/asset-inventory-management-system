@@ -123,158 +123,158 @@ const RegistrationPage = () => {
                                 {/* Header */}
                                 <div className="text-center mb-4">
                                     <h2 className="fw-bold text-primary mb-2">Asset Inventory</h2>
-                                    <p className="text-muted">Create A New Account</p>
+                                    <p className="text-muted">Create a new account</p>
                                 </div>
-                            </div>
 
-                            {/* Error Alert */}
-                            {errors.general && (
-                                <Alert variant='danger' className='mb-4' dismissible onClose={() => setErrors({...errors, general: '' })}>
-                                    <p className='mb-0'>{errors.general}</p>
-                                </Alert>
-                            )}
 
-                            <Form onSubmit={handleSubmit}>
-                                {/* Name Row */}
-                                <Row className='mb-3'>
-                                    <Col sm={6}>
-                                        <Form.Group>
-                                            <Form.Label className="fw-500 small">First Name</Form.Label>
-                                            <Form.Control
-                                                type="text"
-                                                name="first_name"
-                                                value={formData.first_name}
-                                                onChange={handleChange}
-                                                placeholder="First name"
-                                                disabled={loading}
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                    <Col sm={6}>
-                                        <Form.Group>
-                                            <Form.Label className="fw-500 small">Last Name</Form.Label>
-                                            <Form.Control
-                                                type="text"
-                                                name="last_name"
-                                                value={formData.last_name}
-                                                onChange={handleChange}
-                                                placeholder="Last name"
-                                                disabled={loading}
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                </Row>
+                                {/* Error Alert */}
+                                {errors.general && (
+                                    <Alert variant='danger' className='mb-4' dismissible onClose={() => setErrors({...errors, general: '' })}>
+                                        <p className='mb-0'>{errors.general}</p>
+                                    </Alert>
+                                )}
 
-                                {/* Email */}
-                                <Form.Group className="mb-3">
-                                    <Form.Label className="fw-500">Email Address</Form.Label>
-                                    <Form.Control
-                                        type="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        placeholder="your@email.com"
-                                        disabled={loading}
-                                        required
-                                        isInvalid={!!errors.email}
-                                    />
-                                    <Form.Control.Feedback type="invalid">
-                                        {errors.email}
-                                    </Form.Control.Feedback>
-                                </Form.Group>
+                                <Form onSubmit={handleSubmit}>
+                                    {/* Name Row */}
+                                    <Row className='mb-3'>
+                                        <Col sm={6}>
+                                            <Form.Group>
+                                                <Form.Label className="fw-500 small">First Name</Form.Label>
+                                                <Form.Control
+                                                    type="text"
+                                                    name="first_name"
+                                                    value={formData.first_name}
+                                                    onChange={handleChange}
+                                                    placeholder="First name"
+                                                    disabled={loading}
+                                                />
+                                            </Form.Group>
+                                        </Col>
+                                        <Col sm={6}>
+                                            <Form.Group>
+                                                <Form.Label className="fw-500 small">Last Name</Form.Label>
+                                                <Form.Control
+                                                    type="text"
+                                                    name="last_name"
+                                                    value={formData.last_name}
+                                                    onChange={handleChange}
+                                                    placeholder="Last name"
+                                                    disabled={loading}
+                                                />
+                                            </Form.Group>
+                                        </Col>
+                                    </Row>
 
-                                {/* Username */}
-                                <Form.Group className="mb-3">
-                                    <Form.Label className="fw-500">Username</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        name="username"
-                                        value={formData.username}
-                                        onChange={handleChange}
-                                        placeholder="Choose a username"
-                                        disabled={loading}
-                                        required
-                                        isInvalid={!!errors.username}
-                                    />
-                                    <Form.Control.Feedback type="invalid">
-                                        {errors.username}
-                                    </Form.Control.Feedback>
-                                </Form.Group>
-
-                                {/* Password */}
-                                <Form.Group className="mb-3">
-                                    <Form.Label className="fw-500">Password</Form.Label>
-                                    <div className='position-relative'>
-                                        <Form.Control 
-                                            type={showPassword ? 'text' : 'password'}
-                                            name="password"
-                                            value={formData.password}
+                                    {/* Email */}
+                                    <Form.Group className="mb-3">
+                                        <Form.Label className="fw-500">Email Address</Form.Label>
+                                        <Form.Control
+                                            type="email"
+                                            name="email"
+                                            value={formData.email}
                                             onChange={handleChange}
-                                            placeholder="At least 8 characters"
+                                            placeholder="your@email.com"
                                             disabled={loading}
                                             required
-                                            isInvalid={!!errors.password}
+                                            isInvalid={!!errors.email}
                                         />
-                                        <button
-                                            type="button"
-                                            className="btn btn-link position-absolute end-0 top-50 translate-middle-y"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            tabIndex="-1"
-                                            style={{ textDecoration: 'none', fontSize: '18px' }}
-                                        >
-                                            {showPassword ? 'x' : '|'}
-                                        </button>
-                                        <Form.Control.Feedback type="invalid" style={{ display: errors.password ? 'block' : 'none' }}>
-                                            {errors.password}
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.email}
                                         </Form.Control.Feedback>
-                                    </div>
-                                    <small className="text-muted d-block mt-2">
-                                        Must contain uppercase, lowercase and numbers
-                                    </small> 
-                                </Form.Group>
-                                <Form.Group className='mb-3'>
-                                    <Form.Label className='fw-500'>Confirm Password</Form.Label>
-                                    <Form.Control 
-                                        type={showPassword ? 'text' : 'password'}
-                                        name="password_confirm"
-                                        value={formData.password_confirm}
-                                        onChange={handleChange}
-                                        placeholder="Confirm your password"
+                                    </Form.Group>
+
+                                    {/* Username */}
+                                    <Form.Group className="mb-3">
+                                        <Form.Label className="fw-500">Username</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            name="username"
+                                            value={formData.username}
+                                            onChange={handleChange}
+                                            placeholder="Choose a username"
+                                            disabled={loading}
+                                            required
+                                            isInvalid={!!errors.username}
+                                        />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.username}
+                                        </Form.Control.Feedback>
+                                    </Form.Group>
+
+                                    {/* Password */}
+                                    <Form.Group className="mb-3">
+                                        <Form.Label className="fw-500">Password</Form.Label>
+                                        <div className='position-relative'>
+                                            <Form.Control 
+                                                type={showPassword ? 'text' : 'password'}
+                                                name="password"
+                                                value={formData.password}
+                                                onChange={handleChange}
+                                                placeholder="At least 8 characters"
+                                                disabled={loading}
+                                                required
+                                                isInvalid={!!errors.password}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn btn-link position-absolute end-0 top-50 translate-middle-y"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                tabIndex="-1"
+                                                style={{ textDecoration: 'none', fontSize: '18px' }}
+                                            >
+                                                {showPassword ? 'x' : '|'}
+                                            </button>
+                                            <Form.Control.Feedback type="invalid" style={{ display: errors.password ? 'block' : 'none' }}>
+                                                {errors.password}
+                                            </Form.Control.Feedback>
+                                        </div>
+                                        <small className="text-muted d-block mt-2">
+                                            Must contain uppercase, lowercase and numbers
+                                        </small> 
+                                    </Form.Group>
+                                    <Form.Group className='mb-3'>
+                                        <Form.Label className='fw-500'>Confirm Password</Form.Label>
+                                        <Form.Control 
+                                            type={showPassword ? 'text' : 'password'}
+                                            name="password_confirm"
+                                            value={formData.password_confirm}
+                                            onChange={handleChange}
+                                            placeholder="Confirm your password"
+                                            disabled={loading}
+                                            required
+                                            isInvalid={!!errors.password_confirm}
+                                        />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.password_confirm}
+                                        </Form.Control.Feedback>
+                                    </Form.Group>
+                                    <Button
+                                        type="submit"
+                                        variant="primary"
+                                        size="lg"
+                                        className="w-100 fw-bold mt-3"
                                         disabled={loading}
-                                        required
-                                        isInvalid={!!errors.password_confirm}
-                                    />
-                                    <Form.Control.Feedback type="invalid">
-                                        {errors.password_confirm}
-                                    </Form.Control.Feedback>
-                                </Form.Group>
-                                <Button
-                                    type="submit"
-                                    variant="primary"
-                                    size="lg"
-                                    className="w-100 fw-bold mt-3"
-                                    disabled={loading}
-                                >
-                                    {loading ? (
-                                        <>
-                                            <Spinner animation='border' size='sm' className='me-2'/>
-                                            Creating account...
-                                        </>
-                                    ) : (
-                                        'Creating Account'
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <Spinner animation='border' size='sm' className='me-2'/>
+                                                Creating account...
+                                            </>
+                                        ) : (
+                                            'Create Account'
 
-                                    )}
-                                </Button>
-                            </Form>
+                                        )}
+                                    </Button>
+                                </Form>
 
-                            <div className="text-center mt-4">
-                                <p className="text-muted">Already have an account? <Link to="/login" className="text-primary fw-bold text-decoration-none">Sign In</Link></p>
+                                <div className="text-center mt-4">
+                                    <p className="text-muted">Already have an account? <Link to="/login" className="text-primary fw-bold text-decoration-none">Sign In</Link></p>
+                                </div>
                             </div>
                         </div>
                     </Col>
                 </Row>
             </Container>
-
         </div>
     )
 }
