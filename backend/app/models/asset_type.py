@@ -1,42 +1,61 @@
 from app import db
+from sqlalchemy.orm import validates
 
 class AssetType(db.Model):
     __tablename__ = 'asset_types'
 
-    # Primary key: unique identifier for each asset type
     id = db.Column(db.Integer, primary_key=True)
 
-    # Name of the asset type (e.g., Laptop, Printer, Chair)
-    name = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(100), nullable=False, index=True)
+    type_code = db.Column(db.String(50), nullable=False, unique=True, index=True)
 
-    # Unique code for the asset type (stored in uppercase)
-    type_code = db.Column(db.String(50), nullable=False, unique=True)
-
-    # Optional description explaining what this type represents
     description = db.Column(db.String(255))
 
-    # Foreign key linking this type to a category (e.g., Electronics, Furniture)
-    category_id = db.Column(db.Integer, db.ForeignKey('asset_categories.id'), nullable=False)
+    category_id = db.Column(
+        db.Integer,
+        db.ForeignKey('asset_categories.id'),
+        nullable=False,
+        index=True
+    )
 
-    # -----------------------------
-    # Relationships (ORM Access)
-    # -----------------------------
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    # Allows access to all assets of this type via: asset_type.assets
-    assets = db.relationship('Asset', backref='type', lazy=True)
+    __table_args__ = (
+        db.UniqueConstraint('name', 'category_id', name='unique_type_per_category'),
+    )
 
-    # -----------------------------
-    # Constructor (Initialization)
-    # -----------------------------
-    def __init__(self, name, type_code, category_id, description=None):
-        self.name = name
+    # Relationships
+    assets = db.relationship(
+        'Asset',
+        back_populates='asset_type',
+        cascade="all, delete-orphan",
+        lazy='select'
+    )
 
-        # Ensure type_code is always stored in uppercase
-        self.type_code = type_code.upper() if type_code else None
+    category = db.relationship(
+        'AssetCategory',
+        back_populates='types'
+    )
 
-        self.category_id = category_id
-        self.description = description
+    # Validators
+    @validates('type_code')
+    def validate_type_code(self, key, value):
+        if not value:
+            raise ValueError("Type code is required")
+        return value.strip().upper()
 
-    # String representation for debugging and logs
+    # Utility
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "type_code": self.type_code,
+            "category_id": self.category_id,
+            "description": self.description,
+            "created_at": self.created_at
+        }
+
     def __repr__(self):
         return f"<AssetType {self.name} ({self.type_code})>"
+    

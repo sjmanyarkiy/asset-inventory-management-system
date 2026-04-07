@@ -1,46 +1,50 @@
 from app import db
+from sqlalchemy.orm import validates
 
 class AssetCategory(db.Model):
     __tablename__ = 'asset_categories'
 
-    # Primary key: unique identifier for each category
     id = db.Column(db.Integer, primary_key=True)
 
-    # Name of the category (e.g., Electronics, Furniture)
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    name = db.Column(db.String(100), nullable=False, unique=True, index=True)
+    category_code = db.Column(db.String(50), nullable=False, unique=True, index=True)
 
-    # Unique code for the category (stored in uppercase, e.g., ELEC, FURN)
-    category_code = db.Column(db.String(50), nullable=False, unique=True)
-
-    # Optional description explaining what this category includes
     description = db.Column(db.String(255))
 
-    # -----------------------------
-    # Relationships (ORM Access)
-    # -----------------------------
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    # One-to-many relationship:
-    # A category can have multiple assets
-    # Access via: category.assets
-    assets = db.relationship('Asset', backref='category', lazy=True)
+    # Relationships
+    assets = db.relationship(
+        'Asset',
+        back_populates='category',
+        cascade="all, delete-orphan",
+        lazy='select'
+    )
 
-    # One-to-many relationship:
-    # A category can have multiple asset types
-    # Access via: category.types
-    types = db.relationship('AssetType', backref='category', lazy=True)
+    types = db.relationship(
+        'AssetType',
+        back_populates='category',
+        cascade="all, delete-orphan",
+        lazy='select'
+    )
 
-    # -----------------------------
-    # Constructor (Initialization)
-    # -----------------------------
-    def __init__(self, name, category_code, description=None):
-        self.name = name
+    # Validators
+    @validates('category_code')
+    def validate_code(self, key, value):
+        if not value:
+            raise ValueError("Category code is required")
+        return value.strip().upper()
 
-        # Ensure category_code is always stored in uppercase
-        self.category_code = category_code.upper() if category_code else None
+    # Utility
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "category_code": self.category_code,
+            "description": self.description,
+            "created_at": self.created_at
+        }
 
-        self.description = description
-
-    # String representation for debugging and logs
     def __repr__(self):
         return f"<AssetCategory {self.name} ({self.category_code})>"
-    
