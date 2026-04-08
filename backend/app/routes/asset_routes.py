@@ -5,8 +5,6 @@ from app.models.asset_category import AssetCategory
 from app.models.asset_type import AssetType
 from app.models.vendors import Vendor
 from app.models.departments import Department
-# from app.models.asset_assignment import AssetAssignment
-#
 from sqlalchemy import or_
 
 asset_bp = Blueprint('asset_bp', __name__, url_prefix='/assets')
@@ -15,7 +13,7 @@ asset_bp = Blueprint('asset_bp', __name__, url_prefix='/assets')
 # -------------------------
 # CREATE Asset
 # -------------------------
-@asset_bp.route('/assets', methods=['POST'])
+@asset_bp.route('/', methods=['POST'])
 def create_asset():
     data = request.get_json()
 
@@ -27,7 +25,6 @@ def create_asset():
         if not data.get(field):
             return jsonify({"error": f"{field} is required"}), 400
 
-    # Validate foreign keys
     if not AssetCategory.query.get(data.get('category_id')):
         return jsonify({"error": "Invalid category_id"}), 400
 
@@ -40,7 +37,6 @@ def create_asset():
     if data.get('department_id') and not Department.query.get(data.get('department_id')):
         return jsonify({"error": "Invalid department_id"}), 400
 
-    # Uniqueness checks
     if Asset.query.filter_by(barcode=data.get('barcode')).first():
         return jsonify({"error": "Barcode already exists"}), 400
 
@@ -72,16 +68,15 @@ def create_asset():
 
 
 # -------------------------
-# GET ALL ASSETS (filters + pagination)
+# GET ALL ASSETS
 # -------------------------
-@asset_bp.route('', methods=['GET'])
+@asset_bp.route('/', methods=['GET'])
 def get_assets():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
 
     query = Asset.query
 
-    # Filters
     category_id = request.args.get('category_id')
     asset_type_id = request.args.get('asset_type_id')
     vendor_id = request.args.get('vendor_id')
@@ -126,7 +121,7 @@ def get_assets():
 # -------------------------
 # GET SINGLE ASSET
 # -------------------------
-@asset_bp.route('/assets/<int:id>', methods=['GET'])
+@asset_bp.route('/<int:id>', methods=['GET'])
 def get_asset(id):
     asset = Asset.query.get_or_404(id)
     return jsonify(asset.to_dict())
@@ -135,7 +130,7 @@ def get_asset(id):
 # -------------------------
 # UPDATE ASSET
 # -------------------------
-@asset_bp.route('/assets/<int:id>', methods=['PUT'])
+@asset_bp.route('/<int:id>', methods=['PUT'])
 def update_asset(id):
     asset = Asset.query.get_or_404(id)
     data = request.get_json()
@@ -143,7 +138,6 @@ def update_asset(id):
     if not data:
         return jsonify({"error": "No input data provided"}), 400
 
-    # Validate foreign keys
     if data.get('category_id') and not AssetCategory.query.get(data.get('category_id')):
         return jsonify({"error": "Invalid category_id"}), 400
 
@@ -156,7 +150,6 @@ def update_asset(id):
     if data.get('department_id') and not Department.query.get(data.get('department_id')):
         return jsonify({"error": "Invalid department_id"}), 400
 
-    # Uniqueness checks
     if data.get('barcode'):
         existing = Asset.query.filter(
             Asset.barcode == data.get('barcode'),
@@ -198,97 +191,14 @@ def update_asset(id):
 # -------------------------
 # DELETE ASSET
 # -------------------------
-@asset_bp.route('/assets/<int:id>', methods=['DELETE'])
+@asset_bp.route('/<int:id>', methods=['DELETE'])
 def delete_asset(id):
     asset = Asset.query.get_or_404(id)
 
     try:
         db.session.delete(asset)
         db.session.commit()
-
         return jsonify({"message": "Asset deleted successfully"})
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
-
-
-# -------------------------
-# UPDATE ASSET STATUS
-# -------------------------
-@asset_bp.route('/assets/<int:id>/status', methods=['PATCH'])
-def update_asset_status(id):
-    asset = Asset.query.get_or_404(id)
-    data = request.get_json()
-
-    status = data.get('status')
-    valid_statuses = ['available', 'assigned', 'under_repair', 'retired']
-
-    if status not in valid_statuses:
-        return jsonify({"error": "Invalid status"}), 400
-
-    try:
-        asset.status = status
-        db.session.commit()
-        return jsonify(asset.to_dict())
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
-
-
-# -------------------------
-# ASSIGN ASSET
-# -------------------------
-@asset_bp.route('/assets/<int:id>/assign', methods=['POST'])
-def assign_asset(id):
-    data = request.get_json()
-
-    if not data:
-        return jsonify({"error": "No input data provided"}), 400
-
-    user_id = data.get('user_id')
-    assigned_by = data.get('assigned_by')
-
-    if not user_id or not assigned_by:
-        return jsonify({"error": "user_id and assigned_by are required"}), 400
-
-    # Validate users
-    if not User.query.get(user_id):
-        return jsonify({"error": "Invalid user_id"}), 400
-
-    if not User.query.get(assigned_by):
-        return jsonify({"error": "Invalid assigned_by"}), 400
-
-    asset = Asset.query.get_or_404(id)
-
-    # Prevent duplicate active assignment
-    existing_assignment = AssetAssignment.query.filter_by(
-        asset_id=id,
-        status='active'
-    ).first()
-
-    if existing_assignment:
-        return jsonify({"error": "Asset is already assigned"}), 400
-
-    try:
-        assignment = AssetAssignment(
-            asset_id=id,
-            user_id=user_id,
-            assigned_by=assigned_by,
-            status='active'
-        )
-
-        asset.status = 'assigned'
-
-        db.session.add(assignment)
-        db.session.commit()
-
-        return jsonify({
-            "message": "Asset assigned successfully",
-            "assignment": assignment.id
-        }), 201
-
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
