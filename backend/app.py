@@ -34,12 +34,15 @@ from models.user import User
 from models.role import Role
 from models.asset import Asset
 from models.audit_log import AuditLog
-from blueprints.auth import auth_bp, init_auth_db
-from blueprints.admin import admin_bp
+from blueprints.auth import auth_bp
+# from blueprints.admin import admin_bp
+from flask_jwt_extended import JWTManager
+
+jwt = JWTManager(app)
 
 # Register blueprints
 app.register_blueprint(auth_bp)
-app.register_blueprint(admin_bp)
+# app.register_blueprint(admin_bp)
 
 # Initialize database
 def init_db():

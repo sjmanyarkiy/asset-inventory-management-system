@@ -79,7 +79,7 @@ const RegistrationPage = () => {
                 formData
             );
 
-            const { user, token } = response.data;
+            const { user, access_token: token } = response.data.data;
 
             dispatch(setUser(user));
             dispatch(setToken(token))
