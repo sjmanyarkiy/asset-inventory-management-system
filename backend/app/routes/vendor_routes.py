@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models.vendors import Vendor
+from sqlalchemy.exc import IntegrityError
+from app.services.vendor_service import generate_vendor_code
 
-# ✅ Added url_prefix='/vendors'
 vendor_bp = Blueprint('vendor_bp', __name__, url_prefix='/vendors')
 
 
@@ -16,22 +17,29 @@ def create_vendor():
     if not data:
         return jsonify({"error": "No input data provided"}), 400
 
-    if not data.get('name') or not data.get('vendor_code'):
-        return jsonify({"error": "name and vendor_code are required"}), 400
-
-    existing = Vendor.query.filter_by(vendor_code=data.get('vendor_code')).first()
-    if existing:
-        return jsonify({"error": "Vendor code already exists"}), 400
-
-    if data.get('email'):
-        existing_email = Vendor.query.filter_by(email=data.get('email')).first()
-        if existing_email:
-            return jsonify({"error": "Email already exists"}), 400
+    if not data.get('name'):
+        return jsonify({"error": "name is required"}), 400
 
     try:
+        # Check duplicate email
+        if data.get('email'):
+            existing_email = Vendor.query.filter_by(
+                email=data.get('email').lower()
+            ).first()
+            if existing_email:
+                return jsonify({"error": "Email already exists"}), 400
+
+        # Generate vendor code
+        for _ in range(3):
+            vendor_code = generate_vendor_code(data.get('name'))
+            if not Vendor.query.filter_by(vendor_code=vendor_code).first():
+                break
+        else:
+            return jsonify({"error": "Failed to generate unique vendor code"}), 500
+
         vendor = Vendor(
             name=data.get('name'),
-            vendor_code=data.get('vendor_code'),
+            vendor_code=vendor_code,
             status=data.get('status', 'active'),
             contact_person=data.get('contact_person'),
             email=data.get('email'),
@@ -48,11 +56,16 @@ def create_vendor():
         db.session.add(vendor)
         db.session.commit()
 
+        # ✅ IMPORTANT: return full vendor object
         return jsonify(vendor.to_dict()), 201
 
     except ValueError as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
+
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Vendor code or email already exists"}), 400
 
     except Exception as e:
         db.session.rollback()
@@ -60,20 +73,35 @@ def create_vendor():
 
 
 # -------------------------
-# GET All Vendors (pagination)
+# GET Vendors (pagination + search)
 # -------------------------
 @vendor_bp.route('/', methods=['GET'])
 def get_vendors():
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
+    per_page = min(request.args.get('per_page', 10, type=int), 100)
+    search = request.args.get('search', '', type=str)
 
-    vendors = Vendor.query.paginate(page=page, per_page=per_page, error_out=False)
+    query = Vendor.query
+
+    # ✅ SEARCH SUPPORT
+    if search:
+        query = query.filter(
+            Vendor.name.ilike(f"%{search}%") |
+            Vendor.email.ilike(f"%{search}%") |
+            Vendor.vendor_code.ilike(f"%{search}%")
+        )
+
+    pagination = query.order_by(Vendor.id.desc()).paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False
+    )
 
     return jsonify({
-        "total": vendors.total,
-        "pages": vendors.pages,
-        "current_page": vendors.page,
-        "data": [v.to_dict() for v in vendors.items]
+        "total": pagination.total,
+        "pages": pagination.pages,
+        "current_page": pagination.page,
+        "data": [v.to_dict() for v in pagination.items]
     })
 
 
@@ -97,25 +125,21 @@ def update_vendor(id):
     if not data:
         return jsonify({"error": "No input data provided"}), 400
 
-    if data.get('vendor_code'):
-        existing = Vendor.query.filter(
-            Vendor.vendor_code == data.get('vendor_code'),
-            Vendor.id != id
-        ).first()
-        if existing:
-            return jsonify({"error": "Vendor code already exists"}), 400
-
-    if data.get('email'):
-        existing_email = Vendor.query.filter(
-            Vendor.email == data.get('email'),
-            Vendor.id != id
-        ).first()
-        if existing_email:
-            return jsonify({"error": "Email already exists"}), 400
-
     try:
+        if 'vendor_code' in data:
+            return jsonify({"error": "vendor_code cannot be updated"}), 400
+
+        # Prevent duplicate email
+        if data.get('email'):
+            existing_email = Vendor.query.filter(
+                Vendor.email == data.get('email').lower(),
+                Vendor.id != id
+            ).first()
+            if existing_email:
+                return jsonify({"error": "Email already exists"}), 400
+
         fields = [
-            "name", "vendor_code", "status", "contact_person",
+            "name", "status", "contact_person",
             "email", "phone", "postal_address", "physical_address",
             "payment_terms", "description",
             "bank_name", "bank_account_number", "bank_branch"
@@ -132,6 +156,10 @@ def update_vendor(id):
     except ValueError as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
+
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Email already exists"}), 400
 
     except Exception as e:
         db.session.rollback()
@@ -152,17 +180,4 @@ def delete_vendor(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-
-
-# -------------------------
-# SEARCH Vendor
-# -------------------------
-@vendor_bp.route('/search', methods=['GET'])
-def search_vendors():
-    query = request.args.get('q', '')
-
-    vendors = Vendor.query.filter(
-        Vendor.name.ilike(f"%{query}%")
-    ).all()
-
-    return jsonify([v.to_dict() for v in vendors])
+    
