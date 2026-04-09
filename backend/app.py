@@ -1,13 +1,12 @@
-from flask import Flask, jsonify
+from flask import Flask
 from flask_cors import CORS
-import os
+from assetlist.routes import asset_bp
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route("/")
-def home():
-    return jsonify({"message": "Backend is running!"})
+# Register the asset blueprint
+app.register_blueprint(asset_bp)
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=True, port=5000)
