@@ -3,6 +3,7 @@ import { Container, Row, Col, Form, Button, Alert, Spinner } from 'react-bootstr
 import { useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { setUser, setToken } from '../redux/slices/authSlice';
 
 function LoginPage() {
 
@@ -38,7 +39,7 @@ function LoginPage() {
         formData
       );
 
-      const { user, token } = response.data;
+      const { user, access_token: token } = response.data.data;
 
       dispatch(setUser(user));
       dispatch(setToken(token));
