@@ -38,3 +38,9 @@ npm start
 
 This project is available under the MIT License. See the `LICENSE` file for details.
 
+# asset-inventory-management-system
+# live link for frontend 
+https://asset-inventory-management-system-1.onrender.com
+ # live link for backend
+ https://asset-inventory-management-system-gkjx.onrender.com
+ 
