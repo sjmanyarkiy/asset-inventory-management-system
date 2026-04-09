@@ -1,15 +1,19 @@
 import React from "react";
 import DataTable from "./DataTable";
+import axios from "../api/axios";
 
 export default function AssignedTab() {
   const [data, setData] = React.useState([]);
 
   React.useEffect(() => {
-    // For scaffold: fetch from /api/reports/assigned
-    fetch("/api/reports/assigned")
-      .then((r) => r.json())
-      .then((json) => setData(json.items || []))
-      .catch(() => setData([]));
+    let mounted = true;
+    axios
+      .get("/api/reports/assigned")
+      .then((r) => {
+        if (mounted) setData(r.data.items || []);
+      })
+      .catch(() => mounted && setData([]));
+    return () => (mounted = false);
   }, []);
 
   const columns = [

@@ -1,14 +1,17 @@
 import React from "react";
 import DataTable from "./DataTable";
+import axios from "../api/axios";
 
 export default function AccessTab() {
   const [data, setData] = React.useState([]);
 
   React.useEffect(() => {
-    fetch("/api/reports/access")
-      .then((r) => r.json())
-      .then((json) => setData(json.items || []))
-      .catch(() => setData([]));
+    let mounted = true;
+    axios
+      .get("/api/reports/access")
+      .then((r) => mounted && setData(r.data.items || []))
+      .catch(() => mounted && setData([]));
+    return () => (mounted = false);
   }, []);
 
   const columns = [

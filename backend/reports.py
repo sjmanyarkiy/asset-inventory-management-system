@@ -39,6 +39,10 @@ def get_assigned():
     rows = _paginate_query(q, page, per_page)
     items = []
     for assignment, asset in rows:
+        # Keep the assigned_at as a datetime object so Marshmallow's
+        # DateTime field can serialize it correctly. Previously we
+        # converted to ISO string here which caused marshmallow to
+        # attempt to call .isoformat() on an already-string value.
         items.append(
             {
                 "assignment_id": assignment.id,
@@ -46,7 +50,7 @@ def get_assigned():
                 "asset_tag": asset.tag,
                 "asset_name": asset.name,
                 "assigned_to": assignment.user_id,
-                "assigned_at": assignment.assigned_at.isoformat() if assignment.assigned_at else None,
+                "assigned_at": assignment.assigned_at if assignment.assigned_at else None,
             }
         )
 
@@ -89,7 +93,8 @@ def get_repaired():
     rows = _paginate_query(q, page, per_page)
     items = []
     for r in rows:
-        items.append({"repair_id": r.id, "asset_id": r.asset_id, "status": r.status, "reported_at": r.reported_at.isoformat()})
+        # same as assignments: let Marshmallow handle datetime serialization
+        items.append({"repair_id": r.id, "asset_id": r.asset_id, "status": r.status, "reported_at": r.reported_at})
 
     schema = RepairSchema(many=True)
     return jsonify({"items": schema.dump(items), "total": len(items)})
