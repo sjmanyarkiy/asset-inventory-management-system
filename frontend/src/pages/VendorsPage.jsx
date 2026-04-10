@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
+
 import {
   fetchVendors,
   deleteVendor,
@@ -12,6 +14,7 @@ export default function VendorsPage() {
   const { data, loading, error } = useSelector((state) => state.vendors);
 
   const [search, setSearch] = useState("");
+  const [editingId, setEditingId] = useState(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -29,19 +32,23 @@ export default function VendorsPage() {
     bank_branch: "",
   });
 
-  const [editingId, setEditingId] = useState(null);
-
-  /* ---------------- FETCH ---------------- */
+  // =========================
+  // FETCH
+  // =========================
   useEffect(() => {
     dispatch(fetchVendors({ page: 1, search }));
   }, [dispatch, search]);
 
-  /* ---------------- HANDLE INPUT ---------------- */
+  // =========================
+  // INPUT
+  // =========================
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  /* ---------------- SUBMIT ---------------- */
+  // =========================
+  // CREATE / UPDATE (TOAST STYLE LIKE DEPARTMENTS)
+  // =========================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -60,34 +67,79 @@ export default function VendorsPage() {
       bank_branch: form.bank_branch,
     };
 
-    if (editingId) {
-      await dispatch(updateVendor({ id: editingId, data: payload }));
-    } else {
-      await dispatch(createVendor(payload));
+    try {
+      let res;
+
+      // =====================
+      // UPDATE
+      // =====================
+      if (editingId) {
+        const confirmUpdate = window.confirm(
+          "⚠️ Are you sure you want to update this vendor?"
+        );
+
+        if (!confirmUpdate) return;
+
+        res = await dispatch(
+          updateVendor({ id: editingId, data: payload })
+        );
+
+      } else {
+        // =====================
+        // CREATE
+        // =====================
+        const confirmCreate = window.confirm(
+          "✔️ Do you want to create this vendor?"
+        );
+
+        if (!confirmCreate) return;
+
+        res = await dispatch(createVendor(payload));
+      }
+
+      // ERROR HANDLING
+      if (res?.error) {
+        toast.error("Operation failed ❌");
+        return;
+      }
+
+      // SUCCESS TOASTS
+      if (editingId) {
+        toast.success("Vendor updated successfully 🎉");
+      } else {
+        toast.success("Vendor created successfully 🎉");
+      }
+
+      // RESET FORM
+      setForm({
+        name: "",
+        vendor_code: "",
+        email: "",
+        phone: "",
+        contact_person: "",
+        status: "active",
+        postal_address: "",
+        physical_address: "",
+        payment_terms: "",
+        description: "",
+        bank_name: "",
+        bank_account_number: "",
+        bank_branch: "",
+      });
+
+      setEditingId(null);
+
+      dispatch(fetchVendors({ page: 1, search }));
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong ❌");
     }
-
-    setForm({
-      name: "",
-      vendor_code: "",
-      email: "",
-      phone: "",
-      contact_person: "",
-      status: "active",
-      postal_address: "",
-      physical_address: "",
-      payment_terms: "",
-      description: "",
-      bank_name: "",
-      bank_account_number: "",
-      bank_branch: "",
-    });
-
-    setEditingId(null);
-
-    dispatch(fetchVendors({ page: 1, search }));
   };
 
-  /* ---------------- EDIT ---------------- */
+  // =========================
+  // EDIT
+  // =========================
   const handleEdit = (vendor) => {
     setEditingId(vendor.id);
 
@@ -108,13 +160,37 @@ export default function VendorsPage() {
     });
   };
 
-  /* ---------------- DELETE ---------------- */
+  // =========================
+  // DELETE (TOAST STYLE LIKE DEPARTMENTS)
+  // =========================
   const handleDelete = async (id) => {
-    await dispatch(deleteVendor(id));
-    dispatch(fetchVendors({ page: 1, search }));
+    const confirmDelete = window.confirm(
+      "⚠️ Are you sure you want to delete this vendor?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      const res = await dispatch(deleteVendor(id));
+
+      if (res?.error) {
+        toast.error("Delete failed ❌");
+        return;
+      }
+
+      toast.success("Vendor deleted successfully 🗑️");
+
+      dispatch(fetchVendors({ page: 1, search }));
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong ❌");
+    }
   };
 
-  /* ---------------- CANCEL ---------------- */
+  // =========================
+  // CANCEL EDIT
+  // =========================
   const handleCancelEdit = () => {
     setEditingId(null);
     setForm({
@@ -193,59 +269,55 @@ export default function VendorsPage() {
         </div>
       </form>
 
-      {/* LOADING */}
+      {/* LOADING / ERROR */}
       {loading && <p>Loading...</p>}
-
-      {/* ERROR */}
       {error && <p className="text-red-500">{error}</p>}
 
-      {/* ================= FULL TABLE ================= */}
-      <div className="overflow-x-auto">
-        <table className="w-full border mt-4">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">Name</th>
-              <th className="border p-2">Code</th>
-              <th className="border p-2">Email</th>
-              <th className="border p-2">Phone</th>
-              <th className="border p-2">Status</th>
-              <th className="border p-2">Contact Person</th>
-              <th className="border p-2">Bank</th>
-              <th className="border p-2">Actions</th>
+      {/* TABLE */}
+      <table className="w-full border mt-4">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border p-2">Name</th>
+            <th className="border p-2">Code</th>
+            <th className="border p-2">Email</th>
+            <th className="border p-2">Phone</th>
+            <th className="border p-2">Status</th>
+            <th className="border p-2">Contact Person</th>
+            <th className="border p-2">Bank</th>
+            <th className="border p-2">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {data?.map((vendor) => (
+            <tr key={vendor.id}>
+              <td className="border p-2">{vendor.name}</td>
+              <td className="border p-2">{vendor.vendor_code}</td>
+              <td className="border p-2">{vendor.email}</td>
+              <td className="border p-2">{vendor.phone}</td>
+              <td className="border p-2">{vendor.status}</td>
+              <td className="border p-2">{vendor.contact_person}</td>
+              <td className="border p-2">{vendor.bank_name}</td>
+
+              <td className="border p-2">
+                <button
+                  onClick={() => handleEdit(vendor)}
+                  className="text-blue-500 mr-3"
+                >
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => handleDelete(vendor.id)}
+                  className="text-red-500"
+                >
+                  Delete
+                </button>
+              </td>
             </tr>
-          </thead>
-
-          <tbody>
-            {data?.map((vendor) => (
-              <tr key={vendor.id}>
-                <td className="border p-2">{vendor.name}</td>
-                <td className="border p-2">{vendor.vendor_code}</td>
-                <td className="border p-2">{vendor.email}</td>
-                <td className="border p-2">{vendor.phone}</td>
-                <td className="border p-2">{vendor.status}</td>
-                <td className="border p-2">{vendor.contact_person}</td>
-                <td className="border p-2">{vendor.bank_name}</td>
-
-                <td className="border p-2">
-                  <button
-                    onClick={() => handleEdit(vendor)}
-                    className="text-blue-500 mr-3"
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(vendor.id)}
-                    className="text-red-500"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
