@@ -9,6 +9,17 @@ import {
   updateVendor,
 } from "../features/vendors/VendorSlice";
 
+/* =========================
+   ERROR HELPER
+========================= */
+const getErrorMessage = (action) => {
+  return (
+    action?.payload ||
+    action?.error?.message ||
+    "Operation failed ❌"
+  );
+};
+
 export default function VendorsPage() {
   const dispatch = useDispatch();
   const { data, loading, error } = useSelector((state) => state.vendors);
@@ -32,23 +43,23 @@ export default function VendorsPage() {
     bank_branch: "",
   });
 
-  // =========================
-  // FETCH
-  // =========================
+  /* =========================
+     FETCH
+  ========================= */
   useEffect(() => {
     dispatch(fetchVendors({ page: 1, search }));
   }, [dispatch, search]);
 
-  // =========================
-  // INPUT
-  // =========================
+  /* =========================
+     INPUT HANDLER
+  ========================= */
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // =========================
-  // CREATE / UPDATE (TOAST STYLE LIKE DEPARTMENTS)
-  // =========================
+  /* =========================
+     CREATE / UPDATE
+  ========================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -68,49 +79,44 @@ export default function VendorsPage() {
     };
 
     try {
-      let res;
+      let action;
 
-      // =====================
-      // UPDATE
-      // =====================
+      /* UPDATE */
       if (editingId) {
         const confirmUpdate = window.confirm(
           "⚠️ Are you sure you want to update this vendor?"
         );
-
         if (!confirmUpdate) return;
 
-        res = await dispatch(
+        action = await dispatch(
           updateVendor({ id: editingId, data: payload })
         );
+      }
 
-      } else {
-        // =====================
-        // CREATE
-        // =====================
+      /* CREATE */
+      else {
         const confirmCreate = window.confirm(
           "✔️ Do you want to create this vendor?"
         );
-
         if (!confirmCreate) return;
 
-        res = await dispatch(createVendor(payload));
+        action = await dispatch(createVendor(payload));
       }
 
-      // ERROR HANDLING
-      if (res?.error) {
-        toast.error("Operation failed ❌");
+      /* ERROR FROM REDUX / BACKEND */
+      if (action?.error) {
+        toast.error(getErrorMessage(action));
         return;
       }
 
-      // SUCCESS TOASTS
+      /* SUCCESS TOASTS */
       if (editingId) {
         toast.success("Vendor updated successfully 🎉");
       } else {
         toast.success("Vendor created successfully 🎉");
       }
 
-      // RESET FORM
+      /* RESET */
       setForm({
         name: "",
         vendor_code: "",
@@ -137,9 +143,9 @@ export default function VendorsPage() {
     }
   };
 
-  // =========================
-  // EDIT
-  // =========================
+  /* =========================
+     EDIT
+  ========================= */
   const handleEdit = (vendor) => {
     setEditingId(vendor.id);
 
@@ -160,9 +166,9 @@ export default function VendorsPage() {
     });
   };
 
-  // =========================
-  // DELETE (TOAST STYLE LIKE DEPARTMENTS)
-  // =========================
+  /* =========================
+     DELETE
+  ========================= */
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
       "⚠️ Are you sure you want to delete this vendor?"
@@ -171,10 +177,10 @@ export default function VendorsPage() {
     if (!confirmDelete) return;
 
     try {
-      const res = await dispatch(deleteVendor(id));
+      const action = await dispatch(deleteVendor(id));
 
-      if (res?.error) {
-        toast.error("Delete failed ❌");
+      if (action?.error) {
+        toast.error(getErrorMessage(action));
         return;
       }
 
@@ -188,11 +194,12 @@ export default function VendorsPage() {
     }
   };
 
-  // =========================
-  // CANCEL EDIT
-  // =========================
+  /* =========================
+     CANCEL EDIT
+  ========================= */
   const handleCancelEdit = () => {
     setEditingId(null);
+
     setForm({
       name: "",
       vendor_code: "",
@@ -212,6 +219,7 @@ export default function VendorsPage() {
 
   return (
     <div className="p-4">
+
       <h1 className="text-xl font-bold mb-4">Vendors</h1>
 
       {/* SEARCH */}
@@ -318,6 +326,7 @@ export default function VendorsPage() {
           ))}
         </tbody>
       </table>
+
     </div>
   );
 }
