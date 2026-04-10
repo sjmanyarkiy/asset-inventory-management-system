@@ -47,14 +47,27 @@ def create_category():
 
 
 # -------------------------
-# GET All Categories (pagination)
+# GET All Categories (WITH LIVE SEARCH)
 # -------------------------
 @category_bp.route('/', methods=['GET'])
 def get_categories():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    search = request.args.get('search', '', type=str)
 
-    categories = AssetCategory.query.paginate(
+    query = AssetCategory.query
+
+    # ✅ LIVE SEARCH FIX
+    if search:
+        query = query.filter(
+            or_(
+                AssetCategory.name.ilike(f"%{search}%"),
+                AssetCategory.category_code.ilike(f"%{search}%"),
+                AssetCategory.description.ilike(f"%{search}%")
+            )
+        )
+
+    categories = query.paginate(
         page=page,
         per_page=per_page,
         error_out=False
@@ -130,21 +143,3 @@ def delete_category(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-
-
-# -------------------------
-# SEARCH Categories
-# -------------------------
-@category_bp.route('/search', methods=['GET'])
-def search_categories():
-    query = request.args.get('q', '')
-
-    categories = AssetCategory.query.filter(
-        or_(
-            AssetCategory.name.ilike(f"%{query}%"),
-            AssetCategory.category_code.ilike(f"%{query}%"),
-            AssetCategory.description.ilike(f"%{query}%")
-        )
-    ).all()
-
-    return jsonify([c.to_dict() for c in categories])
