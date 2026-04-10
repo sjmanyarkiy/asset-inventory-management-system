@@ -3,11 +3,16 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Provider } from 'react-redux';
 import store from '../redux/store';
 import '../api/axiosConfig';
-
+ 
+// Pages
 import LoginPage from '../pages/LoginPage';
 import RegistrationPage from '../pages/RegistrationPage';
 import DashboardPage from '../pages/DashboardPage';
+import UserManagementPage from '../pages/UserManagementPage';
+ 
+// Components
 import ProtectedRoute from '../components/ProtectedRoute';
+import AdminRoute from '../components/AdminRoute';
 
 const App = () => {
   return (
@@ -26,7 +31,37 @@ const App = () => {
           }
           />
 
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+           {/* Admin routes */}
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <AdminRoute>
+                  <UserManagementPage />
+                </AdminRoute>
+              </ProtectedRoute>
+            }
+          />
+ 
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <AdminRoute>
+                  <UserManagementPage />
+                </AdminRoute>
+              </ProtectedRoute>
+            }
+          />
+ 
+          {/* Redirect root to dashboard or login */}
+          <Route
+            path="/"
+            element={<Navigate to="/dashboard" replace />}
+          />
+ 
+          {/* 404 - Not found */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>
     </Provider>
