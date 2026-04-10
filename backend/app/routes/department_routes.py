@@ -19,7 +19,6 @@ def create_department():
     if not data.get('name') or not data.get('department_code'):
         return jsonify({"error": "name and department_code are required"}), 400
 
-    # Check duplicates
     existing = Department.query.filter(
         or_(
             Department.name == data.get('name'),
@@ -49,14 +48,27 @@ def create_department():
 
 
 # -------------------------
-# GET All Departments (pagination)
+# GET All Departments (WITH SEARCH + PAGINATION) ✅ FIXED
 # -------------------------
 @department_bp.route('/', methods=['GET'])
 def get_departments():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    search = request.args.get('search', '', type=str)
 
-    departments = Department.query.paginate(
+    query = Department.query
+
+    # ✅ SEARCH LOGIC (MAIN FIX)
+    if search:
+        query = query.filter(
+            or_(
+                Department.name.ilike(f"%{search}%"),
+                Department.department_code.ilike(f"%{search}%"),
+                Department.location.ilike(f"%{search}%")
+            )
+        )
+
+    departments = query.paginate(
         page=page,
         per_page=per_page,
         error_out=False
@@ -90,7 +102,6 @@ def update_department(id):
     if not data:
         return jsonify({"error": "No input data provided"}), 400
 
-    # Prevent duplicates
     if data.get('name') or data.get('department_code'):
         existing = Department.query.filter(
             or_(
@@ -134,21 +145,3 @@ def delete_department(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-
-
-# -------------------------
-# SEARCH Departments
-# -------------------------
-@department_bp.route('/search', methods=['GET'])
-def search_departments():
-    query = request.args.get('q', '')
-
-    departments = Department.query.filter(
-        or_(
-            Department.name.ilike(f"%{query}%"),
-            Department.department_code.ilike(f"%{query}%"),
-            Department.location.ilike(f"%{query}%")
-        )
-    ).all()
-
-    return jsonify([d.to_dict() for d in departments])

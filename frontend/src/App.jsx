@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 import AssetsPage from "./pages/AssetsPage";
 import VendorsPage from "./pages/VendorsPage";
@@ -9,6 +10,27 @@ import TypesPage from "./pages/TypesPage";
 function App() {
   return (
     <BrowserRouter>
+
+      {/* ✅ GLOBAL TOAST SYSTEM (FIXED VERSION) */}
+      <Toaster
+        position="top-right"
+        containerStyle={{
+          top: 20,
+          right: 20,
+          zIndex: 999999, // 🔥 ensures it stays above everything
+        }}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "#1f2937",
+            color: "#fff",
+            fontSize: "14px",
+            borderRadius: "6px",
+            zIndex: 999999,
+          },
+        }}
+      />
+
       <Routes>
         <Route path="/" element={<h1>Asset Inventory System</h1>} />
 
@@ -18,6 +40,7 @@ function App() {
         <Route path="/categories" element={<CategoriesPage />} />
         <Route path="/types" element={<TypesPage />} />
       </Routes>
+
     </BrowserRouter>
   );
 }
