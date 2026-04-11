@@ -1,32 +1,66 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import ReportsDashboard from './pages/ReportsDashboardClean';
-import Login from './components/Login';
-import { AuthProvider, useAuth } from './AuthContext';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import store from '../redux/store';
+import '../api/axiosConfig';
 
-function PrivateRoute({ children }) {
-  const auth = useAuth();
-  if (!auth || !auth.user) return <Navigate to="/login" replace />;
-  return children;
-}
+// Pages
+import LoginPage from '../pages/LoginPage';
+import RegistrationPage from '../pages/RegistrationPage';
+import DashboardPage from '../pages/DashboardPage';
+import UserManagementPage from '../pages/UserManagementPage';
+import ReportsDashboard from '../pages/ReportsDashboard';
 
-export default function App() {
+// Components
+import ProtectedRoute from '../components/ProtectedRoute';
+import AdminRoute from '../components/AdminRoute';
+
+const App = () => {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <Provider store={store}>
+      <Router>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          {/* Public routes */}
+          <Route path="/login" element={<LoginPage />}/>
+          <Route path="/register" element={<RegistrationPage />}/>
+
+          {/* Protected routes */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <DashboardPage/>
+            </ProtectedRoute>
+          }
+          />
+
+          {/* Reports route */}
+          <Route path="/reports" element={
+            <ProtectedRoute>
+              <ReportsDashboard />
+            </ProtectedRoute>
+          }
+          />
+
+          {/* Admin routes */}
           <Route
-            path="/reports"
+            path="/admin/users"
             element={
-              <PrivateRoute>
-                <ReportsDashboard />
-              </PrivateRoute>
+              <ProtectedRoute>
+                <AdminRoute>
+                  <UserManagementPage />
+                </AdminRoute>
+              </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/reports" replace />} />
+
+          {/* Redirect root to dashboard */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+          {/* 404 - Not found */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </Router>
+    </Provider>
   );
 }
+
+export default App;
