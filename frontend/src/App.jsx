@@ -7,9 +7,9 @@ import '../api/axiosConfig';
 // Pages
 import LoginPage from '../pages/LoginPage';
 import RegistrationPage from '../pages/RegistrationPage';
-import DashboardPage from '../pages/DashboardPage';
+import MainDashboard from '../pages/Main-Dashboard';
 import UserManagementPage from '../pages/UserManagementPage';
-import ReportsDashboard from '../src/pages/ReportsDashboard';
+import ReportsDashboard from '../pages/ReportsDashboard';
 
 // Components
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -27,7 +27,7 @@ const App = () => {
           {/* Protected routes */}
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <DashboardPage/>
+              <MainDashboard />
             </ProtectedRoute>
           }
           />

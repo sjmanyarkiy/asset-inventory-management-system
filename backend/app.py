@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 import os
 from extensions import db
 
+# Import asset blueprint
+from assetlist.routes import asset_bp
+
 # Load environment variables
 load_dotenv()
 
@@ -19,10 +22,9 @@ def create_app(config_object=None):
     Application factory function
     Creates and configures the Flask app
     """
-    # Initialize Flask app
     app = Flask(__name__)
 
-    # Default configuration
+    # Configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
         'DATABASE_URL',
         'postgresql://0xc7a-11@localhost:5432/asset_inventory'
@@ -31,18 +33,15 @@ def create_app(config_object=None):
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production')
 
-    # Allow overriding config for tests or deployments
     if config_object:
         app.config.update(config_object)
 
     # Initialize extensions
     db.init_app(app)
     CORS(app, resources={r"/api/*": {"origins": "*"}})
-
-    # Initialize JWT
     jwt = JWTManager(app)
 
-    # Import models AFTER db initialization
+    # Import models
     from models.user import User
     from models.role import Role
     from models.asset import Asset
@@ -50,11 +49,10 @@ def create_app(config_object=None):
 
     # Import blueprints
     from blueprints.auth import auth_bp
-    # from blueprints.admin import admin_bp
 
     # Register blueprints
     app.register_blueprint(auth_bp)
-    # app.register_blueprint(admin_bp)
+    app.register_blueprint(asset_bp)
 
     # Error handlers
     @app.errorhandler(404)
@@ -66,31 +64,30 @@ def create_app(config_object=None):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-    # Health check endpoint
+    # Routes
     @app.route('/health', methods=['GET'])
     def health_check():
         return jsonify({'status': 'ok', 'message': 'Asset Inventory API is running'}), 200
 
-    # Home endpoint
     @app.route('/', methods=['GET'])
     def home():
         return jsonify({'message': 'Asset Inventory Backend is running!'}), 200
 
-    # Database initialization with app context
+    # Initialize DB
     with app.app_context():
         db.create_all()
-        create_default_roles(app)
+        create_default_roles()
         print("Database initialized successfully!")
 
     return app
 
 
-def create_default_roles(app):
+def create_default_roles():
     """Create default system roles"""
     from models.role import Role
 
     if Role.query.first():
-        return  # Roles already exist
+        return
 
     roles_data = [
         {
@@ -152,10 +149,8 @@ def create_default_roles(app):
 
 
 if __name__ == '__main__':
-    # Create app instance
     app = create_app()
 
-    # Run the app
     debug = os.getenv('FLASK_ENV') == 'development'
     app.run(
         host='0.0.0.0',
