@@ -1,0 +1,102 @@
+.ps-root {
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #0f172a;
+  padding: 2rem;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.ps-header {
+  margin-bottom: 1.5rem;
+}
+
+.ps-title {
+  font-size: 1.75rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.ps-lead {
+  margin: 0;
+  color: #475569;
+}
+
+.ps-preview {
+  margin-top: 1.25rem;
+}
+
+.ps-figma-link {
+  display: inline-block;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(16,24,40,0.08);
+}
+
+.ps-figma-img {
+  display: block;
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+}
+
+.ps-caption {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.ps-resources {
+  margin-top: 1.5rem;
+}
+
+.ps-list {
+  padding-left: 1.25rem;
+}
+
+.ps-usage {
+  margin-top: 1.5rem;
+  background: #fbfdff;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e6eef8;
+}
+
+.ps-steps {
+  padding-left: 1.25rem;
+}
+
+.ps-cta-row {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.ps-btn {
+  display: inline-block;
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.ps-btn-primary {
+  background: linear-gradient(180deg,#2563eb,#1d4ed8);
+  color: #fff;
+}
+
+.ps-btn-ghost {
+  background: transparent;
+  border: 1px solid #dbeafe;
+  color: #1e293b;
+}
+
+.ps-footer {
+  margin-top: 2rem;
+  color: #94a3b8;
+}
+
+@media (max-width: 640px) {
+  .ps-root { padding: 1rem; }
+  .ps-title { font-size: 1.25rem; }
+}
