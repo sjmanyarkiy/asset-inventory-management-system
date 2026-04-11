@@ -1,0 +1,37 @@
+name: Integration E2E
+
+on:
+  pull_request:
+    branches: [ development ]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:20.10.16-dind
+        privileged: true
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build and run docker-compose
+        run: |
+          docker-compose up -d --build
+      - name: Wait for backend
+        run: |
+          for i in {1..30}; do
+            if curl -sSf http://localhost:5000/ >/dev/null; then echo ok && break; fi
+            sleep 1
+          done
+      - name: Install Cypress
+        uses: cypress-io/github-action@v5
+        with:
+          start: false
+          wait-on: 'http://localhost:5000'
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v5
+        with:
+          record: false
+          start: false
