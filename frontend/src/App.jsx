@@ -9,11 +9,11 @@ import LoginPage from '../pages/LoginPage';
 import RegistrationPage from '../pages/RegistrationPage';
 import DashboardPage from '../pages/DashboardPage';
 import UserManagementPage from '../pages/UserManagementPage';
-import ReportsDashboard from '../pages/ReportsDashboard';
+import ReportsDashboard from '../src/pages/ReportsDashboard';
 
 // Components
 import ProtectedRoute from '../components/ProtectedRoute';
-import AdminRoute from '../components/AdminRoute';
+import AdminRoute from '../components/AdminRoute.jsx';
 
 const App = () => {
   return (

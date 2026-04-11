@@ -4,7 +4,7 @@ import { Alert, Container } from 'react-bootstrap'
 function DashboardPage() {
   return (
     <div>
-      
+      <p>This is the dashboard</p>
     </div>
   )
 }
