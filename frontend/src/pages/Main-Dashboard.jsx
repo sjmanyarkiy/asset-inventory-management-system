@@ -1,24 +1,22 @@
 import React, { useState } from "react";
+import { Container, Row, Col } from "react-bootstrap";
 import Navbar from "../components/Navbar";
 import MenuBar from "../components/MenuBar";
 import SearchBar from "../components/SearchBar";
 import AssetList from "../components/AssetList";
 
 function MainDashboard() {
-  const [searchTerm, setSearchTerm] = useState(""); // 👈 add this
-
+  const [searchTerm, setSearchTerm] = useState("");
+  
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="d-flex flex-column min-vh-100 bg-light">
       <Navbar />
-
-      <div className="flex">
+      <div className="d-flex flex-grow-1">
         <MenuBar />
-
-        <main className="flex-1 p-6">
-          <SearchBar onSearch={setSearchTerm} /> {/* 👈 pass setter */}
-
-          <div className="mt-6">
-            <AssetList searchTerm={searchTerm} /> {/* 👈 pass term */}
+        <main className="flex-grow-1 p-4">
+          <SearchBar onSearch={setSearchTerm} />
+          <div className="mt-4">
+            <AssetList searchTerm={searchTerm} />
           </div>
         </main>
       </div>
