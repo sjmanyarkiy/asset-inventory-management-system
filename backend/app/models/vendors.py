@@ -10,22 +10,16 @@ class Vendor(db.Model):
 
     name = db.Column(db.String(150), nullable=False, index=True)
 
-    vendor_code = db.Column(
-        db.String(50),
-        nullable=False,
-        unique=True,
-        index=True
-    )
+    vendor_code = db.Column(db.String(50), unique=True, nullable=False, index=True)
 
     status = db.Column(
         db.Enum('active', 'on_hold', 'blacklisted', name='vendor_status'),
-        nullable=False,
         default='active',
-        server_default='active'
+        nullable=False
     )
 
     contact_person = db.Column(db.String(150))
-    email = db.Column(db.String(120), unique=True, index=True)
+    email = db.Column(db.String(120), unique=True)
     phone = db.Column(db.String(20))
 
     postal_address = db.Column(db.String(255))
@@ -39,27 +33,23 @@ class Vendor(db.Model):
     description = db.Column(db.String(255))
 
     created_at = db.Column(db.DateTime, server_default=db.func.now())
-    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+    updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    assets = db.relationship('Asset', back_populates='vendor', lazy='select')
+    # RELATIONSHIP
+    assets = db.relationship("Asset", back_populates="vendor")
 
-    # ---------------- VALIDATIONS ----------------
     @validates('vendor_code')
     def validate_vendor_code(self, key, value):
-        if not value:
-            raise ValueError("Vendor code is required")
-        return value.strip().upper()
+        return value.strip().upper() if value else value
 
     @validates('email')
     def validate_email(self, key, value):
         if value:
             value = value.strip().lower()
-            EMAIL_REGEX = re.compile(r"^[^@]+@[^@]+\.[^@]+$")
-            if not EMAIL_REGEX.match(value):
-                raise ValueError("Invalid email address")
+            if not re.match(r"^[^@]+@[^@]+\.[^@]+$", value):
+                raise ValueError("Invalid email")
         return value
 
-    # ---------------- SERIALIZER ----------------
     def to_dict(self):
         return {
             "id": self.id,
@@ -68,17 +58,9 @@ class Vendor(db.Model):
             "status": self.status,
             "contact_person": self.contact_person,
             "email": self.email,
-            "phone": self.phone,
-            "postal_address": self.postal_address,
-            "physical_address": self.physical_address,
-            "bank_name": self.bank_name,
-            "bank_account_number": self.bank_account_number,
-            "bank_branch": self.bank_branch,
-            "payment_terms": self.payment_terms,
-            "description": self.description,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "phone": self.phone
         }
 
     def __repr__(self):
-        return f"<Vendor {self.name} ({self.vendor_code})>"
+        return f"<Vendor {self.name}>"
+    

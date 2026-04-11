@@ -1,6 +1,7 @@
 from app import db
 from sqlalchemy.orm import validates
 
+
 class AssetCategory(db.Model):
     __tablename__ = 'asset_categories'
 
@@ -14,29 +15,18 @@ class AssetCategory(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    # Relationships
-    assets = db.relationship(
-        'Asset',
-        back_populates='category',
-        cascade="all, delete-orphan",
-        lazy='select'
-    )
+    # RELATIONSHIPS
+    assets = db.relationship("Asset", back_populates="category")
+    types = db.relationship("AssetType", back_populates="category", cascade="all, delete-orphan")
 
-    types = db.relationship(
-        'AssetType',
-        back_populates='category',
-        cascade="all, delete-orphan",
-        lazy='select'
-    )
-
-    # Validators
+    # VALIDATION
     @validates('category_code')
     def validate_code(self, key, value):
         if not value:
             raise ValueError("Category code is required")
         return value.strip().upper()
 
-    # Utility
+    # SERIALIZER
     def to_dict(self):
         return {
             "id": self.id,
@@ -47,4 +37,5 @@ class AssetCategory(db.Model):
         }
 
     def __repr__(self):
-        return f"<AssetCategory {self.name} ({self.category_code})>"
+        return f"<AssetCategory {self.name}>"
+    
