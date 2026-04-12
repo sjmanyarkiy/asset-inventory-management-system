@@ -15,18 +15,15 @@ class AssetCategory(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    # RELATIONSHIPS
     assets = db.relationship("Asset", back_populates="category")
     types = db.relationship("AssetType", back_populates="category", cascade="all, delete-orphan")
 
-    # VALIDATION
     @validates('category_code')
     def validate_code(self, key, value):
         if not value:
             raise ValueError("Category code is required")
         return value.strip().upper()
 
-    # SERIALIZER
     def to_dict(self):
         return {
             "id": self.id,
@@ -38,4 +35,3 @@ class AssetCategory(db.Model):
 
     def __repr__(self):
         return f"<AssetCategory {self.name}>"
-    

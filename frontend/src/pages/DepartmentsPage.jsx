@@ -1,26 +1,28 @@
 import { useEffect, useState } from "react";
-import DepartmentSearch from "../components/DepartmentSearch";
-import DepartmentForm from "../pages/DepartmentForm";
+import DepartmentSearch from "../components/departments/DepartmentSearch";
+import DepartmentForm from "../components/departments/DepartmentForm";
 import toast from "react-hot-toast";
 
 export default function DepartmentsPage() {
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
 
   const BASE_URL = "http://localhost:5000/departments";
 
   // =========================
-  // FETCH
+  // FETCH (ONLY SOURCE OF TRUTH)
   // =========================
-  const fetchDepartments = async (search = "") => {
+  const fetchDepartments = async (searchText = "") => {
     try {
       setLoading(true);
 
-      const res = await fetch(
-        `${BASE_URL}/?page=1&search=${search}`
-      );
+      const query = searchText
+        ? `?search=${searchText.trim()}`
+        : "";
 
+      const res = await fetch(`${BASE_URL}${query}`);
       const data = await res.json();
 
       setDepartments(data.data || []);
@@ -32,15 +34,27 @@ export default function DepartmentsPage() {
     }
   };
 
+  // =========================
+  // INITIAL LOAD + SEARCH WATCHER
+  // =========================
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchDepartments(search);
+    }, 300); // 🔥 debounce prevents flicker
+
+    return () => clearTimeout(delay);
+  }, [search]);
+
+  // initial load trigger (optional safety)
   useEffect(() => {
     fetchDepartments();
   }, []);
 
   // =========================
-  // SEARCH (LIVE)
+  // SEARCH (ONLY SET STATE)
   // =========================
-  const handleSearch = (searchText) => {
-    fetchDepartments(searchText);
+  const handleSearch = (value) => {
+    setSearch(value);
   };
 
   // =========================
@@ -50,9 +64,6 @@ export default function DepartmentsPage() {
     try {
       let res;
 
-      // =====================
-      // UPDATE
-      // =====================
       if (selectedDepartment) {
         const confirmUpdate = window.confirm(
           "⚠️ Are you sure you want to update this department?"
@@ -67,16 +78,13 @@ export default function DepartmentsPage() {
         });
 
       } else {
-        // =====================
-        // CREATE
-        // =====================
         const confirmCreate = window.confirm(
           "✔️ Do you want to create this department?"
         );
 
         if (!confirmCreate) return;
 
-        res = await fetch(`${BASE_URL}/`, {
+        res = await fetch(BASE_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
@@ -90,15 +98,16 @@ export default function DepartmentsPage() {
         return;
       }
 
-      // SUCCESS TOASTS
-      if (selectedDepartment) {
-        toast.success("Department updated successfully 🎉");
-      } else {
-        toast.success("Department created successfully 🎉");
-      }
+      toast.success(
+        selectedDepartment
+          ? "Department updated successfully 🎉"
+          : "Department created successfully 🎉"
+      );
 
-      fetchDepartments();
       setSelectedDepartment(null);
+
+      // 🔥 IMPORTANT: no direct fetch → let useEffect handle it
+      setSearch((prev) => prev);
 
     } catch (err) {
       console.error("SAVE ERROR:", err);
@@ -128,9 +137,14 @@ export default function DepartmentsPage() {
         return;
       }
 
-      toast.success("Department deleted successfully 🗑️");
+      toast.success("Department deleted 🗑️");
 
-      fetchDepartments();
+      if (selectedDepartment?.id === id) {
+        setSelectedDepartment(null);
+      }
+
+      // 🔥 let effect refresh list
+      setSearch((prev) => prev);
 
     } catch (err) {
       console.error("DELETE ERROR:", err);
@@ -178,7 +192,6 @@ export default function DepartmentsPage() {
                 <td className="border p-2">{dept.location}</td>
 
                 <td className="border p-2">
-                  {/* EDIT */}
                   <button
                     onClick={() => setSelectedDepartment(dept)}
                     className="bg-yellow-400 px-2 py-1 rounded mr-2"
@@ -186,7 +199,6 @@ export default function DepartmentsPage() {
                     Edit
                   </button>
 
-                  {/* DELETE */}
                   <button
                     onClick={() => handleDelete(dept.id)}
                     className="bg-red-500 text-white px-2 py-1 rounded"

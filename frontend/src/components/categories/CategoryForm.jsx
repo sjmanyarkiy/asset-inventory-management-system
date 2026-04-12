@@ -11,9 +11,9 @@ export default function CategoryForm({
     description: "",
   });
 
-  /* =========================
-     LOAD SELECTED CATEGORY
-  ========================= */
+  // =========================
+  // LOAD EDIT DATA / RESET
+  // =========================
   useEffect(() => {
     if (selectedCategory) {
       setForm({
@@ -22,13 +22,17 @@ export default function CategoryForm({
         description: selectedCategory.description || "",
       });
     } else {
-      resetForm();
+      setForm({
+        name: "",
+        category_code: "",
+        description: "",
+      });
     }
   }, [selectedCategory]);
 
-  /* =========================
-     HANDLE INPUT
-  ========================= */
+  // =========================
+  // HANDLE INPUT
+  // =========================
   const handleChange = (e) => {
     setForm((prev) => ({
       ...prev,
@@ -36,10 +40,26 @@ export default function CategoryForm({
     }));
   };
 
-  /* =========================
-     RESET FORM
-  ========================= */
-  const resetForm = () => {
+  // =========================
+  // SUBMIT
+  // =========================
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const payload = {
+      name: form.name.trim(),
+      category_code: form.category_code.trim(),
+      description: form.description.trim(),
+    };
+
+    onSubmit(payload);
+  };
+
+  // =========================
+  // RESET (CANCEL EDIT)
+  // =========================
+  const handleCancel = () => {
+    clearSelection?.();
     setForm({
       name: "",
       category_code: "",
@@ -47,28 +67,8 @@ export default function CategoryForm({
     });
   };
 
-  /* =========================
-     SUBMIT
-  ========================= */
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const payload = {
-      name: form.name.trim(),
-      category_code: form.category_code.trim(),
-      description: form.description?.trim() || "",
-    };
-
-    onSubmit(payload);
-
-    // reset only after CREATE
-    if (!selectedCategory) {
-      resetForm();
-    }
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-2 mb-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
 
       {/* NAME */}
       <input
@@ -76,7 +76,7 @@ export default function CategoryForm({
         value={form.name}
         onChange={handleChange}
         placeholder="Category Name"
-        className="border p-2 w-full md:w-80"
+        className="border p-2 w-full"
       />
 
       {/* CODE */}
@@ -85,7 +85,7 @@ export default function CategoryForm({
         value={form.category_code}
         onChange={handleChange}
         placeholder="Category Code"
-        className="border p-2 w-full md:w-80"
+        className="border p-2 w-full"
       />
 
       {/* DESCRIPTION */}
@@ -94,33 +94,31 @@ export default function CategoryForm({
         value={form.description}
         onChange={handleChange}
         placeholder="Description"
-        className="border p-2 w-full md:w-80"
+        className="border p-2 w-full"
       />
 
       {/* BUTTONS */}
-      <div className="flex gap-2">
+      <div className="flex justify-end gap-2">
 
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2"
+          className="bg-blue-600 text-white px-4 py-2 rounded"
         >
-          {selectedCategory ? "Update Category" : "Create Category"}
+          {selectedCategory ? "Update" : "Create"}
         </button>
 
         {selectedCategory && (
           <button
             type="button"
-            onClick={() => {
-              clearSelection();
-              resetForm();
-            }}
-            className="bg-gray-400 text-white px-4 py-2"
+            onClick={handleCancel}
+            className="bg-gray-500 text-white px-4 py-2 rounded"
           >
             Cancel
           </button>
         )}
 
       </div>
+
     </form>
   );
 }

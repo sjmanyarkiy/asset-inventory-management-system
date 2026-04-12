@@ -7,29 +7,22 @@ import {
   deleteVendor,
   createVendor,
   updateVendor,
-} from "../features/vendors/VendorSlice";
+} from "../features/vendors/vendorSlice";
 
-/* =========================
-   ERROR HELPER
-========================= */
-const getErrorMessage = (action) => {
-  return (
-    action?.payload ||
-    action?.error?.message ||
-    "Operation failed ❌"
-  );
-};
+const getErrorMessage = (action) =>
+  action?.payload || action?.error?.message || "Operation failed ❌";
 
 export default function VendorsPage() {
   const dispatch = useDispatch();
   const { data, loading, error } = useSelector((state) => state.vendors);
 
+  const [inputSearch, setInputSearch] = useState("");
   const [search, setSearch] = useState("");
+
   const [editingId, setEditingId] = useState(null);
 
-  const [form, setForm] = useState({
+  const initialForm = {
     name: "",
-    vendor_code: "",
     email: "",
     phone: "",
     contact_person: "",
@@ -41,7 +34,9 @@ export default function VendorsPage() {
     bank_name: "",
     bank_account_number: "",
     bank_branch: "",
-  });
+  };
+
+  const [form, setForm] = useState(initialForm);
 
   /* =========================
      FETCH
@@ -51,94 +46,61 @@ export default function VendorsPage() {
   }, [dispatch, search]);
 
   /* =========================
-     INPUT HANDLER
+     DEBOUNCE SEARCH
+  ========================= */
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(inputSearch.trim());
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [inputSearch]);
+
+  /* =========================
+     CHANGE HANDLER
   ========================= */
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   /* =========================
-     CREATE / UPDATE
+     RESET FORM
+  ========================= */
+  const resetForm = () => {
+    setForm(initialForm);
+    setEditingId(null);
+  };
+
+  /* =========================
+     SUBMIT (CREATE / UPDATE)
   ========================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = {
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      contact_person: form.contact_person,
-      status: form.status,
-      postal_address: form.postal_address,
-      physical_address: form.physical_address,
-      payment_terms: form.payment_terms,
-      description: form.description,
-      bank_name: form.bank_name,
-      bank_account_number: form.bank_account_number,
-      bank_branch: form.bank_branch,
-    };
-
     try {
       let action;
 
-      /* UPDATE */
       if (editingId) {
-        const confirmUpdate = window.confirm(
-          "⚠️ Are you sure you want to update this vendor?"
-        );
-        if (!confirmUpdate) return;
-
         action = await dispatch(
-          updateVendor({ id: editingId, data: payload })
+          updateVendor({ id: editingId, data: form })
         );
+      } else {
+        action = await dispatch(createVendor(form));
       }
 
-      /* CREATE */
-      else {
-        const confirmCreate = window.confirm(
-          "✔️ Do you want to create this vendor?"
-        );
-        if (!confirmCreate) return;
-
-        action = await dispatch(createVendor(payload));
-      }
-
-      /* ERROR FROM REDUX / BACKEND */
       if (action?.error) {
         toast.error(getErrorMessage(action));
         return;
       }
 
-      /* SUCCESS TOASTS */
-      if (editingId) {
-        toast.success("Vendor updated successfully 🎉");
-      } else {
-        toast.success("Vendor created successfully 🎉");
-      }
+      toast.success(editingId ? "Vendor Updated 🎉" : "Vendor Created 🎉");
 
-      /* RESET */
-      setForm({
-        name: "",
-        vendor_code: "",
-        email: "",
-        phone: "",
-        contact_person: "",
-        status: "active",
-        postal_address: "",
-        physical_address: "",
-        payment_terms: "",
-        description: "",
-        bank_name: "",
-        bank_account_number: "",
-        bank_branch: "",
-      });
-
-      setEditingId(null);
-
+      resetForm();
       dispatch(fetchVendors({ page: 1, search }));
-
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Something went wrong ❌");
     }
   };
@@ -151,7 +113,6 @@ export default function VendorsPage() {
 
     setForm({
       name: vendor.name || "",
-      vendor_code: vendor.vendor_code || "",
       email: vendor.email || "",
       phone: vendor.phone || "",
       contact_person: vendor.contact_person || "",
@@ -170,51 +131,18 @@ export default function VendorsPage() {
      DELETE
   ========================= */
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "⚠️ Are you sure you want to delete this vendor?"
-    );
+    const ok = window.confirm("Delete vendor?");
+    if (!ok) return;
 
-    if (!confirmDelete) return;
+    const action = await dispatch(deleteVendor(id));
 
-    try {
-      const action = await dispatch(deleteVendor(id));
-
-      if (action?.error) {
-        toast.error(getErrorMessage(action));
-        return;
-      }
-
-      toast.success("Vendor deleted successfully 🗑️");
-
-      dispatch(fetchVendors({ page: 1, search }));
-
-    } catch (err) {
-      console.error(err);
-      toast.error("Something went wrong ❌");
+    if (action?.error) {
+      toast.error(getErrorMessage(action));
+      return;
     }
-  };
 
-  /* =========================
-     CANCEL EDIT
-  ========================= */
-  const handleCancelEdit = () => {
-    setEditingId(null);
-
-    setForm({
-      name: "",
-      vendor_code: "",
-      email: "",
-      phone: "",
-      contact_person: "",
-      status: "active",
-      postal_address: "",
-      physical_address: "",
-      payment_terms: "",
-      description: "",
-      bank_name: "",
-      bank_account_number: "",
-      bank_branch: "",
-    });
+    toast.success("Vendor Deleted 🗑️");
+    dispatch(fetchVendors({ page: 1, search }));
   };
 
   return (
@@ -224,8 +152,8 @@ export default function VendorsPage() {
 
       {/* SEARCH */}
       <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        value={inputSearch}
+        onChange={(e) => setInputSearch(e.target.value)}
         placeholder="Search vendors..."
         className="border p-2 mb-4 w-full md:w-80"
       />
@@ -238,7 +166,7 @@ export default function VendorsPage() {
           value={form.name}
           onChange={handleChange}
           placeholder="Vendor Name"
-          className="border p-2 block w-full md:w-80"
+          className="border p-2 w-full md:w-80"
         />
 
         <input
@@ -246,7 +174,7 @@ export default function VendorsPage() {
           value={form.email}
           onChange={handleChange}
           placeholder="Email"
-          className="border p-2 block w-full md:w-80"
+          className="border p-2 w-full md:w-80"
         />
 
         <input
@@ -254,30 +182,25 @@ export default function VendorsPage() {
           value={form.phone}
           onChange={handleChange}
           placeholder="Phone"
-          className="border p-2 block w-full md:w-80"
+          className="border p-2 w-full md:w-80"
         />
 
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-4 py-2"
-          >
-            {editingId ? "Update Vendor" : "Create Vendor"}
-          </button>
+        <button className="bg-blue-500 text-white px-4 py-2">
+          {editingId ? "Update Vendor" : "Create Vendor"}
+        </button>
 
-          {editingId && (
-            <button
-              type="button"
-              onClick={handleCancelEdit}
-              className="bg-gray-400 text-white px-4 py-2"
-            >
-              Cancel
-            </button>
-          )}
-        </div>
+        {editingId && (
+          <button
+            type="button"
+            onClick={resetForm}
+            className="ml-2 bg-gray-400 text-white px-4 py-2"
+          >
+            Cancel
+          </button>
+        )}
       </form>
 
-      {/* LOADING / ERROR */}
+      {/* STATUS */}
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}
 
@@ -289,34 +212,28 @@ export default function VendorsPage() {
             <th className="border p-2">Code</th>
             <th className="border p-2">Email</th>
             <th className="border p-2">Phone</th>
-            <th className="border p-2">Status</th>
-            <th className="border p-2">Contact Person</th>
-            <th className="border p-2">Bank</th>
             <th className="border p-2">Actions</th>
           </tr>
         </thead>
 
         <tbody>
-          {data?.map((vendor) => (
-            <tr key={vendor.id}>
-              <td className="border p-2">{vendor.name}</td>
-              <td className="border p-2">{vendor.vendor_code}</td>
-              <td className="border p-2">{vendor.email}</td>
-              <td className="border p-2">{vendor.phone}</td>
-              <td className="border p-2">{vendor.status}</td>
-              <td className="border p-2">{vendor.contact_person}</td>
-              <td className="border p-2">{vendor.bank_name}</td>
+          {data?.map((v) => (
+            <tr key={v.id}>
+              <td className="border p-2">{v.name}</td>
+              <td className="border p-2">{v.vendor_code}</td>
+              <td className="border p-2">{v.email}</td>
+              <td className="border p-2">{v.phone}</td>
 
               <td className="border p-2">
                 <button
-                  onClick={() => handleEdit(vendor)}
-                  className="text-blue-500 mr-3"
+                  onClick={() => handleEdit(v)}
+                  className="text-blue-500 mr-2"
                 >
                   Edit
                 </button>
 
                 <button
-                  onClick={() => handleDelete(vendor.id)}
+                  onClick={() => handleDelete(v.id)}
                   className="text-red-500"
                 >
                   Delete

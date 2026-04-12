@@ -8,11 +8,11 @@ export default function CategorySearch({ onSearch }) {
   // =========================
   useEffect(() => {
     const delay = setTimeout(() => {
-      onSearch(input);
-    }, 400); // ⏱️ prevents API spam
+      onSearch?.(input);
+    }, 400);
 
     return () => clearTimeout(delay);
-  }, [input]);
+  }, [input, onSearch]);
 
   const handleChange = (e) => {
     setInput(e.target.value);
@@ -20,7 +20,7 @@ export default function CategorySearch({ onSearch }) {
 
   const handleClear = () => {
     setInput("");
-    onSearch("");
+    onSearch?.("");
   };
 
   return (

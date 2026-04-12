@@ -54,11 +54,14 @@ def create_asset():
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "error": "Asset creation failed",
+            "details": str(e)
+        }), 500
 
 
 # =========================
-# GET ALL ASSETS (FIXED FILTER + SEARCH)
+# GET ALL ASSETS
 # =========================
 @asset_bp.route('', methods=['GET'])
 def get_assets():
@@ -67,7 +70,6 @@ def get_assets():
 
     query = Asset.query
 
-    # filters (SAFE CAST FIX)
     filters = {
         "category_id": request.args.get('category_id', type=int),
         "asset_type_id": request.args.get('asset_type_id', type=int),
@@ -80,7 +82,6 @@ def get_assets():
         if value:
             query = query.filter(getattr(Asset, key) == value)
 
-    # search
     search = request.args.get('q')
     if search:
         query = query.filter(
@@ -104,7 +105,7 @@ def get_assets():
 
 
 # =========================
-# GET SINGLE
+# GET SINGLE ASSET
 # =========================
 @asset_bp.route('/<int:id>', methods=['GET'])
 def get_asset(id):
@@ -117,7 +118,7 @@ def get_asset(id):
 
 
 # =========================
-# UPDATE ASSET (FIXED)
+# UPDATE ASSET
 # =========================
 @asset_bp.route('/<int:id>', methods=['PUT'])
 def update_asset(id):
@@ -136,7 +137,6 @@ def update_asset(id):
             file.save(filepath)
             asset.image_file = filepath
 
-        # SAFE INT CONVERSION (VERY IMPORTANT)
         for field in ["category_id", "asset_type_id", "vendor_id", "department_id"]:
             if field in data and data[field]:
                 try:
@@ -156,7 +156,6 @@ def update_asset(id):
         if error:
             return jsonify({"error": error}), 400
 
-        # UPDATE FIELDS
         fields = [
             "name", "asset_code", "barcode", "status",
             "description", "image_url",
@@ -177,11 +176,14 @@ def update_asset(id):
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "error": "Asset update failed",
+            "details": str(e)
+        }), 500
 
 
 # =========================
-# DELETE
+# DELETE ASSET (CLEAN - NO DEPENDENCY CHECK HERE)
 # =========================
 @asset_bp.route('/<int:id>', methods=['DELETE'])
 def delete_asset(id):
@@ -194,9 +196,14 @@ def delete_asset(id):
         db.session.delete(asset)
         db.session.commit()
 
-        return jsonify({"message": "Asset deleted successfully"})
+        return jsonify({
+            "message": "Asset deleted successfully",
+            "id": id
+        })
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
-    
+        return jsonify({
+            "error": "Asset delete failed",
+            "details": str(e)
+        }), 500

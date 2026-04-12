@@ -25,11 +25,16 @@ class AssetType(db.Model):
             "id": self.id,
             "name": self.name,
             "type_code": self.type_code,
+
+            # KEEP ID FOR BACKEND
             "category_id": self.category_id,
+
+            # DISPLAY NAME FOR FRONTEND
             "category_name": self.category.name if self.category else None,
+
+            "description": self.description,
             "created_at": self.created_at
         }
 
     def __repr__(self):
         return f"<AssetType {self.name}>"
-    

@@ -4,15 +4,15 @@ export default function AssetTypeSearch({ onSearch }) {
   const [value, setValue] = useState("");
 
   /* =========================
-     DEBOUNCE (SMOOTH SEARCH)
+     DEBOUNCE (STABLE + SAFE)
   ========================= */
   useEffect(() => {
     const delay = setTimeout(() => {
       onSearch(value);
-    }, 400); // 🔥 prevents too many API calls
+    }, 400);
 
     return () => clearTimeout(delay);
-  }, [value, onSearch]);
+  }, [value]); // ❗ removed onSearch dependency (prevents unnecessary triggers)
 
   return (
     <div className="mb-4 flex flex-col md:flex-row gap-2">
@@ -29,7 +29,10 @@ export default function AssetTypeSearch({ onSearch }) {
       {/* CLEAR BUTTON */}
       {value && (
         <button
-          onClick={() => setValue("")}
+          onClick={() => {
+            setValue("");
+            onSearch(""); // ✅ ensure immediate reset in parent
+          }}
           className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
         >
           Clear

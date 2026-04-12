@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
-import AssetTypeForm from "./TypeForm";
+import AssetTypeForm from "../components/types/TypeForm";
 
 import {
   fetchAssetTypes,
@@ -13,21 +13,25 @@ import {
 
 export default function AssetTypesPage() {
   const dispatch = useDispatch();
-  const { data, loading } = useSelector((state) => state.types);
+  const { data = [], loading } = useSelector((state) => state.types);
 
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [categories, setCategories] = useState([]);
 
-  const [form, setForm] = useState({
+  const initialForm = {
     name: "",
     type_code: "",
     category_id: "",
     description: "",
-  });
+  };
+
+  const [form, setForm] = useState(initialForm);
+
+  const BASE_URL = "http://127.0.0.1:5000";
 
   /* =========================
-     FETCH TYPES (LIVE SEARCH)
+     FETCH TYPES
   ========================= */
   useEffect(() => {
     dispatch(fetchAssetTypes({ page: 1, search }));
@@ -39,12 +43,10 @@ export default function AssetTypesPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch(
-          "http://localhost:5000/categories?page=1&per_page=100"
-        );
-        const data = await res.json();
-        setCategories(data.data || []);
-      } catch (err) {
+        const res = await fetch(`${BASE_URL}/categories?page=1&per_page=100`);
+        const json = await res.json();
+        setCategories(json.data || []);
+      } catch {
         toast.error("Failed to load categories ❌");
       }
     };
@@ -53,18 +55,42 @@ export default function AssetTypesPage() {
   }, []);
 
   /* =========================
-     SUBMIT
+     HANDLE CHANGE
+  ========================= */
+  const handleChange = (e) => {
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  /* =========================
+     RESET
+  ========================= */
+  const resetForm = () => {
+    setForm(initialForm);
+    setEditingId(null);
+  };
+
+  /* =========================
+     SUBMIT (CREATE / UPDATE)
   ========================= */
   const handleSubmit = async (payload) => {
     try {
       let action;
 
+      const safePayload = {
+        ...payload,
+        name: payload.name?.trim(),
+        type_code: payload.type_code?.trim(),
+      };
+
       if (editingId) {
         action = await dispatch(
-          updateAssetType({ id: editingId, data: payload })
+          updateAssetType({ id: editingId, data: safePayload })
         );
       } else {
-        action = await dispatch(createAssetType(payload));
+        action = await dispatch(createAssetType(safePayload));
       }
 
       if (action?.error) {
@@ -72,22 +98,12 @@ export default function AssetTypesPage() {
         return;
       }
 
-      toast.success(
-        editingId ? "Type updated 🎉" : "Type created 🎉"
-      );
+      toast.success(editingId ? "Type updated 🎉" : "Type created 🎉");
 
-      setForm({
-        name: "",
-        type_code: "",
-        category_id: "",
-        description: "",
-      });
-
-      setEditingId(null);
-
+      resetForm();
       dispatch(fetchAssetTypes({ page: 1, search }));
 
-    } catch (err) {
+    } catch {
       toast.error("Something went wrong ❌");
     }
   };
@@ -99,9 +115,9 @@ export default function AssetTypesPage() {
     setEditingId(type.id);
 
     setForm({
-      name: type.name,
-      type_code: type.type_code,
-      category_id: type.category_id,
+      name: type.name || "",
+      type_code: type.type_code || "",
+      category_id: type.category_id || "",
       description: type.description || "",
     });
   };
@@ -110,8 +126,8 @@ export default function AssetTypesPage() {
      DELETE
   ========================= */
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Delete this type?");
-    if (!confirmDelete) return;
+    const ok = window.confirm("Delete this type?");
+    if (!ok) return;
 
     const action = await dispatch(deleteAssetType(id));
 
@@ -127,9 +143,7 @@ export default function AssetTypesPage() {
   return (
     <div className="p-4">
 
-      <h1 className="text-xl font-bold mb-4">
-        Asset Types
-      </h1>
+      <h1 className="text-xl font-bold mb-4">Asset Types</h1>
 
       {/* SEARCH */}
       <input
@@ -142,19 +156,11 @@ export default function AssetTypesPage() {
       {/* FORM */}
       <AssetTypeForm
         onSubmit={handleSubmit}
-        selectedType={editingId ? form : null}
-        clearSelection={() => {
-          setEditingId(null);
-          setForm({
-            name: "",
-            type_code: "",
-            category_id: "",
-            description: "",
-          });
-        }}
-        categories={categories}
         form={form}
         setForm={setForm}
+        categories={categories}
+        selectedType={editingId ? form : null}
+        clearSelection={resetForm}
       />
 
       {/* LOADING */}
@@ -173,41 +179,50 @@ export default function AssetTypesPage() {
         </thead>
 
         <tbody>
-          {data?.map((type) => {
-            const category = categories.find(
-              (c) => c.id === type.category_id
-            );
+          {data.length > 0 ? (
+            data.map((type) => {
+              const category = categories.find(
+                (c) => c.id === type.category_id
+              );
 
-            return (
-              <tr key={type.id}>
-                <td className="border p-2">{type.name}</td>
-                <td className="border p-2">{type.type_code}</td>
-                <td className="border p-2">
-                  {category?.name || "Unknown"}
-                </td>
-                <td className="border p-2">{type.description}</td>
+              return (
+                <tr key={type.id}>
+                  <td className="border p-2">{type.name}</td>
+                  <td className="border p-2">{type.type_code}</td>
+                  <td className="border p-2">
+                    {category?.name || "Unknown"}
+                  </td>
+                  <td className="border p-2">
+                    {type.description || "-"}
+                  </td>
 
-                <td className="border p-2">
-                  <button
-                    onClick={() => handleEdit(type)}
-                    className="text-blue-500 mr-3"
-                  >
-                    Edit
-                  </button>
+                  <td className="border p-2">
+                    <button
+                      onClick={() => handleEdit(type)}
+                      className="text-blue-500 mr-3"
+                    >
+                      Edit
+                    </button>
 
-                  <button
-                    onClick={() => handleDelete(type.id)}
-                    className="text-red-500"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
+                    <button
+                      onClick={() => handleDelete(type.id)}
+                      className="text-red-500"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              );
+            })
+          ) : (
+            <tr>
+              <td colSpan="5" className="text-center p-4">
+                No types found
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
-
     </div>
   );
 }

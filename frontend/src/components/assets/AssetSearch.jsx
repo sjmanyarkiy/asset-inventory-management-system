@@ -1,57 +1,45 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../services/api";
 
 const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
-  const [categories, setCategories] = useState([]);
-  const [types, setTypes] = useState([]);
-  const [vendors, setVendors] = useState([]);
-  const [departments, setDepartments] = useState([]);
+  const [dropdowns, setDropdowns] = useState({
+    categories: [],
+    types: [],
+    vendors: [],
+    departments: [],
+  });
 
-  const [localSearch, setLocalSearch] = useState(search);
-
-  const BASE_URL = "http://127.0.0.1:5000";
-
-  // =========================
-  // SAFE API RESPONSE HANDLER
-  // =========================
-  const extractData = (res) => {
-    return res?.data?.data || res?.data || [];
-  };
+  const [localSearch, setLocalSearch] = useState(search || "");
 
   // =========================
-  // LOAD DROPDOWN DATA
+  // LOAD DROPDOWNS (SHARED SOURCE OF TRUTH)
   // =========================
-  const fetchDropdownData = async () => {
+  const loadDropdowns = async () => {
     try {
-      const [catRes, typeRes, vendorRes, deptRes] = await Promise.all([
-        axios.get(`${BASE_URL}/categories`),
-        axios.get(`${BASE_URL}/types`),
-        axios.get(`${BASE_URL}/vendors`),
-        axios.get(`${BASE_URL}/departments`)
+      const [c, t, v, d] = await Promise.all([
+        api.get("/categories"),
+        api.get("/types"),
+        api.get("/vendors"),
+        api.get("/departments"),
       ]);
 
-      setCategories(extractData(catRes));
-      setTypes(extractData(typeRes));
-      setVendors(extractData(vendorRes));
-      setDepartments(extractData(deptRes));
-
+      setDropdowns({
+        categories: c.data.data || [],
+        types: t.data.data || [],
+        vendors: v.data.data || [],
+        departments: d.data.data || [],
+      });
     } catch (err) {
       console.error("Dropdown load error:", err);
-
-      // fallback to prevent blank UI
-      setCategories([]);
-      setTypes([]);
-      setVendors([]);
-      setDepartments([]);
     }
   };
 
   useEffect(() => {
-    fetchDropdownData();
+    loadDropdowns();
   }, []);
 
   // =========================
-  // DEBOUNCED SEARCH
+  // DEBOUNCED SEARCH → backend field: q
   // =========================
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -62,17 +50,17 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
   }, [localSearch]);
 
   // =========================
-  // FILTER CHANGE
+  // FILTER UPDATE
   // =========================
   const handleChange = (e) => {
     setFilters({
       ...filters,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   // =========================
-  // RESET
+  // RESET FILTERS
   // =========================
   const resetFilters = () => {
     setLocalSearch("");
@@ -83,7 +71,7 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
       asset_type_id: "",
       vendor_id: "",
       department_id: "",
-      status: ""
+      status: "",
     });
   };
 
@@ -92,7 +80,7 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
 
-        {/* SEARCH */}
+        {/* SEARCH (backend: q) */}
         <input
           type="text"
           placeholder="Search assets..."
@@ -109,7 +97,7 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
           className="border p-2 rounded"
         >
           <option value="">All Categories</option>
-          {categories.map((c) => (
+          {dropdowns.categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
@@ -124,7 +112,7 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
           className="border p-2 rounded"
         >
           <option value="">All Types</option>
-          {types.map((t) => (
+          {dropdowns.types.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}
             </option>
@@ -139,7 +127,7 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
           className="border p-2 rounded"
         >
           <option value="">All Vendors</option>
-          {vendors.map((v) => (
+          {dropdowns.vendors.map((v) => (
             <option key={v.id} value={v.id}>
               {v.name}
             </option>
@@ -154,11 +142,25 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
           className="border p-2 rounded"
         >
           <option value="">All Departments</option>
-          {departments.map((d) => (
+          {dropdowns.departments.map((d) => (
             <option key={d.id} value={d.id}>
               {d.name}
             </option>
           ))}
+        </select>
+
+        {/* ✅ STATUS FILTER (ADDED ONLY CHANGE) */}
+        <select
+          name="status"
+          value={filters.status}
+          onChange={handleChange}
+          className="border p-2 rounded"
+        >
+          <option value="">All Status</option>
+          <option value="available">Available</option>
+          <option value="assigned">Assigned</option>
+          <option value="maintenance">Maintenance</option>
+          <option value="retired">Retired</option>
         </select>
 
       </div>

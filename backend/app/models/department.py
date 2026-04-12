@@ -15,7 +15,6 @@ class Department(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    # RELATIONSHIP
     assets = db.relationship("Asset", back_populates="department")
 
     def to_dict(self):
@@ -29,4 +28,3 @@ class Department(db.Model):
 
     def __repr__(self):
         return f"<Department {self.name}>"
-    

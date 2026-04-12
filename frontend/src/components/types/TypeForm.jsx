@@ -10,13 +10,25 @@ export default function AssetTypeForm({
 }) {
 
   /* =========================
-     LOAD EDIT DATA
+     LOAD EDIT DATA (SAFE CLONE)
   ========================= */
   useEffect(() => {
     if (selectedType) {
-      setForm(selectedType);
+      setForm({
+        name: selectedType.name || "",
+        type_code: selectedType.type_code || "",
+        category_id: selectedType.category_id || "",
+        description: selectedType.description || "",
+      });
+    } else {
+      setForm({
+        name: "",
+        type_code: "",
+        category_id: "",
+        description: "",
+      });
     }
-  }, [selectedType]);
+  }, [selectedType, setForm]);
 
   /* =========================
      CHANGE HANDLER
@@ -38,7 +50,7 @@ export default function AssetTypeForm({
       name: form.name.trim(),
       type_code: form.type_code.trim().toUpperCase(),
       category_id: Number(form.category_id),
-      description: form.description,
+      description: form.description?.trim() || "",
     });
   };
 
@@ -85,7 +97,10 @@ export default function AssetTypeForm({
 
       <div className="flex gap-2">
 
-        <button className="bg-blue-500 text-white px-4 py-2">
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-4 py-2"
+        >
           {selectedType ? "Update" : "Create"}
         </button>
 

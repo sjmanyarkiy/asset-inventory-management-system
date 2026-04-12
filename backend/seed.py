@@ -1,8 +1,8 @@
 import main as app_module
 from app import db
 
-from app.models.vendors import Vendor
-from app.models.departments import Department
+from backend.app.models.vendor import Vendor
+from backend.app.models.department import Department
 from app.models.asset_category import AssetCategory
 from app.models.asset_type import AssetType
 from app.models.asset import Asset

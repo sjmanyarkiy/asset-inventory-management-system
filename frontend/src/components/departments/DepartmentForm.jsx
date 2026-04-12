@@ -21,6 +21,13 @@ export default function DepartmentForm({
         description: selectedDepartment.description || "",
         location: selectedDepartment.location || "",
       });
+    } else {
+      setForm({
+        name: "",
+        department_code: "",
+        description: "",
+        location: "",
+      });
     }
   }, [selectedDepartment]);
 
@@ -32,16 +39,23 @@ export default function DepartmentForm({
     });
   };
 
-  // 🚀 Submit form
+  // 🚀 Submit form (SAFE FIX)
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!form.name || !form.department_code) {
+    const payload = {
+      name: form.name.trim(),
+      department_code: form.department_code.trim(),
+      description: form.description.trim(),
+      location: form.location.trim(),
+    };
+
+    if (!payload.name || !payload.department_code) {
       alert("Name and Department Code are required");
       return;
     }
 
-    onSubmit(form);
+    onSubmit(payload);
 
     // Reset form after create
     if (!selectedDepartment) {

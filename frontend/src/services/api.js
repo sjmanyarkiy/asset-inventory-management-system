@@ -7,10 +7,10 @@ const api = axios.create({
   },
 });
 
-/* -----------------------------
+/* =============================
    REQUEST INTERCEPTOR
-   (Attach auth token if available)
------------------------------ */
+   Attach auth token if available
+============================= */
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -24,20 +24,18 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-/* -----------------------------
+/* =============================
    RESPONSE INTERCEPTOR
-   (Global error handling)
------------------------------ */
+   Global error handling
+============================= */
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle common errors globally
     if (error.response) {
       const { status } = error.response;
 
       if (status === 401) {
-        console.warn("Unauthorized - redirect to login");
-        // optional: redirect user
+        console.warn("Unauthorized - token expired or missing");
       }
 
       if (status === 500) {

@@ -1,13 +1,15 @@
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models.departments import Department
+from app.models.department import Department
 from sqlalchemy import or_
+
+from app.services.safe_delete_service import check_safe_delete
 
 department_bp = Blueprint('department_bp', __name__, url_prefix='/departments')
 
 
 # =========================
-# CREATE
+# CREATE DEPARTMENT
 # =========================
 @department_bp.route('', methods=['POST'])
 def create_department():
@@ -28,8 +30,8 @@ def create_department():
             return jsonify({"error": "Department already exists"}), 400
 
         dept = Department(
-            name=data['name'],
-            department_code=data['department_code'],
+            name=data['name'].strip(),
+            department_code=data['department_code'].strip().upper(),
             description=data.get('description'),
             location=data.get('location')
         )
@@ -37,20 +39,24 @@ def create_department():
         db.session.add(dept)
         db.session.commit()
 
-        return jsonify(dept.to_dict()), 201
+        return jsonify({
+            "message": "Department created successfully",
+            "data": dept.to_dict()
+        }), 201
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "error": "Department creation failed",
+            "details": str(e)
+        }), 500
 
 
 # =========================
-# GET ALL (FIXED FOR DROPDOWN)
+# GET ALL DEPARTMENTS
 # =========================
 @department_bp.route('', methods=['GET'])
 def get_departments():
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 100, type=int)
     search = request.args.get('search', '')
 
     query = Department.query
@@ -64,22 +70,15 @@ def get_departments():
             )
         )
 
-    pagination = query.order_by(Department.id.desc()).paginate(
-        page=page,
-        per_page=per_page,
-        error_out=False
-    )
+    departments = query.order_by(Department.id.desc()).all()
 
     return jsonify({
-        "total": pagination.total,
-        "pages": pagination.pages,
-        "current_page": pagination.page,
-        "data": [d.to_dict() for d in pagination.items]
+        "data": [d.to_dict() for d in departments]
     })
 
 
 # =========================
-# GET SINGLE
+# GET SINGLE DEPARTMENT
 # =========================
 @department_bp.route('/<int:id>', methods=['GET'])
 def get_department(id):
@@ -88,7 +87,7 @@ def get_department(id):
 
 
 # =========================
-# UPDATE
+# UPDATE DEPARTMENT
 # =========================
 @department_bp.route('/<int:id>', methods=['PUT'])
 def update_department(id):
@@ -98,9 +97,6 @@ def update_department(id):
 
         if not data:
             return jsonify({"error": "No input data"}), 400
-
-        if 'department_code' in data:
-            return jsonify({"error": "department_code cannot be updated"}), 400
 
         existing = Department.query.filter(
             Department.id != id,
@@ -113,31 +109,62 @@ def update_department(id):
         if existing:
             return jsonify({"error": "Department already exists"}), 400
 
-        dept.name = data.get('name', dept.name)
-        dept.description = data.get('description', dept.description)
-        dept.location = data.get('location', dept.location)
+        if 'name' in data and data['name']:
+            dept.name = data['name'].strip()
+
+        if 'description' in data:
+            dept.description = data['description']
+
+        if 'location' in data:
+            dept.location = data['location']
+
+        if 'department_code' in data and data['department_code'] != dept.department_code:
+            return jsonify({
+                "error": "department_code cannot be updated"
+            }), 400
 
         db.session.commit()
 
-        return jsonify(dept.to_dict())
+        return jsonify({
+            "message": "Department updated successfully",
+            "data": dept.to_dict()
+        }), 200
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "error": "Department update failed",
+            "details": str(e)
+        }), 500
 
 
 # =========================
-# DELETE
+# DELETE DEPARTMENT (GLOBAL SAFE DELETE)
 # =========================
 @department_bp.route('/<int:id>', methods=['DELETE'])
 def delete_department(id):
     try:
         dept = Department.query.get_or_404(id)
+
+        # 🔥 GLOBAL SAFE DELETE CHECK
+        safe, msg = check_safe_delete("department", id)
+
+        if not safe:
+            return jsonify({
+                "error": msg
+            }), 400
+
         db.session.delete(dept)
         db.session.commit()
 
-        return jsonify({"message": "Department deleted successfully"})
+        return jsonify({
+            "message": "Department deleted successfully",
+            "id": id
+        }), 200
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "error": "Department delete failed",
+            "details": str(e)
+        }), 500

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
-import CategoryForm from "./CategoryForm";
+import CategoryForm from "../components/categories/CategoryForm";
 
 import {
   fetchCategories,
@@ -24,7 +24,7 @@ const getErrorMessage = (action) => {
 
 export default function CategoriesPage() {
   const dispatch = useDispatch();
-  const { data, loading } = useSelector((state) => state.categories);
+  const { data = [], loading } = useSelector((state) => state.categories);
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -35,10 +35,10 @@ export default function CategoriesPage() {
   useEffect(() => {
     const delay = setTimeout(() => {
       dispatch(fetchCategories({ page: 1, search }));
-    }, 300); // debounce (important for smooth live search)
+    }, 300);
 
     return () => clearTimeout(delay);
-  }, [dispatch, search]);
+  }, [search, dispatch]);
 
   /* =========================
      SUBMIT
@@ -79,7 +79,7 @@ export default function CategoriesPage() {
 
       dispatch(fetchCategories({ page: 1, search }));
 
-    } catch (err) {
+    } catch {
       toast.error("Something went wrong ❌");
     }
   };
@@ -100,7 +100,6 @@ export default function CategoriesPage() {
 
     toast.success("Category deleted 🗑️");
 
-    // IMPORTANT: refresh list after delete
     dispatch(fetchCategories({ page: 1, search }));
   };
 
@@ -111,7 +110,7 @@ export default function CategoriesPage() {
         Asset Categories
       </h1>
 
-      {/* SEARCH (LIVE) */}
+      {/* SEARCH */}
       <input
         value={search}
         onChange={(e) => setSearch(e.target.value)}

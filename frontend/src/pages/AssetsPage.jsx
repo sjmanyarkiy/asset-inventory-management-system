@@ -1,69 +1,51 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
 
-import AssetSearch from "../components/AssetSearch";
-import AssetList from "../components/AssetList";
-import AssetForm from "./AssetForm";
+import AssetSearch from "../components/assets/AssetSearch";
+import AssetList from "../components/assets/AssetList";
+import AssetModal from "../components/assets/AssetModal";
+
+import {
+  fetchAssets,
+  deleteAsset,
+} from "../features/assets/assetSlice";
 
 const AssetsPage = () => {
-  const [assets, setAssets] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+
+  const { data: assets = [] } = useSelector((state) => state.assets);
 
   const [search, setSearch] = useState("");
+
+  // ✅ UPDATED: includes STATUS filter (already backend-ready)
   const [filters, setFilters] = useState({
     category_id: "",
     asset_type_id: "",
     vendor_id: "",
     department_id: "",
-    status: ""
+    status: "",   // ✅ NOW ACTIVELY USED AS FILTER
   });
 
-  const [page, setPage] = useState(1);
-
-  const [showForm, setShowForm] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
-
-  const BASE_URL = "http://127.0.0.1:5000";
+  const [showModal, setShowModal] = useState(false);
 
   // =========================
-  // FETCH ASSETS (FIXED QUERY MATCH BACKEND)
+  // FETCH ASSETS (REDUX SOURCE OF TRUTH)
   // =========================
-  const fetchAssets = async () => {
-    setLoading(true);
-
-    try {
-      const res = await axios.get(`${BASE_URL}/assets`, {
-        params: {
-          page,
-          q: search,
-          ...filters
-        }
-      });
-
-      setAssets(res.data.data || []);
-    } catch (err) {
-      console.error("Fetch assets error:", err);
-    }
-
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchAssets();
-  }, [search, filters, page]);
+    dispatch(
+      fetchAssets({
+        q: search,
+        ...filters,
+      })
+    );
+  }, [search, filters, dispatch]);
 
   // =========================
   // DELETE
   // =========================
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this asset?")) return;
-
-    try {
-      await axios.delete(`${BASE_URL}/assets/${id}`);
-      fetchAssets();
-    } catch (err) {
-      console.error(err);
-    }
+  const handleDelete = (id) => {
+    dispatch(deleteAsset(id));
   };
 
   // =========================
@@ -71,7 +53,7 @@ const AssetsPage = () => {
   // =========================
   const handleEdit = (asset) => {
     setSelectedAsset(asset);
-    setShowForm(true);
+    setShowModal(true);
   };
 
   // =========================
@@ -79,16 +61,37 @@ const AssetsPage = () => {
   // =========================
   const handleCreate = () => {
     setSelectedAsset(null);
-    setShowForm(true);
+    setShowModal(true);
+  };
+
+  // =========================
+  // SUCCESS CALLBACK
+  // =========================
+  const handleSuccess = () => {
+    setShowModal(false);
+    setSelectedAsset(null);
+
+    dispatch(
+      fetchAssets({
+        q: search,
+        ...filters,
+      })
+    );
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4">
 
-      {/* HEADER */}
-      <div className="flex justify-between mb-4">
-        <h1 className="text-2xl font-bold">Assets</h1>
+      {/* SEARCH + FILTERS */}
+      <AssetSearch
+        search={search}
+        setSearch={setSearch}
+        filters={filters}
+        setFilters={setFilters}
+      />
 
+      {/* ACTIONS */}
+      <div className="flex gap-2 mt-3">
         <button
           onClick={handleCreate}
           className="bg-green-600 text-white px-4 py-2 rounded"
@@ -97,47 +100,21 @@ const AssetsPage = () => {
         </button>
       </div>
 
-      {/* SEARCH */}
-      <AssetSearch
-        search={search}
-        setSearch={setSearch}
-        filters={filters}
-        setFilters={setFilters}
-      />
-
       {/* LIST */}
       <AssetList
         assets={assets}
-        loading={loading}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
 
-      {/* PAGINATION */}
-      <div className="flex justify-center gap-3 mt-4">
-        <button disabled={page === 1} onClick={() => setPage(page - 1)}>
-          Prev
-        </button>
-
-        <span>Page {page}</span>
-
-        <button onClick={() => setPage(page + 1)}>
-          Next
-        </button>
-      </div>
-
-      {/* MODAL FORM */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
-          <AssetForm
-            selectedAsset={selectedAsset}
-            onClose={() => setShowForm(false)}
-            onSuccess={() => {
-              setShowForm(false);
-              fetchAssets();
-            }}
-          />
-        </div>
+      {/* MODAL */}
+      {showModal && (
+        <AssetModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          selectedAsset={selectedAsset}
+          onSuccess={handleSuccess}
+        />
       )}
     </div>
   );

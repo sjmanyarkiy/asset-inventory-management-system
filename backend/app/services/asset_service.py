@@ -3,8 +3,8 @@ from app import db
 from app.models.asset import Asset
 from app.models.asset_category import AssetCategory
 from app.models.asset_type import AssetType
-from app.models.vendors import Vendor
-from app.models.departments import Department
+from app.models.vendor import Vendor
+from app.models.department import Department
 
 
 # =========================

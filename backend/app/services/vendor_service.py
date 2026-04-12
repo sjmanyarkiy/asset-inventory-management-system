@@ -1,6 +1,6 @@
 import re
 from app import db
-from app.models.vendors import Vendor
+from app.models.vendor import Vendor
 
 
 def generate_vendor_code(name: str) -> str:
