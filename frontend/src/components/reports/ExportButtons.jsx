@@ -1,4 +1,5 @@
 import React from 'react'
+import { jsPDF } from 'jspdf'
 
 function toCSV(rows) {
   if (!rows || !rows.length) return ''
@@ -24,22 +25,23 @@ export default function ExportButtons({ assets = [] }) {
   }
 
   const exportPDF = () => {
-    // Try to use jsPDF if available, otherwise fallback to printing a new window
-    if (window.jspdf && window.jspdf.jsPDF) {
-      const { jsPDF } = window.jspdf
+    try {
       const doc = new jsPDF()
+      doc.setFontSize(14)
       doc.text('Assets Report', 10, 10)
       let y = 20
       assets.forEach(a => {
+        doc.setFontSize(10)
         doc.text(`${a.name} — ${a.department} — ${a.assignedTo || '-'} — ${a.status}`, 10, y)
         y += 8
         if (y > 280) { doc.addPage(); y = 20 }
       })
       doc.save('assets-report.pdf')
       return
+    } catch (err) {
+      // fallback: open printable window
     }
 
-    // fallback: open printable window
     const win = window.open('', '_blank')
     const html = `
       <html>

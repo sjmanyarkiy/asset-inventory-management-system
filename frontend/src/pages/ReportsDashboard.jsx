@@ -3,6 +3,7 @@ import ReportCards from '../components/reports/ReportCards'
 import AssetTable from '../components/reports/AssetTable'
 import Filters from '../components/reports/Filters'
 import ExportButtons from '../components/reports/ExportButtons'
+import ReportsCharts from '../components/reports/ReportsCharts'
 
 export default function ReportsDashboard() {
   const [assets, setAssets] = useState([])
@@ -54,6 +55,7 @@ export default function ReportsDashboard() {
     <div style={{ padding: 20 }}>
       <h2>Reports Dashboard</h2>
       <ReportCards assets={assets} />
+      <ReportsCharts assets={assets} />
 
       <div style={{ marginTop: 20 }}>
         <Filters options={options} filters={filters} setFilters={setFilters} />
