@@ -12,14 +12,19 @@ from extensions import db
 # Load environment variables
 load_dotenv()
 
+# Fix Render's postgres:// to postgresql://
+database_url = os.getenv('DATABASE_URL', 'postgresql://user:password@localhost:5432/asset_inventory')
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+
 # Initialize Flask app
 app = Flask(__name__)
 
 # Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DATABASE_URL',
-    'postgresql://user:password@localhost:5432/asset_inventory'
-)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production')
@@ -36,6 +41,7 @@ from models.asset import Asset
 from models.audit_log import AuditLog
 from blueprints.auth import auth_bp
 # from blueprints.admin import admin_bp
+from assetlist.routes import asset_bp
 from flask_jwt_extended import JWTManager
 
 jwt = JWTManager(app)
@@ -43,6 +49,7 @@ jwt = JWTManager(app)
 # Register blueprints
 app.register_blueprint(auth_bp)
 # app.register_blueprint(admin_bp)
+app.register_blueprint(asset_bp, url_prefix='/api')
 
 # Initialize database
 def init_db():
