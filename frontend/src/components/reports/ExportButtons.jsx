@@ -1,55 +1,74 @@
-import React from "react";
+import React from 'react'
+import { jsPDF } from 'jspdf'
 
-const ExportButtons = ({ assets = [] }) => {
+function toCSV(rows) {
+  if (!rows || !rows.length) return ''
+  const headers = Object.keys(rows[0])
+  const lines = [headers.join(',')]
+  for (const r of rows) {
+    lines.push(headers.map(h => `"${String(r[h] ?? '').replace(/"/g, '""')}"`).join(','))
+  }
+  return lines.join('\n')
+}
+
+export default function ExportButtons({ assets = [] }) {
   const exportCSV = () => {
-    if (!assets || assets.length === 0) return;
-
-    const headers = ["Asset", "Asset Code", "Department", "Vendor", "Category", "Status"];
-    const rows = assets.map((a) => [
-      a.name,
-      a.asset_code || a.barcode || "",
-      a.department || "",
-      a.vendor || "",
-      a.category || "",
-      a.status,
-    ]);
-
-    const csv = [headers, ...rows]
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `assets-report-${new Date().toISOString()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+    const rows = assets.map(a => ({ Asset: a.name, AssetCode: a.asset_code || a.barcode || '', Department: a.department || '', AssignedTo: a.assignedTo || a.assigned_to || '', Status: a.status || '', Vendor: a.vendor || '', Category: a.category || '' }))
+    const csv = toCSV(rows)
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `assets-report-${new Date().toISOString()}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   const exportPDF = () => {
-    // Lightweight fallback: convert CSV to new window printable view
+    try {
+      if (typeof jsPDF === 'function') {
+        const doc = new jsPDF()
+        doc.setFontSize(14)
+        doc.text('Assets Report', 10, 10)
+        let y = 20
+        assets.forEach(a => {
+          doc.setFontSize(10)
+          doc.text(`${a.name} — ${a.department || ''} — ${a.assignedTo || a.assigned_to || '-'} — ${a.status || ''}`, 10, y)
+          y += 8
+          if (y > 280) { doc.addPage(); y = 20 }
+        })
+        doc.save(`assets-report-${new Date().toISOString()}.pdf`)
+        return
+      }
+    } catch (err) {
+      // fall through to fallback
+    }
+
+    // fallback: printable window
+    const win = window.open('', '_blank')
     const html = `
       <html>
         <head><title>Assets Report</title></head>
         <body>
           <h1>Assets Report</h1>
-          <pre>${JSON.stringify(assets, null, 2)}</pre>
+          <table border="1" cellpadding="6" cellspacing="0">
+            <thead><tr><th>Asset</th><th>Department</th><th>Assigned To</th><th>Status</th></tr></thead>
+            <tbody>
+              ${assets.map(a => `<tr><td>${a.name}</td><td>${a.department || ''}</td><td>${a.assignedTo || a.assigned_to || ''}</td><td>${a.status || ''}</td></tr>`).join('')}
+            </tbody>
+          </table>
         </body>
-      </html>
-    `;
-    const w = window.open("", "_blank");
-    w.document.write(html);
-    w.document.close();
-    w.print();
-  };
+      </html>`
+    win.document.write(html)
+    win.document.close()
+    win.focus()
+    setTimeout(() => win.print(), 300)
+  }
 
   return (
-    <div className="flex gap-2">
+    <div style={{ display: 'flex', gap: 8 }}>
       <button onClick={exportCSV} className="px-3 py-2 rounded bg-blue-600 text-white">Export CSV</button>
       <button onClick={exportPDF} className="px-3 py-2 rounded bg-gray-700 text-white">Export PDF</button>
     </div>
-  );
-};
-
-export default ExportButtons;
+  )
+}

@@ -1,16 +1,32 @@
-# Virtual Environment
-backend/venv/
+### System / editors
+.DS_Store
+Thumbs.db
 
-# Python cache
+### Python
+backend/venv/
 __pycache__/
+*.py[cod]
 *.pyc
 *.pyo
-
-# Environment variables
+env/
 .env
 
-# Node
+### Node / frontend
 node_modules/
+frontend/node_modules/
+**/node_modules/
 
-# Build output
+# Vite / build caches
+frontend/.vite/
+.vite/
+
+# Logs
+/tmp/vite.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
 dist/
+build/
+

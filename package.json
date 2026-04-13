@@ -1,0 +1,11 @@
+{
+  "name": "asset-inventory-management-system",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "npm --prefix frontend run start",
+    "test": "npm --prefix frontend run test -- --watchAll=false",
+    "start:frontend": "npm --prefix frontend run start",
+    "test:frontend": "npm --prefix frontend run test -- --watchAll=false"
+  }
+}

@@ -1,75 +1,67 @@
-import React, { useEffect, useMemo, useState } from "react";
-import ReportCards from "../components/reports/ReportCards";
-import Filters from "../components/reports/Filters";
-import AssetTable from "../components/reports/AssetTable";
-import ExportButtons from "../components/reports/ExportButtons";
-import { getAssets } from "../features/assets/assetAPI";
+import React, { useEffect, useMemo, useState } from 'react'
+import ReportCards from '../components/reports/ReportCards'
+import ReportsCharts from '../components/reports/ReportsCharts'
+import AssetTable from '../components/reports/AssetTable'
+import Filters from '../components/reports/Filters'
+import ExportButtons from '../components/reports/ExportButtons'
+import { getAssets } from '../features/assets/assetAPI'
 
-const ReportsDashboard = () => {
-  const [assets, setAssets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({});
+export default function ReportsDashboard() {
+  const [assets, setAssets] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filters, setFilters] = useState({ department: 'all', vendor: 'all', category: 'all', status: 'all', search: '' })
 
   useEffect(() => {
-    setLoading(true);
+    setLoading(true)
     getAssets()
-      .then((res) => setAssets(res.data || []))
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  }, []);
+      .then(res => setAssets(res.data || []))
+      .catch(() => {
+        // fallback demo data if backend is not running
+        setAssets([
+          { id: 1, name: 'Laptop A', department: 'Engineering', assignedTo: 'Alice', status: 'assigned', vendor: 'Dell', category: 'Laptop' },
+          { id: 2, name: 'Projector X', department: 'Marketing', assignedTo: null, status: 'available', vendor: 'Epson', category: 'AV' },
+          { id: 3, name: 'Router R', department: 'IT', assignedTo: 'Bob', status: 'under repair', vendor: 'Cisco', category: 'Network' }
+        ])
+      })
+      .finally(() => setLoading(false))
+  }, [])
 
-  const departments = useMemo(() => [...new Set(assets.map((a) => a.department).filter(Boolean))], [assets]);
-  const vendors = useMemo(() => [...new Set(assets.map((a) => a.vendor).filter(Boolean))], [assets]);
-  const categories = useMemo(() => [...new Set(assets.map((a) => a.category).filter(Boolean))], [assets]);
+  const options = useMemo(() => {
+    const depts = Array.from(new Set(assets.map(a => a.department).filter(Boolean)))
+    const vendors = Array.from(new Set(assets.map(a => a.vendor).filter(Boolean)))
+    const categories = Array.from(new Set(assets.map(a => a.category).filter(Boolean)))
+    return { depts, vendors, categories }
+  }, [assets])
 
-  const filtered = useMemo(() => {
-    return assets.filter((a) => {
-      if (filters.department && a.department !== filters.department) return false;
-      if (filters.vendor && a.vendor !== filters.vendor) return false;
-      if (filters.category && a.category !== filters.category) return false;
-      if (filters.status && a.status !== filters.status) return false;
-      if (filters.q) {
-        const q = filters.q.toLowerCase();
-        if (!(`${a.name}`.toLowerCase().includes(q) || `${a.asset_code || a.barcode}`.toLowerCase().includes(q))) return false;
-      }
-      return true;
-    });
-  }, [assets, filters]);
+  const filteredAssets = useMemo(() => {
+    return assets.filter(a => {
+      if (filters.department !== 'all' && a.department !== filters.department) return false
+      if (filters.vendor !== 'all' && a.vendor !== filters.vendor) return false
+      if (filters.category !== 'all' && a.category !== filters.category) return false
+      if (filters.status !== 'all' && a.status !== filters.status) return false
+      if (filters.search && !`${a.name} ${a.assignedTo || ''} ${a.department}`.toLowerCase().includes(filters.search.toLowerCase())) return false
+      return true
+    })
+  }, [assets, filters])
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Reports Dashboard</h1>
+    <div style={{ padding: 20 }}>
+      <h2>Reports Dashboard</h2>
 
-      <section className="mb-6">
-        <ReportCards assets={assets} />
-      </section>
+      <ReportCards assets={assets} />
+      <ReportsCharts assets={assets} />
 
-      <section className="mb-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Assets</h2>
-          <ExportButtons assets={filtered} />
-        </div>
+      <div style={{ marginTop: 20 }}>
+        <Filters options={options} filters={filters} setFilters={setFilters} />
+      </div>
 
-        <div className="mt-3">
-          <Filters
-            departments={departments}
-            vendors={vendors}
-            categories={categories}
-            filters={filters}
-            setFilters={setFilters}
-          />
-        </div>
-      </section>
+      <div style={{ marginTop: 12 }}>
+        <ExportButtons assets={filteredAssets} />
+      </div>
 
-      <section>
-        {loading ? (
-          <div>Loading…</div>
-        ) : (
-          <AssetTable assets={filtered} />
-        )}
-      </section>
+      <div style={{ marginTop: 12 }}>
+        {loading ? <div>Loading assets...</div> : <AssetTable assets={filteredAssets} />}
+      </div>
     </div>
-  );
-};
-
-export default ReportsDashboard;
+  )
+}
