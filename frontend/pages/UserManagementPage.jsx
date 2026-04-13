@@ -52,7 +52,7 @@ const UserManagementPage = () => {
   const fetchRoles = async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/admin/roles`
+        `${import.meta.env.VITE_API_URL}/api/admin/roles`
       );
       setRoles(response.data.roles);
     } catch (err) {
@@ -72,7 +72,7 @@ const UserManagementPage = () => {
       });
 
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/admin/users?${params}`
+        `${import.meta.env.VITE_API_URL}/api/admin/users?${params}`
       );
 
       setUsers(response.data.users);
@@ -109,7 +109,7 @@ const UserManagementPage = () => {
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/admin/users/${selectedUser.id}/assign-role`,
+        `${import.meta.env.VITE_API_URL}/api/admin/users/${selectedUser.id}/assign-role`,
         { role_id: parseInt(selectedRoleId) }
       );
 
@@ -160,7 +160,7 @@ const UserManagementPage = () => {
       {/* Header */}
       <Row className="mb-4">
         <Col>
-          <h2 className="fw-bold">User Management</h2>
+          <h2 className="fw-bold text-primary">User Management</h2>
           <p className="text-muted">Manage users and assign roles</p>
         </Col>
       </Row>

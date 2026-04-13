@@ -14,6 +14,7 @@ import ReportsDashboard from '../src/pages/ReportsDashboard';
 // Components
 import ProtectedRoute from '../components/ProtectedRoute';
 import AdminRoute from '../components/AdminRoute.jsx';
+import AppLayout from '../components/AppLayout.jsx';
 
 const App = () => {
   return (
@@ -27,7 +28,9 @@ const App = () => {
           {/* Protected routes */}
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <MainDashboard />
+              <AppLayout>
+                <MainDashboard />
+              </AppLayout>
             </ProtectedRoute>
           }
           />
@@ -36,7 +39,9 @@ const App = () => {
           {/* Reports route */}
           <Route path="/reports" element={
             <ProtectedRoute>
-              <ReportsDashboard />
+              <AppLayout>
+                <ReportsDashboard />
+              </AppLayout>
             </ProtectedRoute>
           }
           />
@@ -47,7 +52,9 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <AdminRoute>
-                  <UserManagementPage />
+                  <AppLayout>
+                    <UserManagementPage />
+                  </AppLayout>
                 </AdminRoute>
               </ProtectedRoute>
             }
