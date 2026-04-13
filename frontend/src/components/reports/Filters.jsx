@@ -1,54 +1,90 @@
-import React from 'react'
+import React from "react";
 
-export default function Filters({ options = {}, filters, setFilters }) {
-  const { depts = [], vendors = [], categories = [] } = options
+const Filters = ({
+  departments = [],
+  vendors = [],
+  categories = [],
+  filters,
+  setFilters,
+}) => {
+  const update = (key, value) => setFilters((f) => ({ ...f, [key]: value }));
 
   return (
-    <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-      <label>
-        Department
-        <br />
-        <select value={filters.department} onChange={e => setFilters(f => ({ ...f, department: e.target.value }))}>
-          <option value="all">All</option>
-          {depts.map(d => <option key={d} value={d}>{d}</option>)}
+    <div className="flex gap-3 flex-wrap items-end">
+      <div>
+        <label className="block text-sm text-gray-600">Department</label>
+        <select
+          value={filters.department || ""}
+          onChange={(e) => update("department", e.target.value)}
+          className="border p-2 rounded"
+        >
+          <option value="">All</option>
+          {departments.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
         </select>
-      </label>
+      </div>
 
-      <label>
-        Vendor
-        <br />
-        <select value={filters.vendor} onChange={e => setFilters(f => ({ ...f, vendor: e.target.value }))}>
-          <option value="all">All</option>
-          {vendors.map(v => <option key={v} value={v}>{v}</option>)}
+      <div>
+        <label className="block text-sm text-gray-600">Vendor</label>
+        <select
+          value={filters.vendor || ""}
+          onChange={(e) => update("vendor", e.target.value)}
+          className="border p-2 rounded"
+        >
+          <option value="">All</option>
+          {vendors.map((v) => (
+            <option key={v} value={v}>
+              {v}
+            </option>
+          ))}
         </select>
-      </label>
+      </div>
 
-      <label>
-        Category
-        <br />
-        <select value={filters.category} onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}>
-          <option value="all">All</option>
-          {categories.map(c => <option key={c} value={c}>{c}</option>)}
+      <div>
+        <label className="block text-sm text-gray-600">Category</label>
+        <select
+          value={filters.category || ""}
+          onChange={(e) => update("category", e.target.value)}
+          className="border p-2 rounded"
+        >
+          <option value="">All</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
         </select>
-      </label>
+      </div>
 
-      <label>
-        Status
-        <br />
-        <select value={filters.status} onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}>
-          <option value="all">All</option>
-          <option value="assigned">Assigned</option>
+      <div>
+        <label className="block text-sm text-gray-600">Status</label>
+        <select
+          value={filters.status || ""}
+          onChange={(e) => update("status", e.target.value)}
+          className="border p-2 rounded"
+        >
+          <option value="">All</option>
           <option value="available">Available</option>
-          <option value="under repair">Under Repair</option>
-          <option value="maintenance">Maintenance</option>
+          <option value="assigned">Assigned</option>
+          <option value="under_repair">Under Repair</option>
+          <option value="retired">Retired</option>
         </select>
-      </label>
+      </div>
 
-      <label style={{ marginLeft: 6 }}>
-        Search
-        <br />
-        <input type="search" value={filters.search} onChange={e => setFilters(f => ({ ...f, search: e.target.value }))} placeholder="Search assets..." />
-      </label>
+      <div>
+        <label className="block text-sm text-gray-600">Search</label>
+        <input
+          value={filters.q || ""}
+          onChange={(e) => update("q", e.target.value)}
+          placeholder="Search asset name or code"
+          className="border p-2 rounded"
+        />
+      </div>
     </div>
-  )
-}
+  );
+};
+
+export default Filters;

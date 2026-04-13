@@ -1,33 +1,34 @@
-import React from 'react'
+import React from "react";
 
-export default function AssetTable({ assets = [] }) {
+const AssetTable = ({ assets = [] }) => {
   return (
-    <div style={{ marginTop: 12 }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <div className="overflow-auto mt-4">
+      <table className="min-w-full border-collapse">
         <thead>
-          <tr>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: 8 }}>Asset</th>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: 8 }}>Department</th>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: 8 }}>Assigned To</th>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: 8 }}>Status</th>
+          <tr className="text-left">
+            <th className="p-2 border">Asset</th>
+            <th className="p-2 border">Department</th>
+            <th className="p-2 border">Vendor</th>
+            <th className="p-2 border">Category</th>
+            <th className="p-2 border">Status</th>
+            <th className="p-2 border">Assigned To</th>
           </tr>
         </thead>
         <tbody>
-          {assets.map(a => (
+          {assets.map((a) => (
             <tr key={a.id}>
-              <td style={{ padding: 8, borderBottom: '1px solid #f0f0f0' }}>{a.name}</td>
-              <td style={{ padding: 8, borderBottom: '1px solid #f0f0f0' }}>{a.department}</td>
-              <td style={{ padding: 8, borderBottom: '1px solid #f0f0f0' }}>{a.assignedTo || '-'}</td>
-              <td style={{ padding: 8, borderBottom: '1px solid #f0f0f0' }}>{a.status}</td>
+              <td className="p-2 border">{a.name} <div className="text-xs text-gray-500">{a.asset_code || a.barcode}</div></td>
+              <td className="p-2 border">{a.department || "Unassigned"}</td>
+              <td className="p-2 border">{a.vendor || "Unassigned"}</td>
+              <td className="p-2 border">{a.category || "Unassigned"}</td>
+              <td className="p-2 border">{a.status}</td>
+              <td className="p-2 border">{a.assigned_to || "N/A"}</td>
             </tr>
           ))}
-          {assets.length === 0 && (
-            <tr>
-              <td colSpan={4} style={{ padding: 12, textAlign: 'center', color: '#666' }}>No assets match selected filters.</td>
-            </tr>
-          )}
         </tbody>
       </table>
     </div>
-  )
-}
+  );
+};
+
+export default AssetTable;

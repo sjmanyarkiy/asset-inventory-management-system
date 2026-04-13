@@ -1,33 +1,26 @@
-import React from 'react'
+import React from "react";
 
-export default function ReportCards({ assets = [] }) {
-  const total = assets.length
-  const assigned = assets.filter(a => a.status === 'assigned').length
-  const available = assets.filter(a => a.status === 'available').length
-  const underRepair = assets.filter(a => a.status === 'under repair' || a.status === 'maintenance').length
+const ReportCards = ({ assets = [] }) => {
+  const total = assets.length;
+  const assigned = assets.filter((a) => a.status === "assigned").length;
+  const available = assets.filter((a) => a.status === "available").length;
+  const underRepair = assets.filter((a) => a.status === "under_repair" || a.status === "maintenance").length;
 
-  const cardStyle = { display: 'inline-block', padding: 12, marginRight: 12, border: '1px solid #ddd', borderRadius: 6, minWidth: 140 }
+  const card = (title, value, bg = "bg-gray-100") => (
+    <div className={`p-4 rounded shadow ${bg}`} style={{ minWidth: 160 }}>
+      <div className="text-sm text-gray-600">{title}</div>
+      <div className="text-2xl font-bold mt-2">{value}</div>
+    </div>
+  );
 
   return (
-    <div>
-      <div style={{ display: 'flex', gap: 12 }}>
-        <div style={cardStyle}>
-          <div>Total Assets</div>
-          <div style={{ fontSize: 24, fontWeight: 600 }}>{total}</div>
-        </div>
-        <div style={cardStyle}>
-          <div>Assigned</div>
-          <div style={{ fontSize: 24, fontWeight: 600 }}>{assigned}</div>
-        </div>
-        <div style={cardStyle}>
-          <div>Available</div>
-          <div style={{ fontSize: 24, fontWeight: 600 }}>{available}</div>
-        </div>
-        <div style={cardStyle}>
-          <div>Under Repair</div>
-          <div style={{ fontSize: 24, fontWeight: 600 }}>{underRepair}</div>
-        </div>
-      </div>
+    <div className="flex gap-4 flex-wrap">
+      {card("Total Assets", total, "bg-white")}
+      {card("Assigned", assigned, "bg-white")}
+      {card("Available", available, "bg-white")}
+      {card("Under Repair", underRepair, "bg-white")}
     </div>
-  )
-}
+  );
+};
+
+export default ReportCards;

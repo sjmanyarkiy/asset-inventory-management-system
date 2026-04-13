@@ -1,85 +1,75 @@
-import React, { useEffect, useState, useMemo } from 'react'
-import ReportCards from '../components/reports/ReportCards'
-import AssetTable from '../components/reports/AssetTable'
-import Filters from '../components/reports/Filters'
-import ExportButtons from '../components/reports/ExportButtons'
-import ReportsCharts from '../components/reports/ReportsCharts'
-import { fetchAllAssets } from '../api/axios'
+import React, { useEffect, useMemo, useState } from "react";
+import ReportCards from "../components/reports/ReportCards";
+import Filters from "../components/reports/Filters";
+import AssetTable from "../components/reports/AssetTable";
+import ExportButtons from "../components/reports/ExportButtons";
+import { getAssets } from "../features/assets/assetAPI";
 
-function normalizeStatus(asset) {
-  const copy = { ...asset }
-  if (copy.status === 'under_repair') copy.status = 'under repair'
-  return copy
-}
-
-export default function ReportsDashboard() {
-  const [assets, setAssets] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [filters, setFilters] = useState({ department: 'all', vendor: 'all', category: 'all', status: 'all', search: '' })
+const ReportsDashboard = () => {
+  const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({});
 
   useEffect(() => {
-    let mounted = true
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    getAssets()
+      .then((res) => setAssets(res.data || []))
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
+  }, []);
 
-    fetchAllAssets()
-      .then(data => {
-        if (!mounted) return
-        const list = (data || []).map(normalizeStatus)
-        setAssets(list)
-      })
-      .catch((err) => {
-        console.error('Failed to fetch assets', err)
-        if (!mounted) return
-        setError('Failed to load assets from server')
-        setAssets([
-          { id: 1, name: 'Laptop A', department: 'Engineering', assignedTo: 'Alice', status: 'assigned', vendor: 'Dell', category: 'Laptop' },
-          { id: 2, name: 'Projector X', department: 'Marketing', assignedTo: null, status: 'available', vendor: 'Epson', category: 'AV' },
-          { id: 3, name: 'Router R', department: 'IT', assignedTo: 'Bob', status: 'under repair', vendor: 'Cisco', category: 'Network' }
-        ])
-      })
-      .finally(() => { if (mounted) setLoading(false) })
+  const departments = useMemo(() => [...new Set(assets.map((a) => a.department).filter(Boolean))], [assets]);
+  const vendors = useMemo(() => [...new Set(assets.map((a) => a.vendor).filter(Boolean))], [assets]);
+  const categories = useMemo(() => [...new Set(assets.map((a) => a.category).filter(Boolean))], [assets]);
 
-    return () => { mounted = false }
-  }, [])
-
-  const options = useMemo(() => {
-    const depts = Array.from(new Set(assets.map(a => a.department).filter(Boolean)))
-    const vendors = Array.from(new Set(assets.map(a => a.vendor).filter(Boolean)))
-    const categories = Array.from(new Set(assets.map(a => a.category).filter(Boolean)))
-    return { depts, vendors, categories }
-  }, [assets])
-
-  const filteredAssets = useMemo(() => {
-    return assets.filter(a => {
-      if (filters.department !== 'all' && a.department !== filters.department) return false
-      if (filters.vendor !== 'all' && a.vendor !== filters.vendor) return false
-      if (filters.category !== 'all' && a.category !== filters.category) return false
-      if (filters.status !== 'all' && a.status !== filters.status) return false
-      if (filters.search && !`${a.name} ${a.assignedTo || ''} ${a.department}`.toLowerCase().includes(filters.search.toLowerCase())) return false
-      return true
-    })
-  }, [assets, filters])
+  const filtered = useMemo(() => {
+    return assets.filter((a) => {
+      if (filters.department && a.department !== filters.department) return false;
+      if (filters.vendor && a.vendor !== filters.vendor) return false;
+      if (filters.category && a.category !== filters.category) return false;
+      if (filters.status && a.status !== filters.status) return false;
+      if (filters.q) {
+        const q = filters.q.toLowerCase();
+        if (!(`${a.name}`.toLowerCase().includes(q) || `${a.asset_code || a.barcode}`.toLowerCase().includes(q))) return false;
+      }
+      return true;
+    });
+  }, [assets, filters]);
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Reports Dashboard</h2>
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-      <ReportCards assets={assets} />
-      <ReportsCharts assets={assets} />
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Reports Dashboard</h1>
 
-      <div style={{ marginTop: 20 }}>
-        <Filters options={options} filters={filters} setFilters={setFilters} />
-      </div>
+      <section className="mb-6">
+        <ReportCards assets={assets} />
+      </section>
 
-      <div style={{ marginTop: 12 }}>
-        <ExportButtons assets={filteredAssets} />
-      </div>
+      <section className="mb-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold">Assets</h2>
+          <ExportButtons assets={filtered} />
+        </div>
 
-      <div style={{ marginTop: 12 }}>
-        {loading ? <div>Loading assets...</div> : <AssetTable assets={filteredAssets} />}
-      </div>
+        <div className="mt-3">
+          <Filters
+            departments={departments}
+            vendors={vendors}
+            categories={categories}
+            filters={filters}
+            setFilters={setFilters}
+          />
+        </div>
+      </section>
+
+      <section>
+        {loading ? (
+          <div>Loading…</div>
+        ) : (
+          <AssetTable assets={filtered} />
+        )}
+      </section>
     </div>
-  )
-}
+  );
+};
+
+export default ReportsDashboard;

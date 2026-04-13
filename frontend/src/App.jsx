@@ -6,6 +6,7 @@ import VendorsPage from "./pages/VendorsPage";
 import DepartmentsPage from "./pages/DepartmentsPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import TypesPage from "./pages/TypesPage";
+import ReportsDashboard from "./pages/ReportsDashboard";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
         <Route path="/departments" element={<DepartmentsPage />} />
         <Route path="/categories" element={<CategoriesPage />} />
         <Route path="/types" element={<TypesPage />} />
+        <Route path="/reports" element={<ReportsDashboard />} />
       </Routes>
 
     </BrowserRouter>
