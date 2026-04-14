@@ -9,9 +9,12 @@ from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
 import os
 from extensions import db
+from config import get_config
 
 # Import asset blueprint
 from assetlist.routes import asset_bp
+from blueprints.admin import admin_bp
+from blueprints.reports import reports_bp
 
 # Load environment variables
 load_dotenv()
@@ -33,12 +36,40 @@ def create_app(config_object=None):
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production')
 
+    # if config_object:
+    #     # app.config.update(config_object)
+    #     app.config.from_object(config_object)
+
     if config_object:
-        app.config.update(config_object)
+        app.config.from_object(get_config(config_object))
+    else:
+        app.config.from_object(get_config())
 
     # Initialize extensions
     db.init_app(app)
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # CORS(app)
+    # CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
+    # CORS(app, resources={
+    #     r"/api/*": {"origins": "http://localhost:5173"},
+    #     r"/assets/*": {"origins": "http://localhost:5173"},
+    #     r"/assets": {"origins": "http://localhost:5173"}
+    # })
+    # CORS(app, resources={
+    #     r"/api/*": {
+    #         "origins": "http://localhost:5173",
+    #         "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    #         "allow_headers": ["Content-Type", "Authorization"]
+    #     }
+    # })
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": "http://localhost:5173",
+            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+            "allow_headers": "*"
+        }
+    })
+
     jwt = JWTManager(app)
 
     # Import models
@@ -53,6 +84,8 @@ def create_app(config_object=None):
     # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(asset_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(reports_bp, url_prefix="/api")
 
     # Error handlers
     @app.errorhandler(404)
@@ -157,3 +190,5 @@ if __name__ == '__main__':
         port=int(os.getenv('PORT', 5000)),
         debug=debug
     )
+
+    print(app.url_map)

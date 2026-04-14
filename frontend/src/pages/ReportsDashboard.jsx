@@ -1,38 +1,33 @@
 import React from 'react';
-import { Container, Row, Col, Card, Nav, Button } from 'react-bootstrap';
+import { Card, Nav } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import Navbar from "../components/Navbar";
-import MenuBar from "../components/MenuBar";
 import AccessTab from '../components/AccessTab';
 import AssignedTab from '../components/AssignedTab';
 import RepairedTab from '../components/RepairedTab';
-import { useAuth } from '../AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../redux/slices/authSlice';
 
 export default function ReportsDashboard() {
   const [active, setActive] = React.useState('assigned');
-  const auth = useAuth();
+
+  const user = useSelector(selectUser);
   const navigate = useNavigate();
 
-  const logout = React.useCallback(() => {
-    if (auth && typeof auth.logout === 'function') auth.logout();
-    navigate('/login');
-  }, [auth, navigate]);
+  const role = user?.role?.name?.toLowerCase();
 
-  const role = auth?.user?.role;
+  const logout = React.useCallback(() => {
+    navigate('/login');
+  }, [navigate]);
 
   return (
     <>
       <h3 className="fw-bold text-primary">Reports</h3>
-      <p className="text-muted mb-0">
-        View and analyze asset activity
-      </p>
-      
+      <p className="text-muted mb-0">View and analyze asset activity</p>
 
-      {/* Tabs */}
       <Card className="shadow-sm border-0">
         <Card.Header className="bg-white">
           <Nav variant="tabs" activeKey={active}>
-            {role && ['ADMIN', 'PROCUREMENT', 'FINANCE'].includes(role) && (
+            {role && ['admin', 'super admin', 'procurement', 'finance'].includes(role) && (
               <Nav.Item>
                 <Nav.Link eventKey="access" onClick={() => setActive('access')}>
                   Access

@@ -50,7 +50,8 @@ class User(db.Model):
             'last_name': self.last_name,
             'is_active': self.is_active,
             'role_id': self.role_id,
-            'role': self.role.to_dict() if self.role else None,
+            # 'role': self.role.to_dict() if self.role else None,
+            'role': self.role.name if self.role else None,
             'is_admin': self.is_admin,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None
