@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Modal, Button, Form } from "react-bootstrap";
 import axios from "axios";
 
 function AssetList({ searchTerm = "" }) {
@@ -34,7 +35,7 @@ function AssetList({ searchTerm = "" }) {
       per_page: perPage,
     });
 
-    fetch(`http://localhost:5000/assets?${params.toString()}`)
+    fetch(`http://localhost:5000/api/assets?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         setAssets(data.assets || []);
@@ -55,15 +56,46 @@ function AssetList({ searchTerm = "" }) {
       setEmployees(res.data.users || []);
     } catch (err) {
       console.error("Failed to fetch employees:", err);
+      setEmployees([]);
     }
   };
 
   const openAssignModal = (asset) => {
+    console.log("OPEN MODAL", asset);
     setSelectedAsset(asset);
-    setSelectedUserId(asset.assigned_to_user_id || "");
+    setSelectedUserId("");
     setShowModal(true);
     fetchEmployees();
   };
+
+  // const assignAsset = async () => {
+  //   if (!selectedAsset || !selectedUserId) return;
+
+  //   setAssigning(true);
+
+  //   try {
+  //     const res = await axios.post(
+  //       `http://localhost:5000/api/admin/assets/${selectedAsset.id}/assign`,
+  //       {
+  //         user_id: parseInt(selectedUserId),
+  //       }
+  //     );
+
+  //     setAssets((prev) =>
+  //       prev.map((a) =>
+  //         a.id === selectedAsset.id ? res.data.asset : a
+  //       )
+  //     );
+
+  //     setShowModal(false);
+  //     setSelectedAsset(null);
+  //     setSelectedUserId("");
+  //   } catch (err) {
+  //     console.error("Assignment failed:", err);
+  //   } finally {
+  //     setAssigning(false);
+  //   }
+  // };
 
   const assignAsset = async () => {
     if (!selectedAsset || !selectedUserId) return;
@@ -71,13 +103,15 @@ function AssetList({ searchTerm = "" }) {
     setAssigning(true);
 
     try {
+      // const res = await axios.post(
+      //   `http://localhost:5000/api/admin/assets/${selectedAsset.id}/assign`,
+      //   { user_id: parseInt(selectedUserId) }
+      // );
       const res = await axios.post(
-        `http://localhost:5000/api/admin/assets/${selectedAsset.id}/assign`,
-        {
-          user_id: parseInt(selectedUserId),
-        }
+        `http://localhost:5000/api/assets/${selectedAsset.id}/assign`,
+        { user_id: parseInt(selectedUserId) }
       );
-
+      // update UI instantly
       setAssets((prev) =>
         prev.map((a) =>
           a.id === selectedAsset.id ? res.data.asset : a
@@ -88,9 +122,24 @@ function AssetList({ searchTerm = "" }) {
       setSelectedAsset(null);
       setSelectedUserId("");
     } catch (err) {
-      console.error("Assignment failed:", err);
+      console.error(err);
     } finally {
       setAssigning(false);
+    }
+  };
+
+  const returnAsset = async (assetId) => {
+    try {
+      const res = await axios.post(
+        `http://localhost:5000/api/assets/${assetId}/return`,
+        { current_user_id: 1 } // replace with auth user
+      );
+
+      setAssets((prev) =>
+        prev.map((a) => (a.id === assetId ? res.data.asset : a))
+      );
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -135,6 +184,7 @@ function AssetList({ searchTerm = "" }) {
                 <th className="p-3 border text-left">Asset Name</th>
                 <th className="p-3 border text-left">Category</th>
                 <th className="p-3 border text-left">Status</th>
+                <th className="p-3 border text-left">Assigned To</th>
                 <th className="p-3 border text-left">Action</th>
               </tr>
             </thead>
@@ -150,19 +200,56 @@ function AssetList({ searchTerm = "" }) {
                 assets.map((asset) => (
                   <tr key={asset.id} className="hover:bg-gray-50">
                     <td className="p-3 border">{asset.id}</td>
-                    <td className="p-3 border">{asset.name}</td>
-                    <td className="p-3 border">{asset.category}</td>
+                    {/* <td className="p-3 border">{asset.name}</td> */}
+                    <td className="p-3 border">{asset.asset_name}</td>
+                    {/* <td className="p-3 border">{asset.category}</td> */}
+                    <td className="p-3 border">{asset.asset_category}</td>
                     <td className={`p-3 border ${getStatusClass(asset.status)}`}>
                       {asset.status}
                     </td>
+                    {/* <td className="p-3 border">
+                      {asset.assigned_user?.first_name
+                        ? `${asset.assigned_user.first_name} ${asset.assigned_user.last_name}`
+                        : "—"}
+                    </td> */}
+                    <td>
+                      {asset.assigned_user
+                        ? `${asset.assigned_user.first_name ?? ""} ${asset.assigned_user.last_name ?? ""}`.trim()
+                        : "—"}
+                    </td>
 
                     <td className="p-3 border">
-                      <button
-                        onClick={() => openAssignModal(asset)}
-                        className="px-3 py-1 bg-blue-500 text rounded hover:bg-blue-600"
-                      >
-                        Assign
-                      </button>
+                      <div className="d-flex gap-2 align-items-center">
+
+                        {asset.status === "Available" && (
+                          <button
+                            onClick={() => openAssignModal(asset)}
+                            className="btn btn-sm btn-outline-primary"
+                          >
+                            Assign
+                          </button>
+                        )}
+
+                        {asset.status === "Assigned" && (
+                          <button
+                            onClick={() => returnAsset(asset.id)}
+                            className="btn btn-sm btn-outline-danger"
+                          >
+                            Return
+                          </button>
+                        )}
+
+                        {asset.status === "Repair" && (
+                          <span className="badge bg-warning text-dark">
+                            In Repair
+                          </span>
+                        )}
+
+                        {!["Available", "Assigned", "Repair"].includes(asset.status) && (
+                          <span className="text-muted small">—</span>
+                        )}
+
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -193,7 +280,7 @@ function AssetList({ searchTerm = "" }) {
           </div>
 
           {/* ASSIGN MODAL */}
-          {showModal && selectedAsset && (
+          {/* {showModal && selectedAsset && (
             <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
               <div className="bg-white p-6 rounded-lg w-96">
                 <h2 className="text-xl font-bold mb-3">
@@ -210,10 +297,12 @@ function AssetList({ searchTerm = "" }) {
                   onChange={(e) => setSelectedUserId(e.target.value)}
                 >
                   <option value="">Select Employee</option>
-                  {employees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.first_name} {emp.last_name}
-                    </option>
+                  {employees
+                    .filter(emp => emp && emp.id)
+                    .map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {(emp.first_name || "") + " " + (emp.last_name || "")}
+                      </option>
                   ))}
                 </select>
 
@@ -235,7 +324,48 @@ function AssetList({ searchTerm = "" }) {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
+          <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+            <Modal.Header closeButton>
+              <Modal.Title>Assign Asset</Modal.Title>
+            </Modal.Header>
+
+            <Modal.Body>
+              {selectedAsset && (
+                <>
+                  <p className="mb-3">
+                    <strong>{selectedAsset.asset_name}</strong>
+                  </p>
+
+                  <Form.Select
+                    value={selectedUserId}
+                    onChange={(e) => setSelectedUserId(e.target.value)}
+                  >
+                    <option value="">Select Employee</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {(emp.first_name || "") + " " + (emp.last_name || "")}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </>
+              )}
+            </Modal.Body>
+
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setShowModal(false)}>
+                Cancel
+              </Button>
+
+              <Button
+                variant="primary"
+                onClick={assignAsset}
+                disabled={assigning || !selectedUserId}
+              >
+                {assigning ? "Assigning..." : "Assign"}
+              </Button>
+            </Modal.Footer>
+          </Modal>
         </>
       )}
     </div>

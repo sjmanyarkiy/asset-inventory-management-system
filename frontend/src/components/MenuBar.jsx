@@ -18,7 +18,12 @@ function MenuBar() {
   //   user?.role?.toUpperCase() ||
   //   "";
 
-  const role = user?.role.name;
+  // const role = user?.role.name;
+  const role =
+    user?.role?.name ||
+    user?.role_name ||
+    user?.role ||
+    "";
 
   const handleLogout = () => {
     dispatch(logout());
@@ -70,6 +75,8 @@ function MenuBar() {
     }
   ];
 
+  console.log("USER:", user);
+
   return (
     <div
       className="d-flex flex-column shadow-sm"
@@ -94,8 +101,11 @@ function MenuBar() {
       {/* MENU */}
       <Nav className="flex-column gap-2">
         {menuConfig
+          // .filter((item) =>
+          //   item.roles.includes(role)
+          // )
           .filter((item) =>
-            item.roles.includes(role)
+            Array.isArray(item.roles) && item.roles.includes(role)
           )
           .map((item) => (
             <NavLink

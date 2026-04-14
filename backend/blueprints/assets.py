@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from datetime import datetime
 from backend.models.report import db
 from models.assets import Asset
+from models.role import Role
 from models.users import User
 from models.audit_log import AuditLog
 import json
@@ -44,20 +45,24 @@ def get_assets():
 
     assets = assets_query.paginate(page=page, per_page=per_page, error_out=False)
 
+    # return jsonify({
+    #     "assets": [
+    #         {
+    #             "id": a.id,
+    #             "name": a.name,
+    #             "category": a.category,
+    #             "status": a.status,
+    #             "assigned_to": {
+    #                 "id": a.assigned_to_user.id,
+    #                 "name": a.assigned_to_user.first_name
+    #             } if a.assigned_to_user else None
+    #         }
+    #         for a in assets.items
+    #     ],
+    #     "total": assets.total
+    # })
     return jsonify({
-        "assets": [
-            {
-                "id": a.id,
-                "name": a.name,
-                "category": a.category,
-                "status": a.status,
-                "assigned_to": {
-                    "id": a.assigned_to_user.id,
-                    "name": a.assigned_to_user.first_name
-                } if a.assigned_to_user else None
-            }
-            for a in assets.items
-        ],
+        "assets": [a.to_dict() for a in assets.items],
         "total": assets.total
     })
 
@@ -66,42 +71,75 @@ def get_assets():
 # ASSIGN ASSET
 # ----------------------------
 
+# @assets_bp.route("/assets/<int:asset_id>/assign", methods=["POST"])
+# def assign_asset(asset_id):
+#     data = request.json
+#     user_id = data.get("user_id")
+#     current_user_id = data.get("current_user_id")
+
+#     asset = Asset.query.get_or_404(asset_id)
+#     user = User.query.get_or_404(user_id)
+#     current_user = User.query.get_or_404(current_user_id)
+
+#     # validation
+#     # if asset.status == "Assigned":
+#     #     return jsonify({"error": "Asset already assigned"}), 400
+#     if asset.status != "Available":
+#      return jsonify({"error": "Asset not available"}), 400
+
+#     # asset.status = "Assigned"
+#     # asset.assigned_to = user.id
+#     # asset.updated_at = datetime.utcnow()
+#     asset.assign_to(user.id)
+
+#     db.session.commit()
+
+#     log_action(
+#         "ASSIGN_ASSET",
+#         asset.id,
+#         current_user.id,
+#         user.id,
+#         # {"asset": asset.name}
+#         {"asset": asset.asset_name}
+#     )
+
+#     send_email(
+#         user.email,
+#         "Asset Assigned",
+#         f"You have been assigned {asset.name}"
+#     )
+
+#     # return jsonify({"message": "Asset assigned successfully"})
+#     return jsonify({
+#         "message": "Asset assigned successfully",
+#         "asset": asset.to_dict()
+#     }), 200
 @assets_bp.route("/assets/<int:asset_id>/assign", methods=["POST"])
 def assign_asset(asset_id):
-    data = request.json
+    data = request.get_json() or {}
+
     user_id = data.get("user_id")
-    current_user_id = data.get("current_user_id")
 
     asset = Asset.query.get_or_404(asset_id)
     user = User.query.get_or_404(user_id)
-    current_user = User.query.get_or_404(current_user_id)
 
-    # validation
-    if asset.status == "Assigned":
+    # prevent double assignment
+    if asset.assigned_to:
         return jsonify({"error": "Asset already assigned"}), 400
 
-    asset.status = "Assigned"
     asset.assigned_to = user.id
+    asset.status = "Assigned"
+    asset.assigned_at = datetime.utcnow()
     asset.updated_at = datetime.utcnow()
 
+    asset.unassign()
     db.session.commit()
+    db.session.refresh(asset)
 
-    log_action(
-        "ASSIGN_ASSET",
-        asset.id,
-        current_user.id,
-        user.id,
-        {"asset": asset.name}
-    )
-
-    send_email(
-        user.email,
-        "Asset Assigned",
-        f"You have been assigned {asset.name}"
-    )
-
-    return jsonify({"message": "Asset assigned successfully"})
-
+    return jsonify({
+        "message": "Asset assigned successfully",
+        "asset": asset.to_dict()
+    }), 200
 
 # ----------------------------
 # RETURN ASSET
@@ -125,7 +163,8 @@ def return_asset(asset_id):
         "RETURN_ASSET",
         asset.id,
         current_user.id,
-        metadata={"asset": asset.name}
+        # metadata={"asset": asset.name}
+        metadata={"asset": asset.asset_name}
     )
 
     return jsonify({"message": "Asset returned successfully"})

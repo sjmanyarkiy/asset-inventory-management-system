@@ -17,6 +17,8 @@ def get_users():
     search = request.args.get("search", "").strip().lower()
     role_id = request.args.get("role")
 
+    role_name = request.args.get("role")
+
     query = User.query
 
     # -------------------
@@ -35,8 +37,10 @@ def get_users():
     # -------------------
     # ROLE FILTER
     # -------------------
-    if role_id:
-        query = query.filter(User.role_id == role_id)
+    # if role_id:
+    #     query = query.filter(User.role_id == role_id)
+    if role_name:
+        query = query.join(Role).filter(Role.name == role_name)
 
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -103,4 +107,27 @@ def assign_role(user_id):
     return jsonify({
         "message": "Role updated successfully",
         "user": user.to_dict()
+    }), 200
+
+@admin_bp.route("/assets/<int:asset_id>/assign", methods=["POST"])
+def assign_asset(asset_id):
+    asset = Asset.query.get_or_404(asset_id)
+
+    data = request.get_json() or {}
+    user_id = data.get("user_id")
+
+    if not user_id:
+        return jsonify({"error": "user_id is required"}), 400
+
+    if asset.assigned_to:
+        return jsonify({"error": "Asset already assigned"}), 400
+
+    # use your helper
+    asset.assign_to(user_id)
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Asset assigned successfully",
+        "asset": asset.to_dict()
     }), 200

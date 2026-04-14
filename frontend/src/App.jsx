@@ -6,14 +6,15 @@ import { Toaster } from "react-hot-toast";
 import store from "../redux/store";
 import "../api/axiosConfig";
 
-// Pages (existing system)
+// Pages
 import LoginPage from "../pages/LoginPage";
 import RegistrationPage from "../pages/RegistrationPage";
 import MainDashboard from "../pages/Main-Dashboard.jsx";
 import UserManagementPage from "../pages/UserManagementPage";
 import ReportsDashboard from "../pages/ReportsDashboard.jsx";
+import LandingPage from "../pages/LandingPage";
 
-// New pages (colleague work)
+
 import AssetsPage from "../pages/AssetsPage.jsx";
 import VendorsPage from "../pages/VendorsPage.jsx";
 import DepartmentsPage from "../pages/DepartmentsPage.jsx";
@@ -53,6 +54,7 @@ const App = () => {
         <Routes>
 
           {/* Public routes */}
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegistrationPage />} />
 

@@ -22,7 +22,10 @@ const getErrorMessage = (action) => {
 
 export default function VendorsPage() {
   const dispatch = useDispatch();
-  const { data, loading, error } = useSelector((state) => state.vendors);
+  // const { data, loading, error } = useSelector((state) => state.vendors);
+  const { vendors, loading, error } = useSelector(
+    (state) => state.vendors || {}
+  );
 
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState(null);
@@ -297,7 +300,7 @@ export default function VendorsPage() {
         </thead>
 
         <tbody>
-          {data?.map((vendor) => (
+          {vendors?.map((vendor) => (
             <tr key={vendor.id}>
               <td className="border p-2">{vendor.name}</td>
               <td className="border p-2">{vendor.vendor_code}</td>

@@ -112,7 +112,7 @@ class Asset(db.Model):
 
     def assign_to(self, user_id):
         self.assigned_to = user_id
-        self.status = "In Use"
+        self.status = "Assigned"
         self.updated_at = datetime.utcnow()
 
     def unassign(self):

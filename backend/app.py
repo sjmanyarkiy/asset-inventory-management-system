@@ -96,7 +96,7 @@ def create_app(config_object=None):
 
     # Register blueprints
     app.register_blueprint(auth_bp)
-    app.register_blueprint(asset_bp)
+    app.register_blueprint(asset_bp, url_prefix="/api")
     app.register_blueprint(admin_bp)
     app.register_blueprint(reports_bp, url_prefix="/api")
 
