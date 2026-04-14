@@ -44,6 +44,30 @@ function MenuBar() {
       icon: <Users size={18} />,
       roles: ["Super Admin", "Admin"],
     },
+    {
+      name: "Assets",
+      path: "/assets",
+      icon: <Home size={18} />,
+      roles: ["Super Admin", "Admin", "Manager"]
+    },
+    {
+      name: "Vendors",
+      path: "/vendors",
+      icon: <Users size={18} />,
+      roles: ["Super Admin", "Admin", "Manager"]
+    },
+    {
+      name: "Categories",
+      path: "/categories",
+      icon: <BarChart3 size={18} />,
+      roles: ["Super Admin", "Admin", "Manager"]
+    },
+    {
+      name: "Departments",
+      path: "/departments",
+      icon: <Users size={18} />,
+      roles: ["Super Admin", "Admin", "Manager"]
+    }
   ];
 
   return (

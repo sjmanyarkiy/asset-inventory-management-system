@@ -45,6 +45,11 @@ def create_app(config_object=None):
     else:
         app.config.from_object(get_config())
 
+    # =========================
+    # PREVENT TRAILING SLASH REDIRECT ISSUES
+    # =========================
+    app.url_map.strict_slashes = False
+
     # Initialize extensions
     db.init_app(app)
     # CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -62,13 +67,21 @@ def create_app(config_object=None):
     #         "allow_headers": ["Content-Type", "Authorization"]
     #     }
     # })
-    CORS(app, resources={
-        r"/api/*": {
+    # CORS(app, resources={
+    #     r"/api/*": {
+    #         "origins": "http://localhost:5173",
+    #         "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    #         "allow_headers": "*"
+    #     }
+    # })
+    CORS(
+        app,
+        resources={r"/*": {
             "origins": "http://localhost:5173",
-            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-            "allow_headers": "*"
-        }
-    })
+            "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }}
+    )
 
     jwt = JWTManager(app)
 
