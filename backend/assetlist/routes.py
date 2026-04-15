@@ -40,7 +40,7 @@ def get_assets():
     if search_query:
         filtered = [a for a in filtered if search_query in a["name"].lower() or search_query in a["category"].lower()]
     if status_filter:
-        filtered = [a for a in filtered if a["status"].lower() == status_filter]
+        filtered = [a for a in filtered if a["status"].lower() == status_filter.lower()]
 
     total     = len(filtered)
     start     = (page - 1) * per_page
