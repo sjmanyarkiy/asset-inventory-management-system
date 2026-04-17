@@ -8,23 +8,22 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
 import os
+
 from extensions import db
 
-# Import asset blueprint
+# Import blueprints
 from assetlist.routes import asset_bp
+from blueprints.auth import auth_bp
 
-# Load environment variables
 load_dotenv()
 
 
 def create_app(config_object=None):
-    """
-    Application factory function
-    Creates and configures the Flask app
-    """
     app = Flask(__name__)
 
+    # -------------------
     # Configuration
+    # -------------------
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
         'DATABASE_URL',
         'postgresql://0xc7a-11@localhost:5432/asset_inventory'
@@ -36,25 +35,22 @@ def create_app(config_object=None):
     if config_object:
         app.config.update(config_object)
 
-    # Initialize extensions
+    # -------------------
+    # Extensions
+    # -------------------
     db.init_app(app)
     CORS(app, resources={r"/api/*": {"origins": "*"}})
-    jwt = JWTManager(app)
+    JWTManager(app)
 
-    # Import models
-    from models.user import User
-    from models.role import Role
-    from models.asset import Asset
-    from models.audit_log import AuditLog
+    # -------------------
+    # Blueprints (IMPORTANT FIX)
+    # -------------------
+    app.register_blueprint(auth_bp, url_prefix="/api")
+    app.register_blueprint(asset_bp, url_prefix="/api")
 
-    # Import blueprints
-    from blueprints.auth import auth_bp
-
-    # Register blueprints
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(asset_bp)
-
+    # -------------------
     # Error handlers
+    # -------------------
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({'error': 'Resource not found'}), 404
@@ -64,16 +60,20 @@ def create_app(config_object=None):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
+    # -------------------
     # Routes
-    @app.route('/health', methods=['GET'])
+    # -------------------
+    @app.route('/api/health', methods=['GET'])
     def health_check():
         return jsonify({'status': 'ok', 'message': 'Asset Inventory API is running'}), 200
 
-    @app.route('/', methods=['GET'])
+    @app.route('/api', methods=['GET'])
     def home():
         return jsonify({'message': 'Asset Inventory Backend is running!'}), 200
 
-    # Initialize DB
+    # -------------------
+    # DB init
+    # -------------------
     with app.app_context():
         db.create_all()
         create_default_roles()
@@ -82,8 +82,10 @@ def create_app(config_object=None):
     return app
 
 
+# -------------------
+# Default roles
+# -------------------
 def create_default_roles():
-    """Create default system roles"""
     from models.role import Role
 
     if Role.query.first():
@@ -141,13 +143,15 @@ def create_default_roles():
     ]
 
     for role_data in roles_data:
-        role = Role(**role_data)
-        db.session.add(role)
+        db.session.add(Role(**role_data))
 
     db.session.commit()
     print("Default roles created successfully!")
 
 
+# -------------------
+# Run server
+# -------------------
 if __name__ == '__main__':
     app = create_app()
 

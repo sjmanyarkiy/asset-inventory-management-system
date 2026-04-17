@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request
 
 asset_bp = Blueprint("assets", __name__)  
 
-# Sample assets
+
 assets = [
     {"id": 1,  "name": "Laptop",     "category": "IT",         "status": "Assigned"},
     {"id": 2,  "name": "Printer",    "category": "Office",     "status": "Available"},
@@ -121,3 +121,27 @@ def asset_stats():
         by_status[a["status"]]      = by_status.get(a["status"], 0) + 1
         by_category[a["category"]]  = by_category.get(a["category"], 0) + 1
     return jsonify({"total": len(assets), "by_status": by_status, "by_category": by_category})
+
+
+from extensions import db
+from models.user import User
+
+@asset_bp.route("/dashboard/summary", methods=["GET"])
+def dashboard_summary():
+    by_status, by_category = {}, {}
+    for a in assets:
+        by_status[a["status"]] = by_status.get(a["status"], 0) + 1
+        by_category[a["category"]] = by_category.get(a["category"], 0) + 1
+
+    try:
+        total_users = User.query.count()
+    except:
+        total_users = 0
+
+    return jsonify({
+        "total_assets": len(assets),
+        "total_users": total_users,
+        "total_categories": len(by_category),
+        "by_status": by_status,
+        "by_category": by_category
+    })

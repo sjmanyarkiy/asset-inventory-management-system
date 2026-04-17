@@ -8,7 +8,9 @@ function SummaryCard({ label, value }) {
   return (
     <div className="bg-white rounded-xl shadow p-5 flex flex-col gap-1">
       <span className="text-sm text-gray-500 font-medium">{label}</span>
-      <span className="text-3xl font-bold text-gray-800">{value ?? "—"}</span>
+      <span className="text-3xl font-bold text-gray-800">
+        {value ?? 0}
+      </span>
     </div>
   );
 }
@@ -16,13 +18,59 @@ function SummaryCard({ label, value }) {
 function MainDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/assets/stats")
-      .then((r) => r.json())
-      .then((data) => setStats(data))
-      .catch((err) => console.error("Stats fetch error:", err));
+    const fetchSummary = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(
+          "http://127.0.0.1:5000/api/dashboard/summary",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error(`Failed to load dashboard: ${res.status}`);
+        }
+
+        const data = await res.json();
+        console.log("Dashboard data:", data);
+
+        setStats(data);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load dashboard data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSummary();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-600">
+        Loading dashboard...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -32,19 +80,23 @@ function MainDashboard() {
         <MenuBar />
 
         <main className="flex-1 p-6 space-y-6">
-
           {/* Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <SummaryCard label="Total Assets" value={stats?.total} />
-            <SummaryCard label="Categories" value={stats ? Object.keys(stats.by_category).length : null} />
-            <SummaryCard label="Assigned" value={stats?.by_status?.Assigned} />
-            <SummaryCard label="Under Repair" value={stats?.by_status?.Repair} />
+            <SummaryCard label="Total Assets" value={stats?.total_assets} />
+            <SummaryCard label="Categories" value={stats?.total_categories} />
+            <SummaryCard label="Total Users" value={stats?.total_users} />
+            <SummaryCard
+              label="Under Repair"
+              value={stats?.by_status?.Repair ?? 0}
+            />
           </div>
 
           {/* Status Breakdown */}
           {stats?.by_status && (
             <div className="bg-white rounded-xl shadow p-5">
-              <h2 className="text-lg font-semibold text-gray-700 mb-3">Assets by Status</h2>
+              <h2 className="text-lg font-semibold text-gray-700 mb-3">
+                Assets by Status
+              </h2>
               <div className="flex flex-wrap gap-3">
                 {Object.entries(stats.by_status).map(([status, count]) => (
                   <span
@@ -61,7 +113,9 @@ function MainDashboard() {
           {/* Category Breakdown */}
           {stats?.by_category && (
             <div className="bg-white rounded-xl shadow p-5">
-              <h2 className="text-lg font-semibold text-gray-700 mb-3">Assets by Category</h2>
+              <h2 className="text-lg font-semibold text-gray-700 mb-3">
+                Assets by Category
+              </h2>
               <div className="flex flex-wrap gap-3">
                 {Object.entries(stats.by_category).map(([cat, count]) => (
                   <span
@@ -75,10 +129,9 @@ function MainDashboard() {
             </div>
           )}
 
-          {/* Asset List with Search */}
+          {/* Search + Assets */}
           <SearchBar onSearch={setSearchTerm} />
           <AssetList searchTerm={searchTerm} />
-
         </main>
       </div>
     </div>
