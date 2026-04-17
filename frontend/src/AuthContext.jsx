@@ -16,9 +16,9 @@ export function AuthProvider({ children }) {
   const [token, setToken] = React.useState(() => localStorage.getItem('token'));
 
   const login = async (email, password) => {
-    const resp = await axios.post('/api/auth/login', { email, password });
-    const t = resp.data.access_token;
-    const u = resp.data.user;
+    const resp = await axios.post('/api/login', { username: email, password });
+    const t = resp.data.data.access_token;
+    const u = resp.data.data.user;
     localStorage.setItem('token', t);
     localStorage.setItem('user', JSON.stringify(u));
     setToken(t);
