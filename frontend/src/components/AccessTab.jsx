@@ -2,6 +2,8 @@ import React from "react";
 import DataTable from "./DataTable";
 import axios from "../api/axios";
 
+import { useEffect } from 'react';
+
 export default function AccessTab() {
   const [data, setData] = React.useState([]);
 
@@ -19,6 +21,17 @@ export default function AccessTab() {
     { header: "User Name", accessor: "user_name" },
     { header: "Access Level", accessor: "access_level" },
   ];
+
+  useEffect(() => {
+    axios.get("http://localhost:5000/api/reports/assigned")
+      .then(res => {
+        console.log("Assigned data:", res.data);
+        setData(res.data);
+      })
+      .catch(err => {
+        console.error("Assigned tab error:", err.response || err);
+      });
+  }, []);
 
   return (
     <div>

@@ -1,6 +1,7 @@
 import React from "react";
 import DataTable from "./DataTable";
 import axios from "../api/axios";
+import { useEffect } from 'react';
 
 export default function RepairedTab() {
   const [data, setData] = React.useState([]);
@@ -20,6 +21,17 @@ export default function RepairedTab() {
     { header: "Status", accessor: "status" },
     { header: "Reported At", accessor: "reported_at" },
   ];
+
+  useEffect(() => {
+    axios.get("http://localhost:5000/api/reports/assigned")
+      .then(res => {
+        console.log("Assigned data:", res.data);
+        setData(res.data);
+      })
+      .catch(err => {
+        console.error("Assigned tab error:", err.response || err);
+      });
+  }, []);
 
   return (
     <div>

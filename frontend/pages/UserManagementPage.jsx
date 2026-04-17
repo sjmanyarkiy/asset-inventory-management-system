@@ -39,6 +39,9 @@ const UserManagementPage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRoleId, setSelectedRoleId] = useState('');
   const [assigning, setAssigning] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [userToToggle, setUserToToggle] = useState(null);
+  const [toggling, setToggling] = useState(false);
 
   useEffect(() => {
     fetchRoles();
@@ -52,9 +55,10 @@ const UserManagementPage = () => {
   const fetchRoles = async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/admin/roles`
+        `${import.meta.env.VITE_API_URL}/api/admin/roles`
       );
-      setRoles(response.data.roles);
+      // setRoles(response.data.roles);
+      setRoles(response.data);
     } catch (err) {
       console.error('Failed to fetch roles:', err);
       setError('Failed to load roles');
@@ -72,11 +76,12 @@ const UserManagementPage = () => {
       });
 
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/admin/users?${params}`
+        `${import.meta.env.VITE_API_URL}/api/admin/users?${params}`
       );
 
       setUsers(response.data.users);
-      setTotalPages(response.data.pages);
+      // setTotalPages(response.data.pages);
+      setTotalPages(1);
       setCurrentPage(page);
       setError('');
     } catch (err) {
@@ -109,7 +114,7 @@ const UserManagementPage = () => {
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/admin/users/${selectedUser.id}/assign-role`,
+        `${import.meta.env.VITE_API_URL}/api/admin/users/${selectedUser.id}/assign-role`,
         { role_id: parseInt(selectedRoleId) }
       );
 
@@ -155,12 +160,47 @@ const UserManagementPage = () => {
     fetchUsers(page);
   };
 
+  const handleToggleClick = (user) => {
+    setUserToToggle(user);
+    setShowStatusModal(true);
+  };
+
+  const toggleUserStatus = async () => {
+    if (!userToToggle) return;
+
+    setToggling(true);
+
+    try {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_API_URL}/api/admin/users/${userToToggle.id}/toggle-status`
+      );
+
+      setUsers(users.map(u =>
+        u.id === userToToggle.id ? response.data.user : u
+      ));
+
+      setSuccess(
+        `User ${response.data.user.is_active ? "activated" : "deactivated"} successfully`
+      );
+
+      setShowStatusModal(false);
+      setUserToToggle(null);
+
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to update user status");
+    } finally {
+      setToggling(false);
+    }
+  };
+  
+
   return (
     <Container fluid className="py-4">
       {/* Header */}
       <Row className="mb-4">
         <Col>
-          <h2 className="fw-bold">User Management</h2>
+          <h2 className="fw-bold text-primary">User Management</h2>
           <p className="text-muted">Manage users and assign roles</p>
         </Col>
       </Row>
@@ -265,8 +305,8 @@ const UserManagementPage = () => {
                         </Badge>
                       </td>
                       <td className="py-3">
-                        <Badge bg={user.is_active ? 'success' : 'secondary'}>
-                          {user.is_active ? 'Active' : 'Inactive'}
+                        <Badge bg={user.is_active ? 'success' : 'danger'}>
+                          {user.is_active ? 'Active' : 'Deactivated'}
                         </Badge>
                       </td>
                       <td className="py-3 text-center">
@@ -277,7 +317,16 @@ const UserManagementPage = () => {
                           disabled={user.id === currentUser.id}
                           title={user.id === currentUser.id ? "You cannot change your own role" : "Edit role"}
                         >
+                          
                           Edit Role
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={user.is_active ? "outline-danger" : "outline-success"}
+                          onClick={() => toggleUserStatus(user.id)}
+                          disabled={user.id === currentUser.id}
+                        >
+                          {user.is_active ? "Deactivate" : "Activate"}
                         </Button>
                       </td>
                     </tr>
@@ -385,6 +434,56 @@ const UserManagementPage = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+      <Modal show={showStatusModal} onHide={() => setShowStatusModal(false)} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>
+          {userToToggle?.is_active ? "Deactivate User" : "Activate User"}
+        </Modal.Title>
+      </Modal.Header>
+
+      <Modal.Body>
+        {userToToggle && (
+          <>
+            <p>
+              Are you sure you want to{" "}
+              <strong>
+                {userToToggle.is_active ? "deactivate" : "activate"}
+              </strong>{" "}
+              this user?
+            </p>
+
+            <div className="p-2 bg-light rounded">
+              <strong>{userToToggle.username}</strong><br />
+              <small>{userToToggle.email}</small>
+            </div>
+
+            <p className="mt-3 text-muted small">
+              {userToToggle.is_active
+                ? "They will lose access to the system."
+                : "They will regain access to the system."}
+            </p>
+          </>
+        )}
+      </Modal.Body>
+
+      <Modal.Footer>
+        <Button
+          variant="secondary"
+          onClick={() => setShowStatusModal(false)}
+          disabled={toggling}
+        >
+          Cancel
+        </Button>
+
+        <Button
+          variant={userToToggle?.is_active ? "danger" : "success"}
+          onClick={toggleUserStatus}
+          disabled={toggling}
+        >
+          {toggling ? "Processing..." : "Confirm"}
+        </Button>
+      </Modal.Footer>
+    </Modal>
     </Container>
   );
 };

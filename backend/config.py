@@ -20,7 +20,11 @@ class Config:
     JWT_HEADER_TYPE = 'Bearer'
     
     # CORS Configuration
-    CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:5000').split(',')
+    # CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:5000').split(',')
+    CORS_ORIGINS = os.getenv(
+        'CORS_ORIGINS',
+        'http://localhost:3000,http://localhost:5000,http://localhost:5173'
+    ).split(',')
     
     # Application
     JSON_SORT_KEYS = False
@@ -34,7 +38,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_DATABASE_URI = os.getenv(
         'DATABASE_URL',
-        'postgresql://postgres:password@localhost:5432/asset_inventory_dev'
+        'postgresql://postgres:password@localhost:5432/asset_inventory'
     )
 
 
