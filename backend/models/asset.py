@@ -8,7 +8,7 @@ class Asset(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    # Identity
+    # Identity & Classification
     asset_name = db.Column(db.String(120), nullable=False, index=True)
     asset_code = db.Column(db.String(50), unique=True, nullable=False, index=True)
     asset_type_id = db.Column(db.Integer, db.ForeignKey('asset_types.id'), nullable=False)
@@ -29,83 +29,41 @@ class Asset(db.Model):
 
     # Assignment (CORE FEATURE)
     assigned_to = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    assigned_user = db.relationship(
-        'User',
-        foreign_keys=[assigned_to],
-        backref='assigned_assets'
-    )
     assigned_at = db.Column(db.DateTime, nullable=True)
 
     # Lifecycle state
-    status = db.Column(
-        db.String(50),
-        default='Available',
-        nullable=False
-    )
-    condition = db.Column(
-        db.String(50),
-        default='Good',
-        nullable=False
-    )
+    status = db.Column(db.String(50), default='Available', nullable=False)
+    condition = db.Column(db.String(50), default='Good', nullable=False)
 
     # Meta
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
-    )
-
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    creator = db.relationship(
-        'User',
-        foreign_keys=[created_by],
-        backref='created_assets'
-    )
 
-    # Relationships
-    # asset_type = db.relationship('AssetType', backref='assets')
-    # category = db.relationship('AssetCategory', backref='assets')
-    # vendor = db.relationship('Vendor', backref='assets')
-    # department = db.relationship('Department', backref='assets')
-    asset_type = db.relationship('AssetType')
-    category = db.relationship('AssetCategory')
-    vendor = db.relationship('Vendor')
-    department = db.relationship('Department')
+    # Relationships (no backrefs - they're defined on the other side)
+    assigned_user = db.relationship('User', foreign_keys=[assigned_to], backref='assigned_assets')
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_assets')
 
-    # -----------------------------
-    # SERIALIZATION (IMPORTANT)
-    # -----------------------------
     def to_dict(self):
         """Safe frontend-friendly serialization"""
-
         return {
             "id": self.id,
             "asset_name": self.asset_name,
             "asset_code": self.asset_code,
             "asset_type_id": self.asset_type_id,
-            "asset_type": self.asset_type.name if self.asset_type else None,
             "category_id": self.category_id,
-            "asset_category": self.category.name if self.category else None,
             "vendor_id": self.vendor_id,
-            "vendor": self.vendor.name if self.vendor else None,
             "department_id": self.department_id,
             "description": self.description,
-
             "serial_number": self.serial_number,
             "location": self.location,
-
             "purchase_date": self.purchase_date.isoformat() if self.purchase_date else None,
             "purchase_price": self.purchase_price,
             "depreciation_rate": self.depreciation_rate,
             "current_value": self.current_value,
-
-            # CORE FIX: frontend uses this
             "assigned_to": self.assigned_to,
             "assigned_at": self.assigned_at.isoformat() if self.assigned_at else None,
-
-            # IMPORTANT: full user object for UI display
             "assigned_user": {
                 "id": self.assigned_user.id,
                 "first_name": self.assigned_user.first_name,
@@ -113,20 +71,13 @@ class Asset(db.Model):
                 "email": self.assigned_user.email,
                 "username": self.assigned_user.username,
             } if self.assigned_user else None,
-
             "status": self.status,
             "condition": self.condition,
             "is_active": self.is_active,
-
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-
             "created_by": self.created_by
         }
-
-    # -----------------------------
-    # HELPERS (OPTIONAL BUT USEFUL)
-    # -----------------------------
 
     def is_assigned(self):
         return self.assigned_to is not None
