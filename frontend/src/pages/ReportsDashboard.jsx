@@ -13,14 +13,14 @@ export default function ReportsDashboard() {
 
   useEffect(() => {
     setLoading(true)
-    getAssets()
-      .then(res => setAssets(res.data || []))
+    getAssets({ per_page: 1000 })
+      .then(res => setAssets(res.data?.data || []))
       .catch(() => {
         // fallback demo data if backend is not running
         setAssets([
           { id: 1, name: 'Laptop A', department: 'Engineering', assignedTo: 'Alice', status: 'assigned', vendor: 'Dell', category: 'Laptop' },
           { id: 2, name: 'Projector X', department: 'Marketing', assignedTo: null, status: 'available', vendor: 'Epson', category: 'AV' },
-          { id: 3, name: 'Router R', department: 'IT', assignedTo: 'Bob', status: 'under repair', vendor: 'Cisco', category: 'Network' }
+          { id: 3, name: 'Router R', department: 'IT', assignedTo: 'Bob', status: 'under_repair', vendor: 'Cisco', category: 'Network' }
         ])
       })
       .finally(() => setLoading(false))

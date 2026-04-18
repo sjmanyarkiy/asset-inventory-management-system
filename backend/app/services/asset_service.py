@@ -35,14 +35,18 @@ def generate_asset_code():
 # =========================
 def validate_asset_foreign_keys(data):
     """
-    Ensures all FK references exist before insert/update
+    Ensures all FK references exist before insert/update.
+    Only validates fields that are present in the data payload
+    so partial updates (PUT with only name/status) work correctly.
     """
 
-    if not db.session.get(AssetCategory, data.get('category_id')):
-        return "Invalid category_id"
+    if 'category_id' in data:
+        if not db.session.get(AssetCategory, data.get('category_id')):
+            return "Invalid category_id"
 
-    if not db.session.get(AssetType, data.get('asset_type_id')):
-        return "Invalid asset_type_id"
+    if 'asset_type_id' in data:
+        if not db.session.get(AssetType, data.get('asset_type_id')):
+            return "Invalid asset_type_id"
 
     if data.get('vendor_id') and not db.session.get(Vendor, data.get('vendor_id')):
         return "Invalid vendor_id"

@@ -1,4 +1,5 @@
 alembic==1.14.1
+python-dotenv==1.0.1
 aniso8601==10.0.1
 blinker==1.8.2
 certifi==2025.11.12

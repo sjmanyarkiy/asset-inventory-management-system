@@ -5,6 +5,7 @@
   "scripts": {
     "start": "npm --prefix frontend run start",
     "test": "npm --prefix frontend run test -- --watchAll=false",
+    "test:e2e": "npm --prefix frontend run test:e2e",
     "start:frontend": "npm --prefix frontend run start",
     "test:frontend": "npm --prefix frontend run test -- --watchAll=false"
   }

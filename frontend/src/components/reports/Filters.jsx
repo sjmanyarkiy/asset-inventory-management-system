@@ -45,8 +45,7 @@ export default function Filters({ departments = [], vendors = [], categories = [
           <option value="all">All</option>
           <option value="available">Available</option>
           <option value="assigned">Assigned</option>
-          <option value="under repair">Under Repair</option>
-          <option value="maintenance">Maintenance</option>
+          <option value="under_repair">Under Repair</option>
           <option value="retired">Retired</option>
         </select>
       </label>

@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { useDispatch } from "react-redux";
+import toast from "react-hot-toast";
+import api from "../../services/api";
+import { createAsset, updateAsset } from "../../features/assets/assetSlice";
 
-const BASE_URL = "http://127.0.0.1:5000";
+const BASE_URL = "http://127.0.0.1:5001";
 
 const AssetForm = ({ asset, onSuccess, onClose }) => {
+  const dispatch = useDispatch();
   const isEdit = !!asset;
 
   const [formData, setFormData] = useState({
@@ -27,28 +31,39 @@ const AssetForm = ({ asset, onSuccess, onClose }) => {
     vendors: [],
     departments: [],
   });
+  const [dropdownLoading, setDropdownLoading] = useState(true);
 
   const [modal, setModal] = useState({
     open: false,
     type: "",
     value: "",
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
 
   useEffect(() => {
     const load = async () => {
-      const [c, t, v, d] = await Promise.all([
-        axios.get(`${BASE_URL}/categories`),
-        axios.get(`${BASE_URL}/types`),
-        axios.get(`${BASE_URL}/vendors`),
-        axios.get(`${BASE_URL}/departments`),
-      ]);
+      setDropdownLoading(true);
+      try {
+        const [c, t, v, d] = await Promise.all([
+          api.get("/categories"),
+          api.get("/types"),
+          api.get("/vendors"),
+          api.get("/departments"),
+        ]);
 
-      setDropdowns({
-        categories: c.data.data || [],
-        types: t.data.data || [],
-        vendors: v.data.data || [],
-        departments: d.data.data || [],
-      });
+        setDropdowns({
+          categories: c.data.data || [],
+          types: t.data.data || [],
+          vendors: v.data.data || [],
+          departments: d.data.data || [],
+        });
+      } catch {
+        setFormError("Failed to load form options. Please try again.");
+        toast.error("Failed to load dropdown data");
+      } finally {
+        setDropdownLoading(false);
+      }
     };
 
     load();
@@ -80,60 +95,122 @@ const AssetForm = ({ asset, onSuccess, onClose }) => {
     const { type, value } = modal;
     if (!value) return;
 
-    let payload = { name: value };
+    setFormError("");
 
-    if (type === "categories") payload.category_code = value.slice(0, 4).toUpperCase();
-    if (type === "types") payload.type_code = value.slice(0, 4).toUpperCase();
-    if (type === "departments") payload.department_code = value.slice(0, 4).toUpperCase();
+    try {
+      let payload = { name: value };
 
-    const res = await axios.post(`${BASE_URL}/${type}`, payload);
-    const newItem = res.data;
+      if (type === "categories") payload.category_code = value.slice(0, 4).toUpperCase();
+      if (type === "types") {
+        payload.type_code = value.slice(0, 4).toUpperCase();
+        payload.category_id = Number(formData.category_id);
 
-    const map = {
-      categories: "category_id",
-      types: "asset_type_id",
-      vendors: "vendor_id",
-      departments: "department_id",
-    };
+        if (!payload.category_id) {
+          const message = "Select a category first before adding a new type.";
+          setFormError(message);
+          toast.error(message);
+          return;
+        }
+      }
+      if (type === "departments") payload.department_code = value.slice(0, 4).toUpperCase();
 
-    setDropdowns((prev) => ({
-      ...prev,
-      [type]: [...prev[type], newItem],
-    }));
+      const res = await api.post(`/${type}`, payload);
+      const newItem = res.data?.data || res.data;
 
-    setFormData((prev) => ({
-      ...prev,
-      [map[type]]: newItem.id,
-    }));
+      const map = {
+        categories: "category_id",
+        types: "asset_type_id",
+        vendors: "vendor_id",
+        departments: "department_id",
+      };
 
-    setModal({ open: false, type: "", value: "" });
+      setDropdowns((prev) => ({
+        ...prev,
+        [type]: [...prev[type], newItem],
+      }));
+
+      setFormData((prev) => ({
+        ...prev,
+        [map[type]]: newItem.id,
+      }));
+
+      setModal({ open: false, type: "", value: "" });
+      toast.success("New option added");
+    } catch (err) {
+      const message = err?.response?.data?.error || "Failed to add option";
+      setFormError(message);
+      toast.error(message);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError("");
 
-    const form = new FormData();
-
-    Object.entries(formData).forEach(([k, v]) => {
-      if (v !== "") form.append(k, v);
-    });
-
-    if (file) form.append("image_file", file);
-
-    if (isEdit) {
-      await axios.put(`${BASE_URL}/assets/${asset.id}`, form);
-    } else {
-      await axios.post(`${BASE_URL}/assets`, form);
+    if (!formData.name?.trim()) {
+      setFormError("Asset name is required.");
+      toast.error("Asset name is required");
+      return;
     }
 
-    onSuccess();
-    onClose();
+    if (!formData.barcode?.trim()) {
+      setFormError("Barcode is required.");
+      toast.error("Barcode is required");
+      return;
+    }
+
+    if (!formData.category_id) {
+      setFormError("Category is required.");
+      toast.error("Category is required");
+      return;
+    }
+
+    if (!formData.asset_type_id) {
+      setFormError("Type is required.");
+      toast.error("Type is required");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const form = new FormData();
+
+      Object.entries(formData).forEach(([k, v]) => {
+        if (v !== "") form.append(k, v);
+      });
+
+      if (file) form.append("image_file", file);
+
+      if (isEdit) {
+        await dispatch(
+          updateAsset({
+            id: asset.id,
+            data: form,
+          })
+        ).unwrap();
+      } else {
+        await dispatch(createAsset(form)).unwrap();
+      }
+
+      onSuccess();
+    } catch (err) {
+      const message =
+        typeof err === "string"
+          ? err
+          : err?.response?.data?.error || "Unable to save asset. Please try again.";
+      setFormError(message);
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const renderSelect = (label, name, type) => (
     <select
       name={name}
       value={formData[name]}
+      disabled={submitting || dropdownLoading}
       onChange={(e) => {
         if (e.target.value === "__new__") {
           setModal({ open: true, type, value: "" });
@@ -166,14 +243,20 @@ const AssetForm = ({ asset, onSuccess, onClose }) => {
   return (
     <form onSubmit={handleSubmit} className="p-4 space-y-3 bg-white">
 
-      <input name="name" placeholder="Asset Name" value={formData.name} onChange={handleChange} className="border p-2 w-full" />
-      <input name="asset_code" placeholder="Asset Code" value={formData.asset_code} onChange={handleChange} className="border p-2 w-full" />
-      <input name="barcode" placeholder="Barcode" value={formData.barcode} onChange={handleChange} className="border p-2 w-full" />
+      {formError && (
+        <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {formError}
+        </div>
+      )}
 
-      <select name="status" value={formData.status} onChange={handleChange} className="border p-2 w-full">
+      <input name="name" placeholder="Asset Name" value={formData.name} onChange={handleChange} className="border p-2 w-full" disabled={submitting || dropdownLoading} />
+      <input name="asset_code" placeholder="Asset Code" value={formData.asset_code} onChange={handleChange} className="border p-2 w-full" disabled={submitting || dropdownLoading} />
+      <input name="barcode" placeholder="Barcode" value={formData.barcode} onChange={handleChange} className="border p-2 w-full" disabled={submitting || dropdownLoading} />
+
+      <select name="status" value={formData.status} onChange={handleChange} className="border p-2 w-full" disabled={submitting || dropdownLoading}>
         <option value="available">Available</option>
         <option value="assigned">Assigned</option>
-        <option value="maintenance">Maintenance</option>
+        <option value="under_repair">Under Repair</option>
         <option value="retired">Retired</option>
       </select>
 
@@ -182,7 +265,7 @@ const AssetForm = ({ asset, onSuccess, onClose }) => {
       {renderSelect("Vendor", "vendor_id", "vendors")}
       {renderSelect("Department", "department_id", "departments")}
 
-      <textarea name="description" value={formData.description} onChange={handleChange} className="border p-2 w-full" />
+      <textarea name="description" value={formData.description} onChange={handleChange} className="border p-2 w-full" disabled={submitting || dropdownLoading} />
 
       {/* IMAGE SECTION (ONLY CHANGE IS HERE) */}
       <div className="border p-2 w-full flex flex-col gap-2">
@@ -191,11 +274,12 @@ const AssetForm = ({ asset, onSuccess, onClose }) => {
           type="file"
           id="file"
           className="hidden"
+          disabled={submitting || dropdownLoading}
           onChange={(e) => setFile(e.target.files[0])}
         />
 
         <label htmlFor="file">
-          <span className="inline-block bg-yellow-500 text-black px-4 py-2 rounded cursor-pointer hover:bg-yellow-600 font-semibold underline underline-offset-2">
+          <span className={`inline-block bg-yellow-500 text-black px-4 py-2 rounded font-semibold underline underline-offset-2 ${submitting ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-yellow-600"}`}>
             {file ? "Selected File" : isEdit ? "Change Image" : "Choose Image"}
           </span>
         </label>
@@ -210,11 +294,14 @@ const AssetForm = ({ asset, onSuccess, onClose }) => {
       </div>
 
       <div className="flex gap-2">
-        <button className="bg-blue-600 text-white px-4 py-2">
-          {isEdit ? "Update Asset" : "Create Asset"}
+        <button
+          className={`text-white px-4 py-2 ${submitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+          disabled={submitting || dropdownLoading}
+        >
+          {submitting ? "Saving..." : dropdownLoading ? "Loading options..." : isEdit ? "Update Asset" : "Create Asset"}
         </button>
 
-        <button type="button" onClick={onClose}>
+        <button type="button" onClick={onClose} disabled={submitting || dropdownLoading} className={submitting || dropdownLoading ? "opacity-60 cursor-not-allowed" : ""}>
           Cancel
         </button>
       </div>

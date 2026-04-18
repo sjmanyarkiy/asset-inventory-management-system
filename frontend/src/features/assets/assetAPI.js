@@ -18,14 +18,20 @@ export const getAssetById = (id) => {
    CREATE ASSET
 ========================= */
 export const createAsset = (data) => {
-  return api.post("/assets", data);
+  const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
+  return api.post("/assets", data, isFormData ? { headers: { "Content-Type": "multipart/form-data" } } : undefined);
 };
 
 /* =========================
    UPDATE ASSET
 ========================= */
 export const updateAsset = (id, data) => {
-  return api.put(`/assets/${id}`, data);
+  const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
+  return api.put(
+    `/assets/${id}`,
+    data,
+    isFormData ? { headers: { "Content-Type": "multipart/form-data" } } : undefined
+  );
 };
 
 /* =========================

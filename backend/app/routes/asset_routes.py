@@ -27,8 +27,19 @@ def create_asset():
         data = dict(request.form)
         file = request.files.get("image_file")
 
-        if not data.get('name') or not data.get('barcode'):
-            return jsonify({"error": "name and barcode are required"}), 400
+        required_fields = ["name", "barcode", "category_id", "asset_type_id"]
+        missing_fields = [field for field in required_fields if not str(data.get(field, "")).strip()]
+        if missing_fields:
+            return jsonify({
+                "error": f"Missing required fields: {', '.join(missing_fields)}"
+            }), 400
+
+        for field in ["category_id", "asset_type_id", "vendor_id", "department_id"]:
+            if field in data and str(data[field]).strip() != "":
+                try:
+                    data[field] = int(data[field])
+                except ValueError:
+                    return jsonify({"error": f"{field} must be a number"}), 400
 
         image_file_path = None
 

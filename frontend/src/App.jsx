@@ -1,14 +1,17 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 
-import AssetsPage from './pages/AssetsPage'
-import VendorsPage from './pages/VendorsPage'
-import DepartmentsPage from './pages/DepartmentsPage'
-import CategoriesPage from './pages/CategoriesPage'
-import TypesPage from './pages/TypesPage'
-import ReportsDashboard from './pages/ReportsDashboard'
-import Login from './components/Login'
+import './App.css'
+
+const AssetsPage = lazy(() => import('./pages/AssetsPage'))
+const VendorsPage = lazy(() => import('./pages/VendorsPage'))
+const DepartmentsPage = lazy(() => import('./pages/DepartmentsPage'))
+const CategoriesPage = lazy(() => import('./pages/CategoriesPage'))
+const TypesPage = lazy(() => import('./pages/TypesPage'))
+const ReportsDashboard = lazy(() => import('./pages/ReportsDashboard'))
+const Login = lazy(() => import('./components/Login'))
+const PremiumLandingPage = lazy(() => import('./components/landing/PremiumLandingPage'))
 
 export default function App() {
   return (
@@ -19,25 +22,30 @@ export default function App() {
         toastOptions={{ duration: 3000 }}
       />
 
-      <div style={{ padding: 20 }}>
-        <header>
+      <div className="app-shell">
+        <header className="app-header">
           <h1>Asset Inventory System</h1>
-          <nav>
-            <Link to="/">Home</Link> | <Link to="/login">Login</Link> | <Link to="/reports">Reports</Link>
+          <nav className="top-nav" aria-label="Main navigation">
+            <Link to="/">Home</Link>
+            <Link to="/assets">Assets</Link>
+            <Link to="/reports">Reports</Link>
+            <Link to="/login">Login</Link>
           </nav>
         </header>
 
-        <Routes>
-          <Route path="/" element={<div>Welcome to the Asset Inventory frontend (dev)</div>} />
-          <Route path="/login" element={<Login />} />
+        <Suspense fallback={<div className="route-loading">Loading page…</div>}>
+          <Routes>
+            <Route path="/" element={<PremiumLandingPage />} />
+            <Route path="/login" element={<Login />} />
 
-          <Route path="/assets" element={<AssetsPage />} />
-          <Route path="/vendors" element={<VendorsPage />} />
-          <Route path="/departments" element={<DepartmentsPage />} />
-          <Route path="/categories" element={<CategoriesPage />} />
-          <Route path="/types" element={<TypesPage />} />
-          <Route path="/reports" element={<ReportsDashboard />} />
-        </Routes>
+            <Route path="/assets" element={<AssetsPage />} />
+            <Route path="/vendors" element={<VendorsPage />} />
+            <Route path="/departments" element={<DepartmentsPage />} />
+            <Route path="/categories" element={<CategoriesPage />} />
+            <Route path="/types" element={<TypesPage />} />
+            <Route path="/reports" element={<ReportsDashboard />} />
+          </Routes>
+        </Suspense>
       </div>
     </BrowserRouter>
   )

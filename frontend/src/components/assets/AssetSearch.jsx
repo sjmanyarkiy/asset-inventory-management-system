@@ -11,6 +11,10 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
 
   const [localSearch, setLocalSearch] = useState(search || "");
 
+  useEffect(() => {
+    setLocalSearch(search || "");
+  }, [search]);
+
   // =========================
   // LOAD DROPDOWNS (SHARED SOURCE OF TRUTH)
   // =========================
@@ -47,7 +51,7 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
     }, 400);
 
     return () => clearTimeout(delay);
-  }, [localSearch]);
+  }, [localSearch, setSearch]);
 
   // =========================
   // FILTER UPDATE
@@ -159,7 +163,7 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
           <option value="">All Status</option>
           <option value="available">Available</option>
           <option value="assigned">Assigned</option>
-          <option value="maintenance">Maintenance</option>
+          <option value="under_repair">Under Repair</option>
           <option value="retired">Retired</option>
         </select>
 

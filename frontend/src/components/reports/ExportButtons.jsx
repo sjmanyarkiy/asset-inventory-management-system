@@ -1,5 +1,4 @@
 import React from 'react'
-import { jsPDF } from 'jspdf'
 
 function toCSV(rows) {
   if (!rows || !rows.length) return ''
@@ -24,8 +23,9 @@ export default function ExportButtons({ assets = [] }) {
     URL.revokeObjectURL(url)
   }
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
     try {
+      const { jsPDF } = await import('jspdf')
       if (typeof jsPDF === 'function') {
         const doc = new jsPDF()
         doc.setFontSize(14)
