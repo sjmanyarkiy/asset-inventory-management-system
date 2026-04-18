@@ -77,7 +77,10 @@ const RegistrationPage = () => {
             const response = await axios.post(
                 `${import.meta.env.VITE_API_URL}/api/auth/register`,
                 formData
+                
             );
+            alert('Registration successful! Please check your email to verify your account.');
+            navigate('/check-email');  // New page
 
             const { user, access_token: token } = response.data.data;
 

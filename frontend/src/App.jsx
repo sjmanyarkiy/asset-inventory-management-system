@@ -14,6 +14,8 @@ import UserManagementPage from "../pages/UserManagementPage";
 import ReportsDashboard from "../pages/ReportsDashboard.jsx";
 import LandingPage from "../pages/LandingPage";
 import AssetRequestPage from "../pages/AssetRequestPage.jsx";
+import RequestApprovalPage from "../pages/RequestApprovalPage.jsx";
+import UserProfilePage from "../pages/UserProfilePage.jsx";
 
 
 import AssetsPage from "../pages/AssetsPage.jsx";
@@ -163,6 +165,26 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/approvals"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <RequestApprovalPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* User profile route */}
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <UserProfilePage />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
 
           {/* Root redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

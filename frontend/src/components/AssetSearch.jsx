@@ -11,6 +11,9 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
 
   const BASE_URL = "http://127.0.0.1:5000";
 
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+
   // =========================
   // SAFE API RESPONSE HANDLER
   // =========================
@@ -24,11 +27,12 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
   const fetchDropdownData = async () => {
     try {
       const [catRes, typeRes, vendorRes, deptRes] = await Promise.all([
-        axios.get(`${BASE_URL}/categories`),
-        axios.get(`${BASE_URL}/types`),
-        axios.get(`${BASE_URL}/vendors`),
-        axios.get(`${BASE_URL}/departments`)
+        axios.get(`${API_URL}/api/asset-categories`),
+        axios.get(`${API_URL}/api/asset-types`),
+        axios.get(`${API_URL}/api/vendors`),
+        axios.get(`${API_URL}/api/departments`)
       ]);
+
 
       setCategories(extractData(catRes));
       setTypes(extractData(typeRes));

@@ -43,7 +43,7 @@ function LoginPage() {
 
       dispatch(setUser(user));
       dispatch(setToken(token));
-      localStorage.setItem('token', token);
+      localStorage.setItem('access_token', token);
       localStorage.setItem('user', JSON.stringify(user))
 
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;

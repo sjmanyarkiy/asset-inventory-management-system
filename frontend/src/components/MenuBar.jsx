@@ -1,10 +1,12 @@
 import React from "react";
-import { Nav } from "react-bootstrap";
+import { Nav, Dropdown } from "react-bootstrap";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, selectUser } from "../../redux/slices/authSlice";
+import UserProfile from "../components/UserProfile";
 
-import { Home, BarChart3, Users, LogOut } from "lucide-react";
+import { Home, BarChart3, Users, LogOut, User } from "lucide-react";
+import { CheckSquare } from 'react-feather';
 
 function MenuBar() {
   const navigate = useNavigate();
@@ -78,7 +80,20 @@ function MenuBar() {
       path: "/requests",
       icon: <BarChart3 size={18} />,
       roles: ["Super Admin", "Admin", "Employee", "Manager"]
-    }
+    },
+    {
+      name: "Request Approvals",
+      path: "/approvals",
+      icon: <CheckSquare size={18} />,
+      roles: ["Super Admin", "Manager"],  // Only managers and admins see this
+      divider: true
+    },
+    {
+      name: "Profile",
+      path: "/profile",
+      icon: <User size={18} />,
+      roles: ["Super Admin", "Admin", "Employee", "Manager"]
+    },
   ];
 
   console.log("USER:", user);
@@ -133,7 +148,7 @@ function MenuBar() {
       </Nav>
 
       {/* FOOTER */}
-      <div className="mt-auto pt-3 border-top border-light border-opacity-25">
+      {/* <div className="mt-auto pt-3 border-top border-light border-opacity-25">
         <div className="mb-2 small opacity-75">
           Signed in as <br />
           <strong>{user?.email || "User"}</strong>
@@ -146,6 +161,30 @@ function MenuBar() {
           <LogOut size={16} />
           Logout
         </button>
+      </div> */}
+      <div className="mt-auto pt-3 border-top border-light border-opacity-25">
+        <div className="mb-3">
+          <UserProfile />  {/* NEW: Inline profile with avatar/role */}
+        </div>
+        
+        <Dropdown className="w-100">
+          <Dropdown.Toggle 
+            variant="light" 
+            className="w-100 text-start d-flex align-items-center gap-2 py-2"
+          >
+            <User size={16} />
+            Manage Account
+          </Dropdown.Toggle>
+          
+          <Dropdown.Menu className="w-100">
+            <Dropdown.Item as={NavLink} to="/profile">
+              <User size={16} className="me-2" /> View Profile
+            </Dropdown.Item>
+            <Dropdown.Item onClick={handleLogout}>
+              <LogOut size={16} className="me-2" /> Logout
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
       </div>
 
       {/* hover styling */}

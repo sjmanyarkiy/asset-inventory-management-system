@@ -12,15 +12,10 @@ load_dotenv()
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from flask_migrate import Migrate
 
 from extensions import db
 from config import get_config
-
-# Import asset blueprint
-from assetlist.routes import asset_bp
-from blueprints.admin import admin_bp
-from blueprints.reports import reports_bp
-from blueprints.requests import requests_bp
 
 
 def create_app(config_object=None):
@@ -39,6 +34,8 @@ def create_app(config_object=None):
     # Override with environment variables if present
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', app.config.get('SECRET_KEY', 'dev-secret-key-change-in-production'))
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', app.config.get('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production'))
+    app.config['RESEND_API_KEY'] = os.getenv('RESEND_API_KEY')
+    app.config['FRONTEND_URL'] = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 
     # =========================
     # PREVENT TRAILING SLASH REDIRECT ISSUES
@@ -82,10 +79,18 @@ def create_app(config_object=None):
     from models.vendor import Vendor
     from models.asset_request import AssetRequest
     from models.repair_request import RepairRequest
-    from blueprints.asset_types_routes import asset_types_bp
+    
 
     # Import blueprints
+    from assetlist.routes import asset_bp
+    from blueprints.admin import admin_bp
+    from blueprints.reports import reports_bp
+    from blueprints.requests import requests_bp
     from blueprints.auth import auth_bp
+    from blueprints.asset_types_routes import asset_types_bp
+    from blueprints.review_routes import review_bp
+
+    migrate = Migrate(app, db)
 
     # Register blueprints
     app.register_blueprint(auth_bp)
@@ -94,6 +99,7 @@ def create_app(config_object=None):
     app.register_blueprint(reports_bp, url_prefix="/api")
     app.register_blueprint(requests_bp)
     app.register_blueprint(asset_types_bp)
+    app.register_blueprint(review_bp)
 
     # Error handlers
     @app.errorhandler(404)

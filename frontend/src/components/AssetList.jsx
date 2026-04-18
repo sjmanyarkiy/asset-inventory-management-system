@@ -17,6 +17,9 @@ function AssetList({ searchTerm = "" }) {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [assigning, setAssigning] = useState(false);
 
+  //API
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
   useEffect(() => {
     setPage(1);
   }, [searchTerm, status]);
@@ -35,7 +38,8 @@ function AssetList({ searchTerm = "" }) {
       per_page: perPage,
     });
 
-    fetch(`http://localhost:5000/api/assets?${params.toString()}`)
+    // fetch(`http://localhost:5000/api/assets?${params.toString()}`)
+    fetch(`${API_URL}/api/assets?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         setAssets(data.assets || []);
@@ -50,9 +54,7 @@ function AssetList({ searchTerm = "" }) {
 
   const fetchEmployees = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/api/admin/users?role=Employee"
-      );
+      const res = await axios.get(`${API_URL}/api/admin/users?role=Employee`);
       setEmployees(res.data.users || []);
     } catch (err) {
       console.error("Failed to fetch employees:", err);
@@ -108,7 +110,7 @@ function AssetList({ searchTerm = "" }) {
       //   { user_id: parseInt(selectedUserId) }
       // );
       const res = await axios.post(
-        `http://localhost:5000/api/assets/${selectedAsset.id}/assign`,
+        `${API_URL}/api/assets/${selectedAsset.id}/assign`,
         { user_id: parseInt(selectedUserId) }
       );
       // update UI instantly
@@ -131,8 +133,7 @@ function AssetList({ searchTerm = "" }) {
   const returnAsset = async (assetId) => {
     try {
       const res = await axios.post(
-        `http://localhost:5000/api/assets/${assetId}/return`,
-        { current_user_id: 1 } // replace with auth user
+        `${API_URL}/api/assets/${assetId}/return`
       );
 
       setAssets((prev) =>

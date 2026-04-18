@@ -224,6 +224,7 @@ def create_users(roles):
             'last_name': 'Administrator',
             'password': 'Admin@123!',
             'is_active': True,
+            'is_email_verified': True,
             'role': role_map.get('Super Admin')
         },
         {
@@ -233,6 +234,7 @@ def create_users(roles):
             'last_name': 'Teresa',
             'password': 'Teresa@123!',
             'is_active': True,
+            'is_email_verified': True,
             'role': role_map.get('Admin')
         },
         {
@@ -242,6 +244,7 @@ def create_users(roles):
             'last_name': 'Kiama',
             'password': 'Manager@123!',
             'is_active': True,
+            'is_email_verified': True,
             'role': role_map.get('Manager')
         },
         {
@@ -251,6 +254,7 @@ def create_users(roles):
             'last_name': 'Mdogo',
             'password': 'Manager@123!',
             'is_active': True,
+            'is_email_verified': True,
             'role': role_map.get('Manager')
         },
         {
@@ -260,6 +264,7 @@ def create_users(roles):
             'last_name': 'Kamongo',
             'password': 'alice@123!',
             'is_active': True,
+            'is_email_verified': True,
             'role': role_map.get('Employee')
         },
         {
@@ -269,6 +274,7 @@ def create_users(roles):
             'last_name': 'Wamalwa',
             'password': 'kevin@123!',
             'is_active': True,
+            'is_email_verified': True,
             'role': role_map.get('Employee')
         },
         {
@@ -278,6 +284,7 @@ def create_users(roles):
             'last_name': 'Cheboi',
             'password': 'carol@123!',
             'is_active': True,
+            'is_email_verified': True,
             'role': role_map.get('Employee')
         },
         {
@@ -287,6 +294,7 @@ def create_users(roles):
             'last_name': 'Maingi',
             'password': 'david@123!',
             'is_active': True,
+            'is_email_verified': True,
             'role': role_map.get('Employee')
         },
         {
@@ -296,6 +304,7 @@ def create_users(roles):
             'last_name': 'Zake',
             'password': 'mwenda@123!',
             'is_active': False,
+            'is_email_verified': False,
             'role': role_map.get('Employee')
         }
     ]
@@ -679,6 +688,36 @@ def create_reports(users):
 
 
 def print_seed_summary(users, roles):
+    """Print summary of seeded data"""
+    
+    print("=" * 70)
+    print("🎉 SEED DATA SUMMARY")
+    print("=" * 70)
+    
+    print("\n📋 ROLES:")
+    for role in roles:
+        user_count = len(role.users) if hasattr(role, 'users') and role.users else 0
+        print(f"   • {role.name} (Level {role.hierarchy_level}) - {user_count} users")
+    
+    print("\n👥 TEST USERS:")
+    print("   Status Username              Email                          Role")
+    print("   " + "-" * 67)
+    for user in users:
+        role_name = user.role.name if user.role else "None"
+        status = "✓" if user.is_active else "✗"
+        verified = "✅" if user.is_email_verified else "⚠"
+        print(f"   {status} {verified}  {user.username:<20} {user.email:<30} {role_name}")
+    
+    print("\n🔐 LOGIN CREDENTIALS (All verified users ready to login):")
+    print("   Admin (Super Admin): admin / Admin@123!")
+    print("   Admin: teresa / Teresa@123!")
+    print("   Managers: managermkubwa or managermdogo / Manager@123!")
+    print("   Employees: alice-kamongo, kevin-wamalwa, etc. / [their password]")
+    print("   ⚠ mwenda-zake is inactive/unverified (demo purposes)")
+    
+    print("\n" + "=" * 70)
+    print("✨ Database seeding complete! Ready for testing.")
+    print("=" * 70 + "\n")
     """Print summary of seeded data"""
     
     print("=" * 70)

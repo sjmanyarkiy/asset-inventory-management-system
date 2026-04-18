@@ -15,8 +15,6 @@ class Role(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    users = db.relationship('User', backref='role', lazy=True)
-    
     def to_dict(self):
         """Convert role to dictionary"""
         return {
@@ -25,6 +23,5 @@ class Role(db.Model):
             'description': self.description,
             'permissions': self.permissions,
             'hierarchy_level': self.hierarchy_level,
-            'is_system': self.is_system,
-            'user_count': len(self.users) if self.users else 0
+            'is_system': self.is_system
         }

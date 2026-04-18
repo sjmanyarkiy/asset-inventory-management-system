@@ -10,7 +10,7 @@ class RepairRequest(db.Model):
     
     # Requester info
     requested_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    requester = db.relationship('User', foreign_keys=[requested_by], backref='repair_requests')
+    requested_user = db.relationship('User', foreign_keys=[requested_by], backref='repair_requests')
     
     # Asset being repaired
     asset_id = db.Column(db.Integer, db.ForeignKey('assets.id'), nullable=False)
@@ -42,19 +42,18 @@ class RepairRequest(db.Model):
         return {
             'id': self.id,
             'requested_by': self.requested_by,
-            'requester': {
-                'id': self.requester.id,
-                'first_name': self.requester.first_name,
-                'last_name': self.requester.last_name,
-                'email': self.requester.email,
-                'username': self.requester.username
-            } if self.requester else None,
+            'requested_user': {
+                'id': self.requested_user.id,
+                'first_name': self.requested_user.first_name,
+                'last_name': self.requested_user.last_name,
+                'email': self.requested_user.email,
+                'username': self.requested_user.username
+            } if self.requested_user else None,
             'asset_id': self.asset_id,
             'asset': {
                 'id': self.asset.id,
                 'asset_name': self.asset.asset_name,
                 'asset_code': self.asset.asset_code,
-                'asset_type': self.asset.asset_type
             } if self.asset else None,
             'issue_description': self.issue_description,
             'urgency': self.urgency,

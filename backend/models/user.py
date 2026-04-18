@@ -1,6 +1,8 @@
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from extensions import db
+import uuid
+from datetime import datetime, timedelta
 
 
 class User(db.Model):
@@ -18,11 +20,16 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_login = db.Column(db.DateTime, nullable=True)
+    is_email_verified = db.Column(db.Boolean, default=False)
+    email_verification_token = db.Column(db.String(255), unique=True, nullable=True)
+    email_verification_expires = db.Column(db.DateTime, nullable=True)
 
-    # department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
-    # department = db.relationship('Department', backref='users')
+    # Department relationships
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
     department = db.relationship('Department', foreign_keys=[department_id], backref='department_employees')
+    
+    # Relationships
+    role = db.relationship('Role', backref='users')
     
     def set_password(self, password):
         """Hash and set password"""
@@ -51,12 +58,21 @@ class User(db.Model):
             'id': self.id,
             'username': self.username,
             'email': self.email,
-            'first_name': self.first_name,
-            'last_name': self.last_name,
+            'first_name': self.first_name or '',
+            'last_name': self.last_name or '',
+            'full_name': f"{self.first_name or self.username} {self.last_name or ''}".strip(),
             'is_active': self.is_active,
             'role_id': self.role_id,
             'role': self.role.to_dict() if self.role else None,
             'is_admin': self.is_admin,
+            'is_email_verified': self.is_email_verified,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None
         }
+    
+    def generate_email_token(self):
+        """Generate email verification token (24hr expiry)"""
+        self.email_verification_token = str(uuid.uuid4())
+        self.email_verification_expires = datetime.utcnow() + timedelta(hours=24)
+        db.session.commit()
+        return self.email_verification_token

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Form, Button, Alert, Spinner } from 'react-bootstrap';
 
-const AssetRequestForm = () => {
+const AssetRequestForm = ({ onRequestSubmitted }) => {
   const [formData, setFormData] = useState({
     asset_type_id: '',
     quantity: 1,
@@ -24,7 +24,15 @@ const AssetRequestForm = () => {
 
   const fetchAssetTypes = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/asset-types`);
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(
+        `${API_URL}/api/asset-types`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
       setAssetTypes(response.data.data || response.data || []);
     } catch (err) {
       console.error('Failed to fetch asset types:', err);
@@ -81,6 +89,11 @@ const AssetRequestForm = () => {
         reason: '',
         urgency: 'Medium'
       });
+
+      // Refresh parent's request list if callback provided
+      if (onRequestSubmitted) {
+        onRequestSubmitted();
+      }
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000);
