@@ -3,11 +3,16 @@ Main Flask application entry point
 Asset Inventory Management System
 """
 
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
+
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from dotenv import load_dotenv
-import os
+
 from extensions import db
 from config import get_config
 
@@ -15,9 +20,7 @@ from config import get_config
 from assetlist.routes import asset_bp
 from blueprints.admin import admin_bp
 from blueprints.reports import reports_bp
-
-# Load environment variables
-load_dotenv()
+from blueprints.requests import requests_bp
 
 
 def create_app(config_object=None):
@@ -27,23 +30,15 @@ def create_app(config_object=None):
     """
     app = Flask(__name__)
 
-    # Configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-        'DATABASE_URL',
-        'postgresql://0xc7a-11@localhost:5432/asset_inventory'
-    )
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production')
-
-    # if config_object:
-    #     # app.config.update(config_object)
-    #     app.config.from_object(config_object)
-
+    # Configuration - Load from config.py based on environment
     if config_object:
         app.config.from_object(get_config(config_object))
     else:
         app.config.from_object(get_config())
+    
+    # Override with environment variables if present
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', app.config.get('SECRET_KEY', 'dev-secret-key-change-in-production'))
+    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', app.config.get('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production'))
 
     # =========================
     # PREVENT TRAILING SLASH REDIRECT ISSUES
@@ -52,36 +47,27 @@ def create_app(config_object=None):
 
     # Initialize extensions
     db.init_app(app)
-    # CORS(app, resources={r"/api/*": {"origins": "*"}})
-    # CORS(app)
-    # CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
-    # CORS(app, resources={
-    #     r"/api/*": {"origins": "http://localhost:5173"},
-    #     r"/assets/*": {"origins": "http://localhost:5173"},
-    #     r"/assets": {"origins": "http://localhost:5173"}
-    # })
-    # CORS(app, resources={
-    #     r"/api/*": {
-    #         "origins": "http://localhost:5173",
-    #         "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    #         "allow_headers": ["Content-Type", "Authorization"]
-    #     }
-    # })
-    # CORS(app, resources={
-    #     r"/api/*": {
-    #         "origins": "http://localhost:5173",
-    #         "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    #         "allow_headers": "*"
-    #     }
-    # })
-    CORS(
-        app,
-        resources={r"/*": {
-            "origins": "http://localhost:5173",
-            "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"]
-        }}
+    
+    # CORS Configuration - Allow both local development and Render URLs
+    allowed_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3000').split(',')
+    print(f"DEBUG: CORS allowed origins = {allowed_origins}") 
+
+    # CORS(
+    #     app,
+    #     resources={r"/*": {
+    #         "origins": allowed_origins,
+    #         "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    #         "allow_headers": ["Content-Type", "Authorization"],
+    #         "supports_credentials": True
+    #     }}
+    # )
+    CORS(app, 
+         origins=["http://localhost:5173", "http://localhost:3000"],
+         methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+         allow_headers=["Content-Type", "Authorization"],
+         supports_credentials=True
     )
+    print("✓ CORS enabled for localhost:5173 and localhost:3000")
 
     jwt = JWTManager(app)
 
@@ -90,6 +76,12 @@ def create_app(config_object=None):
     from models.role import Role
     from models.asset import Asset
     from models.audit_log import AuditLog
+    from models.asset_type import AssetType
+    from models.asset_category import AssetCategory
+    from models.department import Department
+    from models.vendor import Vendor
+    from models.asset_request import AssetRequest
+    from models.repair_request import RepairRequest
 
     # Import blueprints
     from blueprints.auth import auth_bp
@@ -99,6 +91,7 @@ def create_app(config_object=None):
     app.register_blueprint(asset_bp, url_prefix="/api")
     app.register_blueprint(admin_bp)
     app.register_blueprint(reports_bp, url_prefix="/api")
+    app.register_blueprint(requests_bp)
 
     # Error handlers
     @app.errorhandler(404)

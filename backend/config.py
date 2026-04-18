@@ -20,7 +20,6 @@ class Config:
     JWT_HEADER_TYPE = 'Bearer'
     
     # CORS Configuration
-    # CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:5000').split(',')
     CORS_ORIGINS = os.getenv(
         'CORS_ORIGINS',
         'http://localhost:3000,http://localhost:5000,http://localhost:5173'
@@ -38,7 +37,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_DATABASE_URI = os.getenv(
         'DATABASE_URL',
-        'postgresql://postgres:password@localhost:5432/asset_inventory'
+        'postgresql://0xc7a-11@localhost:5432/asset_inventory'
     )
 
 
@@ -58,11 +57,13 @@ class ProductionConfig(Config):
     TESTING = False
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     
-    # Ensure JWT secret is set in production
+    # Ensure critical environment variables are set in production
     @classmethod
     def validate(cls):
-        if not os.getenv('JWT_SECRET_KEY'):
-            raise ValueError('JWT_SECRET_KEY environment variable must be set in production')
+        required_vars = ['DATABASE_URL', 'JWT_SECRET_KEY', 'SECRET_KEY']
+        missing = [var for var in required_vars if not os.getenv(var)]
+        if missing:
+            raise ValueError(f'Missing required environment variables in production: {", ".join(missing)}')
 
 
 # Config mapping
@@ -77,4 +78,11 @@ def get_config(env=None):
     """Get configuration object based on environment"""
     if env is None:
         env = os.getenv('FLASK_ENV', 'development')
-    return config.get(env, DevelopmentConfig)
+    
+    config_class = config.get(env, DevelopmentConfig)
+    
+    # Validate production config
+    if env == 'production' and hasattr(config_class, 'validate'):
+        config_class.validate()
+    
+    return config_class

@@ -8,43 +8,62 @@ Populates database with:
 - Vendors
 - Departments
 - Sample Assets
+- Service Reports
 
 Run with: python seed.py
 """
 
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from app import create_app
+# from app import create_app
+# from app import create_app
+
+
 from extensions import db
 from models.user import User
 from models.role import Role
 from models.asset import Asset
-from models.audit_log import AuditLog
+
+import importlib.util
+spec = importlib.util.spec_from_file_location("app_module", os.path.join(os.path.dirname(__file__), "app.py"))
+app_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(app_module)
+create_app = app_module.create_app
 
 # Import additional models if they exist in models/ directory
 try:
     from models.asset_category import AssetCategory
-except:
+except ImportError:
     AssetCategory = None
 
 try:
     from models.asset_type import AssetType
-except:
+except ImportError:
     AssetType = None
 
 try:
     from models.vendor import Vendor
-except:
+except ImportError:
     Vendor = None
 
 try:
     from models.department import Department
-except:
+except ImportError:
     Department = None
+
+try:
+    from models.report import Report
+except ImportError:
+    Report = None
 
 
 def seed_database():
@@ -55,16 +74,21 @@ def seed_database():
     with app.app_context():
         # Check if already seeded
         if User.query.filter_by(username='admin').first():
-            print("✓ Database already seeded. Skipping...")
+            print("✓ Database already seeded. Skipping...\n")
             return
         
         try:
             print("🌱 Starting database seed...\n")
             
-            # 1. Create Roles
-            print("📋 Creating roles...")
-            # roles = create_roles()
-            roles = Role.query.all()
+            # 1. Get or create Roles
+            print("📋 Checking roles...")
+            existing_roles = Role.query.all()
+            if existing_roles:
+                print(f"   ✓ Found {len(existing_roles)} existing roles")
+                roles = existing_roles
+            else:
+                print("   Creating new roles...")
+                roles = create_roles()
             
             # 2. Create Users with roles
             print("👥 Creating users...")
@@ -97,8 +121,10 @@ def seed_database():
                 print("📦 Creating sample assets...")
                 create_sample_assets(users, categories, asset_types, vendors, departments)
 
-            print("📊 Creating reports...")
-            create_reports(users)
+            # 5. Create service reports
+            if Report:
+                print("📊 Creating service reports...")
+                create_reports(users)
             
             print("\n✅ Database seeded successfully!\n")
             print_seed_summary(users, roles)
@@ -106,6 +132,8 @@ def seed_database():
         except Exception as e:
             db.session.rollback()
             print(f"❌ Error seeding database: {str(e)}")
+            import traceback
+            traceback.print_exc()
             raise
 
 
@@ -182,6 +210,9 @@ def create_roles():
 def create_users(roles):
     """Create test users with different roles"""
     
+    if not roles:
+        raise ValueError("❌ Roles must be created before users")
+    
     # Map role names to role objects
     role_map = {role.name: role for role in roles}
     
@@ -208,23 +239,23 @@ def create_users(roles):
             'username': 'managermkubwa',
             'email': 'manager1@assetinventory.com',
             'first_name': 'John',
-            'last_name': 'Manager',
+            'last_name': 'Kiama',
             'password': 'Manager@123!',
             'is_active': True,
             'role': role_map.get('Manager')
         },
         {
             'username': 'managermdogo',
-            'email': 'managermdogo@assetinventory.com',
-            'first_name': 'Jane',
-            'last_name': 'Supervisor',
+            'email': 'mmdogo@assetinventory.com',
+            'first_name': 'Miriam',
+            'last_name': 'Mdogo',
             'password': 'Manager@123!',
             'is_active': True,
             'role': role_map.get('Manager')
         },
         {
             'username': 'alice-kamongo',
-            'email': 'employee1@assetinventory.com',
+            'email': 'akamongo1@assetinventory.com',
             'first_name': 'Alice',
             'last_name': 'Kamongo',
             'password': 'alice@123!',
@@ -233,7 +264,7 @@ def create_users(roles):
         },
         {
             'username': 'kevin-wamalwa',
-            'email': 'kevin.wamalwa@assetinventory.com',
+            'email': 'kwamalwa@assetinventory.com',
             'first_name': 'Kevin',
             'last_name': 'Wamalwa',
             'password': 'kevin@123!',
@@ -259,7 +290,7 @@ def create_users(roles):
             'role': role_map.get('Employee')
         },
         {
-            'username': 'Mwenda Z',
+            'username': 'mwenda-zake',
             'email': 'mwendazake@assetinventory.com',
             'first_name': 'Mwenda',
             'last_name': 'Zake',
@@ -593,8 +624,13 @@ def create_sample_assets(users, categories, asset_types, vendors, departments):
     db.session.commit()
     print(f"   ✓ Created {len(assets_data)} sample assets")
 
+
 def create_reports(users):
-    """Create sample reports"""
+    """Create sample service reports"""
+
+    if not Report:
+        print("   ⚠ Report model not found, skipping reports creation")
+        return []
 
     # pick some users
     admin_user = next((u for u in users if u.username == "admin"), users[0])
@@ -638,7 +674,7 @@ def create_reports(users):
         reports.append(report)
 
     db.session.commit()
-    print(f"   ✓ Created {len(reports)} reports")
+    print(f"   ✓ Created {len(reports)} service reports")
     return reports
 
 
@@ -651,24 +687,39 @@ def print_seed_summary(users, roles):
     
     print("\n📋 ROLES:")
     for role in roles:
-        user_count = len(role.users) if role.users else 0
+        user_count = len(role.users) if hasattr(role, 'users') and role.users else 0
         print(f"   • {role.name} (Level {role.hierarchy_level}) - {user_count} users")
     
     print("\n👥 TEST USERS:")
-    print("   Username              Email                          Role")
-    print("   " + "-" * 65)
+    print("   Status Username              Email                          Role")
+    print("   " + "-" * 67)
     for user in users:
         role_name = user.role.name if user.role else "None"
         status = "✓" if user.is_active else "✗"
-        print(f"   {status} {user.username:<20} {user.email:<30} {role_name}")
+        print(f"   {status}      {user.username:<20} {user.email:<30} {role_name}")
     
-    print("\n🔐 DEFAULT PASSWORDS:")
-    print("   • Admin users: Admin@123!")
-    print("   • Managers: Manager@123!")
-    print("   • Employees: Employee@123!")
+    print("\n🔐 LOGIN CREDENTIALS:")
+    print("   Admin (Super Admin):")
+    print("      • Username: admin")
+    print("      • Password: Admin@123!")
+    print("")
+    print("   Admin (Regular Admin):")
+    print("      • Username: teresa")
+    print("      • Password: Teresa@123!")
+    print("")
+    print("   Managers:")
+    print("      • Username: managermkubwa or managermdogo")
+    print("      • Password: Manager@123!")
+    print("")
+    print("   Employees (use individual passwords as set in code)")
+    print("      • alice-kamongo: alice@123!")
+    print("      • kevin-wamalwa: kevin@123!")
+    print("      • carol-cheboi: carol@123!")
+    print("      • david-maingi: david@123!")
+    print("      • mwenda-zake: mwenda@123!")
     
     print("\n" + "=" * 70)
-    print("✨ You can now log in with these credentials!")
+    print("✨ Database seeding complete! Ready for testing.")
     print("=" * 70 + "\n")
 
 

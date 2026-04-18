@@ -18,6 +18,11 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_login = db.Column(db.DateTime, nullable=True)
+
+    # department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
+    # department = db.relationship('Department', backref='users')
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
+    department = db.relationship('Department', foreign_keys=[department_id], backref='department_employees')
     
     def set_password(self, password):
         """Hash and set password"""
@@ -50,8 +55,7 @@ class User(db.Model):
             'last_name': self.last_name,
             'is_active': self.is_active,
             'role_id': self.role_id,
-            # 'role': self.role.to_dict() if self.role else None,
-            'role': self.role.name if self.role else None,
+            'role': self.role.to_dict() if self.role else None,
             'is_admin': self.is_admin,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None

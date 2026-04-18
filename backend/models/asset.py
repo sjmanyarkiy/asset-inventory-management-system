@@ -11,7 +11,10 @@ class Asset(db.Model):
     # Identity
     asset_name = db.Column(db.String(120), nullable=False, index=True)
     asset_code = db.Column(db.String(50), unique=True, nullable=False, index=True)
-    asset_type = db.Column(db.String(80), nullable=False)
+    asset_type_id = db.Column(db.Integer, db.ForeignKey('asset_types.id'), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('asset_categories.id'), nullable=True)
+    vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), nullable=True)
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
     description = db.Column(db.Text)
 
     # Tracking
@@ -31,6 +34,7 @@ class Asset(db.Model):
         foreign_keys=[assigned_to],
         backref='assigned_assets'
     )
+    assigned_at = db.Column(db.DateTime, nullable=True)
 
     # Lifecycle state
     status = db.Column(
@@ -60,6 +64,16 @@ class Asset(db.Model):
         backref='created_assets'
     )
 
+    # Relationships
+    # asset_type = db.relationship('AssetType', backref='assets')
+    # category = db.relationship('AssetCategory', backref='assets')
+    # vendor = db.relationship('Vendor', backref='assets')
+    # department = db.relationship('Department', backref='assets')
+    asset_type = db.relationship('AssetType')
+    category = db.relationship('AssetCategory')
+    vendor = db.relationship('Vendor')
+    department = db.relationship('Department')
+
     # -----------------------------
     # SERIALIZATION (IMPORTANT)
     # -----------------------------
@@ -70,7 +84,13 @@ class Asset(db.Model):
             "id": self.id,
             "asset_name": self.asset_name,
             "asset_code": self.asset_code,
-            "asset_type": self.asset_type,
+            "asset_type_id": self.asset_type_id,
+            "asset_type": self.asset_type.name if self.asset_type else None,
+            "category_id": self.category_id,
+            "asset_category": self.category.name if self.category else None,
+            "vendor_id": self.vendor_id,
+            "vendor": self.vendor.name if self.vendor else None,
+            "department_id": self.department_id,
             "description": self.description,
 
             "serial_number": self.serial_number,
@@ -83,6 +103,7 @@ class Asset(db.Model):
 
             # CORE FIX: frontend uses this
             "assigned_to": self.assigned_to,
+            "assigned_at": self.assigned_at.isoformat() if self.assigned_at else None,
 
             # IMPORTANT: full user object for UI display
             "assigned_user": {
@@ -113,9 +134,11 @@ class Asset(db.Model):
     def assign_to(self, user_id):
         self.assigned_to = user_id
         self.status = "Assigned"
+        self.assigned_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
 
     def unassign(self):
         self.assigned_to = None
         self.status = "Available"
+        self.assigned_at = None
         self.updated_at = datetime.utcnow()
