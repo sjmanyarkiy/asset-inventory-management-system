@@ -82,6 +82,7 @@ def create_app(config_object=None):
     from models.vendor import Vendor
     from models.asset_request import AssetRequest
     from models.repair_request import RepairRequest
+    from blueprints.asset_types_routes import asset_types_bp
 
     # Import blueprints
     from blueprints.auth import auth_bp
@@ -92,6 +93,7 @@ def create_app(config_object=None):
     app.register_blueprint(admin_bp)
     app.register_blueprint(reports_bp, url_prefix="/api")
     app.register_blueprint(requests_bp)
+    app.register_blueprint(asset_types_bp)
 
     # Error handlers
     @app.errorhandler(404)

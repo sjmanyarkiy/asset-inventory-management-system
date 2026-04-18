@@ -34,7 +34,7 @@ from models.role import Role
 from models.asset import Asset
 
 import importlib.util
-spec = importlib.util.spec_from_file_location("app_module", os.path.join(os.path.dirname(__file__), "app.py"))
+spec = importlib.util.spec_from_file_location("app_module", os.path.join(os.path.dirname(__file__), "factory.py"))
 app_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(app_module)
 create_app = app_module.create_app

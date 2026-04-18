@@ -72,6 +72,12 @@ function MenuBar() {
       path: "/departments",
       icon: <Users size={18} />,
       roles: ["Super Admin", "Admin", "Manager"]
+    },
+    {
+      name: "Asset Requests",
+      path: "/requests",
+      icon: <BarChart3 size={18} />,
+      roles: ["Super Admin", "Admin", "Employee", "Manager"]
     }
   ];
 

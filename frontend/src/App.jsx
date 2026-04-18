@@ -13,6 +13,7 @@ import MainDashboard from "../pages/Main-Dashboard.jsx";
 import UserManagementPage from "../pages/UserManagementPage";
 import ReportsDashboard from "../pages/ReportsDashboard.jsx";
 import LandingPage from "../pages/LandingPage";
+import AssetRequestPage from "../pages/AssetRequestPage.jsx";
 
 
 import AssetsPage from "../pages/AssetsPage.jsx";
@@ -147,6 +148,17 @@ const App = () => {
               <ProtectedRoute>
                 <AppLayout>
                   <TypesPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/requests"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <AssetRequestPage />
                 </AppLayout>
               </ProtectedRoute>
             }
