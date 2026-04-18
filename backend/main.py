@@ -10,6 +10,26 @@ from app import db
 from app.routes import register_routes
 
 
+def _parse_allowed_origins():
+    configured_origins = os.getenv("CORS_ORIGINS", "")
+    configured_frontend_url = os.getenv("FRONTEND_URL", "")
+
+    origins = {
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    }
+
+    for raw in [configured_origins, configured_frontend_url]:
+        if not raw:
+            continue
+        for item in raw.split(","):
+            normalized = item.strip().rstrip("/")
+            if normalized:
+                origins.add(normalized)
+
+    return sorted(origins)
+
+
 def create_app():
     app = Flask(__name__)
 
@@ -18,11 +38,13 @@ def create_app():
     # =========================
     CORS(
         app,
-        resources={r"/*": {
-            "origins": "http://localhost:5173",
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"]
-        }}
+        resources={
+            r"/*": {
+                "origins": _parse_allowed_origins(),
+                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "allow_headers": ["Content-Type", "Authorization"],
+            }
+        },
     )
 
     # =========================
