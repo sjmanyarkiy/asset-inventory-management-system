@@ -1,59 +1,33 @@
-alembic==1.14.1
-aniso8601==10.0.1
-bcrypt==4.1.2
-blinker==1.8.2
-certifi==2025.11.12
-charset-normalizer==3.4.7
-click==8.1.8
-cryptography==42.0.8
-distlib==0.4.0
-dnspython==2.6.1
-dotenv==0.9.9
-email-validator==2.1.0
-exceptiongroup==1.3.1
-filelock==3.16.1
+# Core Flask (stable)
 Flask==2.3.3
 Flask-Cors==5.0.0
 Flask-JWT-Extended==4.5.2
 Flask-Migrate==4.1.0
 Flask-RESTful==0.3.10
 Flask-SQLAlchemy==3.1.1
-greenlet==3.0.3
-gunicorn==23.0.0
-idna==3.11
-importlib_metadata==8.5.0
-importlib_resources==6.4.5
-iniconfig==2.1.0
-itsdangerous==2.2.0
-Jinja2==3.1.6
-jwt==1.3.1
-Mako==1.3.10
-MarkupSafe==2.1.5
-packaging==25.0
-pillow==10.4.0
-pipenv==2024.4.1
-platformdirs==4.3.6
-pluggy==1.5.0
+
+# Database
 psycopg2-binary==2.9.9
-pycparser>=2.21
-PyJWT==2.9.0
-pypng==0.20220715.0
-pytest==8.3.5
-python-barcode==0.15.1
-python-dotenv==1.0.0
-python-http-client==3.3.7
-pytz==2026.1.post1
-qrcode==7.4.2
-requests==2.32.4
-resend==2.29.0
-sendgrid==6.12.5
-six==1.17.0
 SQLAlchemy==2.0.48
 SQLAlchemy-serializer==1.4.12
-tomli==2.4.0
-typing_extensions>=4.13.2
-urllib3>=2.2.3
-virtualenv==20.35.4
+alembic==1.14.1
+
+# Auth & Security
+bcrypt==4.1.2
+python-dotenv==1.0.0
+
+# BARCODE SYSTEM (✅ greenlet fixed)
+greenlet==3.0.3
+python-barcode==0.15.1
+qrcode[pil]==7.4.2
+Pillow==10.4.0
+
+# Production
+gunicorn==23.0.0
 Werkzeug==3.0.6
-zipp>=3.20.2
-cffi>=2.0.0
+
+# Testing (optional)
+pytest==8.3.5
+
+# Utils
+click==8.1.8
