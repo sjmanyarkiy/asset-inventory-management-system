@@ -95,8 +95,10 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
+    port = int(os.getenv("PORT", 5001))
     app.run(
-        debug=os.getenv("FLASK_DEBUG", "True") == "True",
+        debug=True,
+        use_reloader=False,
         host="0.0.0.0",
-        port=int(os.getenv("PORT", "5001"))
+        port=port
     )
