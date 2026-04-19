@@ -2,14 +2,13 @@ import { useEffect, useState } from "react";
 import DepartmentSearch from "../components/departments/DepartmentSearch";
 import DepartmentForm from "../components/departments/DepartmentForm";
 import toast from "react-hot-toast";
+import api from "../services/api";
 
 export default function DepartmentsPage() {
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-
-  const BASE_URL = "http://localhost:5000/departments";
 
   // =========================
   // FETCH (ONLY SOURCE OF TRUTH)
@@ -18,14 +17,11 @@ export default function DepartmentsPage() {
     try {
       setLoading(true);
 
-      const query = searchText
-        ? `?search=${searchText.trim()}`
-        : "";
+      const res = await api.get("/departments", {
+        params: searchText ? { search: searchText.trim() } : undefined,
+      });
 
-      const res = await fetch(`${BASE_URL}${query}`);
-      const data = await res.json();
-
-      setDepartments(data.data || []);
+      setDepartments(res.data?.data || []);
     } catch (error) {
       console.error("FETCH ERROR:", error);
       toast.error("Failed to load departments ❌");
@@ -71,11 +67,7 @@ export default function DepartmentsPage() {
 
         if (!confirmUpdate) return;
 
-        res = await fetch(`${BASE_URL}/${selectedDepartment.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
+        res = await api.put(`/departments/${selectedDepartment.id}`, formData);
 
       } else {
         const confirmCreate = window.confirm(
@@ -84,17 +76,13 @@ export default function DepartmentsPage() {
 
         if (!confirmCreate) return;
 
-        res = await fetch(BASE_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
+        res = await api.post("/departments", formData);
       }
 
-      const result = await res.json();
+      const result = res.data;
 
-      if (!res.ok) {
-        toast.error(result.error || "Operation failed ❌");
+      if (!result) {
+        toast.error("Operation failed ❌");
         return;
       }
 
@@ -106,8 +94,7 @@ export default function DepartmentsPage() {
 
       setSelectedDepartment(null);
 
-      // 🔥 IMPORTANT: no direct fetch → let useEffect handle it
-      setSearch((prev) => prev);
+      await fetchDepartments(search);
 
     } catch (err) {
       console.error("SAVE ERROR:", err);
@@ -126,16 +113,7 @@ export default function DepartmentsPage() {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`${BASE_URL}/${id}`, {
-        method: "DELETE",
-      });
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        toast.error(result.error || "Delete failed ❌");
-        return;
-      }
+      await api.delete(`/departments/${id}`);
 
       toast.success("Department deleted 🗑️");
 
@@ -143,8 +121,7 @@ export default function DepartmentsPage() {
         setSelectedDepartment(null);
       }
 
-      // 🔥 let effect refresh list
-      setSearch((prev) => prev);
+      await fetchDepartments(search);
 
     } catch (err) {
       console.error("DELETE ERROR:", err);

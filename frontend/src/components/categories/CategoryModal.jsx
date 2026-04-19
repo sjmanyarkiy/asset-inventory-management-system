@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../../services/api";
 import CategoryForm from "./CategoryForm";
 
 const CategoryModal = ({
@@ -6,17 +6,12 @@ const CategoryModal = ({
   onSuccess,
   selectedCategory,   // ✅ now controlled from parent
 }) => {
-  const BASE_URL = "http://127.0.0.1:5000";
-
   const handleSubmit = async (payload) => {
     try {
       if (selectedCategory) {
-        await axios.put(
-          `${BASE_URL}/categories/${selectedCategory.id}`,
-          payload
-        );
+        await api.put(`/categories/${selectedCategory.id}`, payload);
       } else {
-        await axios.post(`${BASE_URL}/categories`, payload);
+        await api.post("/categories", payload);
       }
 
       onSuccess(); // refresh list + dropdowns

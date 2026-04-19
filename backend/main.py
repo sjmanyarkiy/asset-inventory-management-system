@@ -82,6 +82,8 @@ def create_app():
     # HEALTH CHECK
     # =========================
     @app.route("/")
+    @app.route("/api")
+    @app.route("/api/")
     def home():
         return jsonify({
             "message": "Backend running with PostgreSQL"

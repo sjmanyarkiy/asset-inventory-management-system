@@ -4,8 +4,15 @@ import Login from '../components/Login';
 import { AuthProvider } from '../AuthContext';
 import { MemoryRouter } from 'react-router-dom';
 
-jest.mock('../api/axios', () => ({
-  post: jest.fn(() => Promise.resolve({ data: { access_token: 'tok', user: { id: 1, name: 'Alice', role: 'EMPLOYEE' } } }))
+jest.mock('../services/api', () => ({
+  __esModule: true,
+  default: {
+    post: jest.fn(() =>
+      Promise.resolve({
+        data: { access_token: 'tok', user: { id: 1, name: 'Alice', role: 'EMPLOYEE' } },
+      })
+    ),
+  },
 }));
 
 test('login form submits and navigates', async () => {

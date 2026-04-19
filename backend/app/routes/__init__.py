@@ -6,9 +6,16 @@ from app.routes.type_routes import type_bp
 
 
 def register_routes(app):
-    app.register_blueprint(asset_bp)
-    app.register_blueprint(vendor_bp)
-    app.register_blueprint(department_bp)
-    app.register_blueprint(category_bp)
-    app.register_blueprint(type_bp)
+    blueprints = [asset_bp, vendor_bp, department_bp, category_bp, type_bp]
+
+    for bp in blueprints:
+        # Legacy routes (e.g., /assets)
+        app.register_blueprint(bp)
+
+        # API-prefixed routes (e.g., /api/assets)
+        app.register_blueprint(
+            bp,
+            name=f"api_{bp.name}",
+            url_prefix=f"/api{bp.url_prefix or ''}"
+        )
     

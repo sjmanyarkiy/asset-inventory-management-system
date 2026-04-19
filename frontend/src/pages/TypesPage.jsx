@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
+import api from "../services/api";
 
 import AssetTypeForm from "../components/types/TypeForm";
 
@@ -28,8 +29,6 @@ export default function AssetTypesPage() {
 
   const [form, setForm] = useState(initialForm);
 
-  const BASE_URL = "http://127.0.0.1:5000";
-
   /* =========================
      FETCH TYPES
   ========================= */
@@ -43,9 +42,10 @@ export default function AssetTypesPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/categories?page=1&per_page=100`);
-        const json = await res.json();
-        setCategories(json.data || []);
+        const res = await api.get("/categories", {
+          params: { page: 1, per_page: 100 },
+        });
+        setCategories(res.data?.data || []);
       } catch {
         toast.error("Failed to load categories ❌");
       }

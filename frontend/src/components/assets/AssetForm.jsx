@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import api from "../../services/api";
+import { toAssetFileUrl } from "../../config/apiConfig";
 import { createAsset, updateAsset } from "../../features/assets/assetSlice";
-
-const BASE_URL = "http://127.0.0.1:5001";
 
 const AssetForm = ({ asset, onSuccess, onClose }) => {
   const dispatch = useDispatch();
@@ -234,8 +233,7 @@ const AssetForm = ({ asset, onSuccess, onClose }) => {
 
   const getImageUrl = (img) => {
     if (!img) return null;
-    if (img.startsWith("http")) return img;
-    return `${BASE_URL}/${img.replace(/^\/+/, "")}`;
+    return toAssetFileUrl(img);
   };
 
   const imageUrl = getImageUrl(existingImage);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import Modal from "./Modal";
+import api from "../../services/api";
 
 const ShortcutModal = ({
   isOpen,
@@ -10,8 +10,6 @@ const ShortcutModal = ({
   fields = [],
   onSuccess,
 }) => {
-  const BASE_URL = "http://127.0.0.1:5000";
-
   // build initial form dynamically
   const buildInitialState = () => {
     const state = {};
@@ -43,7 +41,7 @@ const ShortcutModal = ({
     setLoading(true);
 
     try {
-      await axios.post(`${BASE_URL}/${endpoint}`, form);
+      await api.post(`/${endpoint}`, form);
 
       setForm(buildInitialState());
       onSuccess?.();

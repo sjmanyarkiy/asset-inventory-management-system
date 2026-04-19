@@ -1,150 +1,91 @@
-# asset-inventory-management-system
+# Asset Inventory Management System
 
-Live links
+[![CI](https://img.shields.io/github/actions/workflow/status/sjmanyarkiy/asset-inventory-management-system/routing-guard.yml?branch=main&label=CI&style=flat-square)](https://github.com/sjmanyarkiy/asset-inventory-management-system/actions/workflows/routing-guard.yml) [![E2E](https://img.shields.io/github/actions/workflow/status/sjmanyarkiy/asset-inventory-management-system/playwright-e2e.yml?branch=main&label=E2E&style=flat-square)](https://github.com/sjmanyarkiy/asset-inventory-management-system/actions/workflows/playwright-e2e.yml) [![Backend](https://img.shields.io/github/actions/workflow/status/sjmanyarkiy/asset-inventory-management-system/routing-guard.yml?branch=main&label=Backend&style=flat-square)](https://github.com/sjmanyarkiy/asset-inventory-management-system/actions/workflows/routing-guard.yml)
 
-- Frontend: https://asset-inventory-management-system-1.onrender.com
-- Backend: https://asset-inventory-management-system-gkjx.onrender.com
+[![Deploy](https://img.shields.io/website?url=https%3A%2F%2Fasset-inventory-management-system-1.onrender.com&label=Deploy&style=flat-square)](https://asset-inventory-management-system-1.onrender.com) [![Last%20Updated](https://img.shields.io/github/last-commit/sjmanyarkiy/asset-inventory-management-system?label=Last%20Updated&style=flat-square)](https://github.com/sjmanyarkiy/asset-inventory-management-system/commits/main) [![License](https://img.shields.io/github/license/sjmanyarkiy/asset-inventory-management-system?label=License&style=flat-square)](LICENSE)
 
-## Task Division
+## Enterprise-style asset operations, built with production guardrails
 
-### Samuel — Reports Dashboard
+> 🚀 Status: Production-ready full-stack system with CI-gated routing, E2E coverage, and deployed live environment.
 
-Work on a reports dashboard that includes:
+This project is a full-stack asset management platform designed to demonstrate practical engineering quality: robust API integration, race-condition-aware UX workflows, end-to-end testing, and CI gates that prevent routing regressions from reaching `main`.
 
-- Visibility into who has access to which asset
-- A list of assigned assets
-- A list of repaired assets
-- Ability to download generated reports
+## Live Demo
 
-#### Implementation plan
+- Frontend: <https://asset-inventory-management-system-1.onrender.com>
+- Backend API: <https://asset-inventory-management-system-gkjx.onrender.com>
 
-Purpose: provide Samuel with a clear, actionable plan for building the reports dashboard so it can be implemented and tested consistently.
+## What this system does
 
-1. Key features
+- Manage assets through full CRUD flows with status tracking and barcode support
+- Organize data by category, type, vendor, and department
+- Filter/search assets efficiently for operations teams
+- Support image upload + preview in asset records
+- Provide a scalable foundation for reports and lifecycle insights
 
-- View who has access to each asset (by user/role/group)
-- View a list of assigned assets (current assignments)
-- View a list of repaired assets (historical & recent repairs)
-- Filterable/searchable tables and export (CSV/Excel/PDF)
+## UI Preview
 
-2. Data model (suggested)
+> Replace these placeholder visuals with real screenshots anytime without changing README structure.
 
-- users: id, name, email, role
-- assets: id, tag, name, category, location, status
-- assignments: id, asset_id, user_id, assigned_at, assigned_by, notes
-- repairs: id, asset_id, reported_at, repaired_at, technician_id, description, cost, status
-- permissions/access: id, user_id, asset_id, access_level (view/edit)
+### Landing Experience
 
-3. API endpoints (REST examples)
+![Landing page preview](docs/screenshots/landing.png)
 
-- GET /api/reports/access?asset_id=&user_id=&role= — returns access list
-- GET /api/reports/assigned?user_id=&location=&status= — returns assigned assets
-- GET /api/reports/repaired?from=&to=&asset_id= — returns repaired asset history
-- POST /api/reports/export  (body: { type: "access|assigned|repaired", filters: {...}, format: "csv|xlsx|pdf" }) — returns or streams file
+## 📊 Dashboard
 
-4. Frontend components/UI
+![Dashboard](docs/screenshots/dashboard.png)
 
-- ReportsDashboard page (tabs for Access / Assigned / Repaired)
-- Filters panel (user, role, asset category, date ranges)
-- Data tables with pagination, sort, and row actions
-- Download/export button that calls POST /api/reports/export
+## 📦 Asset Management
 
-5. Export implementation notes
+![Asset Table](docs/screenshots/assets-table.png)
 
-- CSV/Excel: server-side generation recommended (pandas in Python, exceljs/fast-csv in Node)
-- PDF: render HTML and convert (WeasyPrint for Python, Puppeteer or pdfkit for Node)
-- For large exports, generate async job and provide download link when ready
+## 📸 Screenshots Guidelines
 
-6. Authorization & security
+To maintain consistency in UI presentation:
 
-- Ensure endpoints require authentication and check user permissions (role-based or asset-level checks)
-- Log report generation and downloads if sensitive data
+- Recommended size: **1440 × 900**
+- Format: **PNG** (preferred for GitHub rendering)
+- Max size: **< 500KB per image**
+- Keep UI centered with visible navigation and key actions
+- Use light compression (avoid blur artifacts)
 
-7. Acceptance criteria
+Current screenshots are stored in:
 
-- Users can view each report tab with correct, paginated data
-- Filters produce expected results
-- Exports download in requested format and match filtered results
-- Access control prevents unauthorized users from seeing restricted assets
+- `docs/screenshots/`
 
-8. Next steps / suggestions
+## Architecture (high level)
 
-- Samuel: create a simple UI mockup and API contract (OpenAPI) for review
-- Implement backend endpoints with tests and small sample dataset
-- Implement frontend components with a stories/tests for the tables and export flow
-
-## Version control & Gitflow
-
-All development for this project follows Gitflow using feature branches. The main ideas and rules:
-
-- Branches
-  - `main`: production-ready code only. Protected branch; merges only from `release/*` or `hotfix/*` after review and CI passing.
-  - `develop`: integration branch for completed features. All feature branches are branched off `develop` and merged back into `develop` via pull requests.
-  - `feature/*`: short-lived branches for individual features or tasks (e.g., `feature/sam-reports-dashboard`). Branch off `develop` and open a PR to `develop` when ready.
-  - `release/*`: created from `develop` when preparing a release. Used for final testing, minor fixes, and version bumping. Merge `release/*` into `main` and `develop` after release, and tag the `main` merge.
-  - `hotfix/*`: created from `main` to quickly patch production; merge back into both `main` and `develop` after fix.
-
-- Naming conventions
-  - Feature branches: `feature/<short-description>`
-  - Release branches: `release/<version>` (e.g., `release/1.2.0`)
-  - Hotfix branches: `hotfix/<short-description>`
-
-- Pull request workflow
-  - Create feature branch from `develop`.
-  - Work locally, commit frequently with meaningful messages (Conventional Commits are recommended).
-  - Push branch to remote and open a PR targeting `develop`.
-  - At least one code review approval required before merging. Ensure CI passes and run tests locally.
-  - Merge using 'squash and merge' or 'merge commit' per team preference; keep commit history clear.
-
-- Releases
-  - Create `release/<version>` from `develop` when ready to release.
-  - Perform final QA and apply any release-only fixes to the release branch.
-  - Merge the release into `main` (create a tag) and back into `develop`.
-
-- Hotfixes
-  - Create `hotfix/<short-desc>` from `main` for critical production fixes.
-  - After fix, merge into `main` (tag) and `develop`.
-
-- Branch protection & CI
-  - Protect `main` and `develop` with branch protection rules: require PR reviews, passing CI, and no direct pushes.
-  - Use CI to run tests and linting on PRs.
-
-Example git commands
-
-```bash
-# create and push a feature branch
-git checkout develop
-git pull origin develop
-git checkout -b feature/sam-reports-dashboard
-git add .
-git commit -m "feat(reports): add initial ReportsDashboard layout"
-git push -u origin feature/sam-reports-dashboard
-
-# open a PR against develop, get reviews, then merge
-
-# create a release branch
-git checkout develop
-git pull origin develop
-git checkout -b release/1.0.0
-git push -u origin release/1.0.0
-
-# merge release into main and tag
-git checkout main
-git pull origin main
-git merge --no-ff release/1.0.0
-git tag -a v1.0.0 -m "Release 1.0.0"
-git push origin main --tags
-
-# create a hotfix from main
-git checkout main
-git pull origin main
-git checkout -b hotfix/patch-login
-git push -u origin hotfix/patch-login
+```mermaid
+flowchart LR
+  A[React + Vite Frontend] -->|Axios requests to /api/*| B[Flask Backend API]
+  B -->|SQLAlchemy ORM| C[(SQLite/PostgreSQL)]
+  D[GitHub Actions CI] -->|PR routing guard checks| A
+  D -->|Route compatibility tests| B
 ```
 
-If you want, I can also:
+## Key Engineering Highlights
 
-- Add a GitHub Actions workflow to enforce CI on PRs
-- Create a branch protection policy template for the repository
-- Create a `develop` branch in the remote (if it doesn't exist) and open a starter `feature/*` branch for Samuel
+- **Playwright E2E coverage for critical flows**
+  - API routing smoke checks validate category/vendor/department endpoints and dropdown behavior.
+- **CI routing enforcement with PR blocking**
+  - Pull requests are gated by stable required checks to prevent frontend/backend route drift.
+- **Optimistic UI + race-condition handling**
+  - UX flows stay responsive while E2E coverage targets edge cases and concurrency-sensitive asset operations.
+- **Centralized API resolution strategy**
+  - Frontend uses a shared API config/client to eliminate hardcoded endpoint drift across environments.
+- **Production deployment + verification ready**
+  - Live frontend/backend deployments with automated regression workflows for ongoing confidence.
+
+## Tech Stack
+
+- **Frontend:** React, Vite, Redux Toolkit, Axios
+- **Backend:** Flask, SQLAlchemy, Flask-Migrate, Flask-CORS
+- **Quality:** Playwright, Jest, Pytest, GitHub Actions
+- **Deployment:** Render (frontend + backend)
+
+## Engineering & CI Details
+
+For detailed CI enforcement, branch-protection-sensitive job names, routing guardrails, and troubleshooting:
+
+- `docs/ci-guardrails.md`
 

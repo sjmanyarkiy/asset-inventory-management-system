@@ -1,4 +1,5 @@
 import axios from "axios";
+import { resolveApiBaseUrl } from "../config/apiConfig";
 
 export const getApiErrorMessage = (error) => {
   if (!error?.response) {
@@ -19,55 +20,6 @@ export const getApiErrorMessage = (error) => {
   if (status >= 500) return "Server error. Please try again shortly.";
 
   return "Request failed. Please try again.";
-};
-
-const resolveApiBaseUrl = () => {
-  const normalizeBase = (value) => {
-    if (!value || typeof value !== "string") return undefined;
-    const trimmed = value.trim();
-    if (!trimmed || trimmed.startsWith("%VITE_")) return undefined;
-
-    // Preserve empty string semantics when caller intentionally wants same-origin.
-    if (trimmed === "") return "";
-
-    return trimmed.endsWith("/") ? trimmed.slice(0, -1) : trimmed;
-  };
-
-  const getViteEnv = () => {
-    try {
-      // Avoid direct import.meta access so Jest can parse this module in CJS mode.
-      return Function(
-        "return typeof import !== 'undefined' && typeof import.meta !== 'undefined' ? import.meta.env : undefined;"
-      )();
-    } catch {
-      return undefined;
-    }
-  };
-
-  const viteEnv = getViteEnv();
-  const isViteDev = Boolean(viteEnv?.DEV);
-
-  const runtimeBase = normalizeBase(
-    typeof window !== "undefined" ? window.__APP_CONFIG__?.API_BASE_URL : undefined
-  );
-
-  const viteBase = normalizeBase(viteEnv?.VITE_API_BASE_URL);
-
-  const processBase = normalizeBase(
-    typeof process !== "undefined" ? process.env?.VITE_API_BASE_URL : undefined
-  );
-
-  if (runtimeBase !== undefined) return runtimeBase;
-  if (viteBase !== undefined) return viteBase;
-  if (processBase !== undefined) return processBase;
-
-  // Local development convenience fallback only.
-  if (isViteDev) {
-    return "http://127.0.0.1:5001";
-  }
-
-  // Production-safe fallback: same origin (for reverse-proxy/fullstack deployments).
-  return "";
 };
 
 const api = axios.create({

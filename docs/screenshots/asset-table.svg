@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="Asset table preview placeholder">
+  <rect width="1200" height="675" fill="#ffffff" rx="20" />
+  <text x="60" y="88" fill="#111827" font-size="44" font-family="Inter, Arial, sans-serif" font-weight="700">Asset Table & Filters</text>
+  <rect x="60" y="120" width="1080" height="70" rx="12" fill="#f3f4f6"/>
+  <rect x="90" y="140" width="220" height="30" rx="8" fill="#e5e7eb"/>
+  <rect x="330" y="140" width="180" height="30" rx="8" fill="#e5e7eb"/>
+  <rect x="530" y="140" width="180" height="30" rx="8" fill="#e5e7eb"/>
+  <rect x="730" y="140" width="180" height="30" rx="8" fill="#e5e7eb"/>
+  <rect x="930" y="140" width="180" height="30" rx="8" fill="#dbeafe"/>
+  <rect x="60" y="210" width="1080" height="400" rx="14" fill="#f9fafb" stroke="#e5e7eb"/>
+  <rect x="80" y="240" width="1040" height="44" rx="8" fill="#e5e7eb"/>
+  <rect x="80" y="300" width="1040" height="52" rx="8" fill="#ffffff" stroke="#e5e7eb"/>
+  <rect x="80" y="362" width="1040" height="52" rx="8" fill="#ffffff" stroke="#e5e7eb"/>
+  <rect x="80" y="424" width="1040" height="52" rx="8" fill="#ffffff" stroke="#e5e7eb"/>
+  <rect x="80" y="486" width="1040" height="52" rx="8" fill="#ffffff" stroke="#e5e7eb"/>
+</svg>

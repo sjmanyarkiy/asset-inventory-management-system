@@ -1,7 +1,6 @@
 import React, { memo, useCallback, useMemo, useState } from "react";
 import ImagePreview from "../shared/ImagePreview";
-
-const BASE_URL = "http://127.0.0.1:5001";
+import { toAssetFileUrl } from "../../config/apiConfig";
 
 const STATUS_STYLES = {
   assigned: "bg-green-100 text-green-800 border border-green-200",
@@ -39,7 +38,7 @@ const AssetRow = memo(function AssetRow({ asset, isDeleting, onEdit, onRequestDe
   );
 
   const img = useMemo(
-    () => (asset.image_file ? `${BASE_URL}/${asset.image_file.replace(/\\/g, "/")}` : null),
+    () => toAssetFileUrl(asset.image_file),
     [asset.image_file]
   );
 
