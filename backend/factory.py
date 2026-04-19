@@ -156,6 +156,9 @@ def create_app(config_object=None):
         create_default_roles()
         print("Database initialized successfully!")
 
+    print("REGISTERED ROUTES:")
+    print(app.url_map)  
+
     return app
 
 
@@ -225,7 +228,7 @@ def create_default_roles():
     print("Default roles created successfully!")
 
 
-app = create_app()
+# app = create_app()
 
 if __name__ == '__main__':
     app = create_app()
