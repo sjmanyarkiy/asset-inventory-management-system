@@ -69,13 +69,13 @@ def create_app(config_object=None):
     #         "supports_credentials": True
     #     }}
     # )
-    CORS(app, 
-         origins=["http://localhost:5173", "http://localhost:3000"],
-         methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-         allow_headers=["Content-Type", "Authorization"],
-         supports_credentials=True
-    )
-    print("✓ CORS enabled for localhost:5173 and localhost:3000")
+    # CORS(app, 
+    #      origins=["http://localhost:5173", "http://localhost:3000"],
+    #      methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    #      allow_headers=["Content-Type", "Authorization"],
+    #      supports_credentials=True
+    # )
+    # print("✓ CORS enabled for localhost:5173 and localhost:3000")
 
     jwt = JWTManager(app)
 
