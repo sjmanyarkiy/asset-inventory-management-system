@@ -195,6 +195,8 @@ def create_default_roles():
     print("Default roles created successfully!")
 
 
+app = create_app()
+
 if __name__ == '__main__':
     app = create_app()
 
