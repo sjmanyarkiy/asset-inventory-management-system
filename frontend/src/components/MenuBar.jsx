@@ -5,8 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout, selectUser } from "../../redux/slices/authSlice";
 import UserProfile from "../components/UserProfile";
 
-import { Home, BarChart3, Users, LogOut, User } from "lucide-react";
-import { CheckSquare, Shield } from 'react-feather';
+import { Home, BarChart3, Users, LogOut, User, CheckSquare, Shield } from "lucide-react";
 
 function MenuBar() {
   const navigate = useNavigate();

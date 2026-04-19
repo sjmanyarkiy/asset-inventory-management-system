@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Provider } from "react-redux";
 import { Toaster } from "react-hot-toast";
@@ -7,22 +7,20 @@ import store from "../redux/store";
 import "../api/axiosConfig";
 
 // Pages
-import LoginPage from "../pages/LoginPage";
-import RegistrationPage from "../pages/RegistrationPage";
-import MainDashboard from "../pages/Main-Dashboard.jsx";
-import UserManagementPage from "../pages/UserManagementPage";
-import ReportsDashboard from "../pages/ReportsDashboard.jsx";
-import LandingPage from "../pages/LandingPage";
-import AssetRequestPage from "../pages/AssetRequestPage.jsx";
-import RequestApprovalPage from "../pages/RequestApprovalPage.jsx";
-import UserProfilePage from "../pages/UserProfilePage.jsx";
-
-
-import AssetsPage from "../pages/AssetsPage.jsx";
-import VendorsPage from "../pages/VendorsPage.jsx";
-import DepartmentsPage from "../pages/DepartmentsPage.jsx";
-import CategoriesPage from "../pages/CategoriesPage.jsx";
-import TypesPage from "../pages/TypesPage.jsx";
+const LoginPage = lazy(() => import("../pages/LoginPage"));
+const RegistrationPage = lazy(() => import("../pages/RegistrationPage"));
+const MainDashboard = lazy(() => import("../pages/Main-Dashboard.jsx"));
+const UserManagementPage = lazy(() => import("../pages/UserManagementPage"));
+const ReportsDashboard = lazy(() => import("../pages/ReportsDashboard.jsx"));
+const LandingPage = lazy(() => import("../pages/LandingPage"));
+const AssetRequestPage = lazy(() => import("../pages/AssetRequestPage.jsx"));
+const RequestApprovalPage = lazy(() => import("../pages/RequestApprovalPage.jsx"));
+const UserProfilePage = lazy(() => import("../pages/UserProfilePage.jsx"));
+const AssetsPage = lazy(() => import("../pages/AssetsPage.jsx"));
+const VendorsPage = lazy(() => import("../pages/VendorsPage.jsx"));
+const DepartmentsPage = lazy(() => import("../pages/DepartmentsPage.jsx"));
+const CategoriesPage = lazy(() => import("../pages/CategoriesPage.jsx"));
+const TypesPage = lazy(() => import("../pages/TypesPage.jsx"));
 
 // Components
 import ProtectedRoute from "../components/ProtectedRoute";
@@ -54,7 +52,8 @@ const App = () => {
           }}
         />
 
-        <Routes>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Routes>
 
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
@@ -217,7 +216,8 @@ const App = () => {
           {/* fallback */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
 
-        </Routes>
+          </Routes>
+        </Suspense>
       </Router>
     </Provider>
   );
