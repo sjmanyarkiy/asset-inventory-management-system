@@ -130,6 +130,25 @@ def create_app(config_object=None):
     @app.route('/', methods=['GET'])
     def home():
         return jsonify({'message': 'Asset Inventory Backend is running!'}), 200
+    
+    @app.route('/debug/users', methods=['GET'])
+    def debug_users():
+        from models.user import User
+
+        users = User.query.all()
+
+        return jsonify({
+            "count": len(users),
+            "users": [
+                {
+                    "id": u.id,
+                    "username": u.username,
+                    "email": u.email,
+                    "role_id": u.role_id
+                }
+                for u in users
+            ]
+        })
 
     # Initialize DB
     with app.app_context():
