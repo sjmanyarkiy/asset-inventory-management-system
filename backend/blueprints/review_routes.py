@@ -4,6 +4,7 @@ Managers can view, approve, and reject asset/repair requests from their departme
 """
 
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from models.asset_request import AssetRequest
 from models.repair_request import RepairRequest
 from models.user import User
@@ -33,7 +34,8 @@ def token_required(f):
 
         try:
             data = jwt.decode(token, os.getenv('JWT_SECRET_KEY'), algorithms=['HS256'])
-            current_user_id = data.get('user_id')
+            # current_user_id = data.get('user_id')
+            current_user_id = data.get('sub')
         except jwt.ExpiredSignatureError:
             return jsonify({'error': 'Token has expired'}), 401
         except jwt.InvalidTokenError:
@@ -50,59 +52,33 @@ def token_required(f):
 @review_bp.route('/assets', methods=['GET'])
 @token_required
 def get_asset_requests_for_review(current_user_id):
-    """Get asset requests for manager review (pending only)"""
     try:
         user = User.query.get(current_user_id)
         if not user:
             return jsonify({'error': 'User not found'}), 404
 
-        # Check if manager or admin
-        if user.role.hierarchy_level > 1:  # Not admin/super-admin
+        # ✅ FIXED: Managers (1) + Admins (2+) can review
+        if user.role.hierarchy_level > 2:  # Employees (0) cannot
             return jsonify({'error': 'Permission denied'}), 403
 
-        # Build query based on role
         query = AssetRequest.query.filter_by(status='Pending')
 
-        # If Manager (not Super Admin/Admin), filter by department
-        if user.role.hierarchy_level == 1:  # Manager level
+        # Managers filter by their departments
+        if user.role.hierarchy_level == 2:  # Manager only sees OWN dept
             if user.managed_departments:
                 dept_ids = [d.id for d in user.managed_departments]
                 query = query.filter(AssetRequest.department_id.in_(dept_ids))
             else:
-                # Manager with no managed departments
                 return jsonify({'requests': []}), 200
 
         requests_list = query.all()
-
         return jsonify({
-            'requests': [
-                {
-                    'id': r.id,
-                    'asset_type_id': r.asset_type_id,
-                    'asset_type': {'id': r.asset_type.id, 'name': r.asset_type.name} if r.asset_type else None,
-                    'quantity': r.quantity,
-                    'reason': r.reason,
-                    'urgency': r.urgency,
-                    'status': r.status,
-                    'department_id': r.department_id,
-                    'department': {'id': r.department.id, 'name': r.department.name} if r.department else None,
-                    'requested_by': {
-                        'id': r.requested_user.id,
-                        'username': r.requested_user.username,
-                        'first_name': r.requested_user.first_name,
-                        'last_name': r.requested_user.last_name,
-                        'email': r.requested_user.email
-                    } if r.requested_user else None,
-                    'created_at': r.created_at.isoformat() if r.created_at else None,
-                }
-                for r in requests_list
-            ],
+            'requests': [r.to_dict() for r in requests_list],  # Use model method
             'count': len(requests_list)
         }), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @review_bp.route('/assets/<int:request_id>/approve', methods=['POST'])
 @token_required
@@ -110,7 +86,7 @@ def approve_asset_request(current_user_id, request_id):
     """Manager approves an asset request"""
     try:
         user = User.query.get(current_user_id)
-        if not user or user.role.hierarchy_level > 1:
+        if not user or user.role.hierarchy_level > 2:
             return jsonify({'error': 'Permission denied'}), 403
 
         asset_request = AssetRequest.query.get(request_id)

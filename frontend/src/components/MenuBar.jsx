@@ -6,7 +6,7 @@ import { logout, selectUser } from "../../redux/slices/authSlice";
 import UserProfile from "../components/UserProfile";
 
 import { Home, BarChart3, Users, LogOut, User } from "lucide-react";
-import { CheckSquare } from 'react-feather';
+import { CheckSquare, Shield } from 'react-feather';
 
 function MenuBar() {
   const navigate = useNavigate();
@@ -93,6 +93,12 @@ function MenuBar() {
       path: "/profile",
       icon: <User size={18} />,
       roles: ["Super Admin", "Admin", "Employee", "Manager"]
+    },
+    {
+      name: "Admin Panel",
+      path: "/admin",
+      icon: <Shield size={18} />,
+      roles: ["Super Admin", "Admin"]
     },
   ];
 

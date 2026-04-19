@@ -1,20 +1,48 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from datetime import datetime
-from backend.models.report import db
-from models.assets import Asset
+from extensions import db
+from models.asset import Asset
 from models.role import Role
-from models.users import User
+from models.user import User
 from models.audit_log import AuditLog
+from functools import wraps
+import jwt
+import os
 import json
 
-assets_bp = Blueprint("assets", __name__)
+assets_bp = Blueprint("assets", __name__, url_prefix="/api")
 
 
-# ----------------------------
-# Helpers
-# ----------------------------
+def token_required(f):
+    """Verify JWT token"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            try:
+                token = auth_header.split(" ")[1]
+            except IndexError:
+                return jsonify({'error': 'Invalid token format'}), 401
+
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+
+        try:
+            data = jwt.decode(token, os.getenv('JWT_SECRET_KEY'), algorithms=['HS256'])
+            current_user_id = data.get('user_id')
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token has expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 401
+
+        return f(current_user_id, *args, **kwargs)
+    return decorated
+
 
 def log_action(action, asset_id, user_id, target_user_id=None, metadata=None):
+    """Log asset actions to audit trail"""
     log = AuditLog(
         action=action,
         asset_id=asset_id,
@@ -27,147 +55,163 @@ def log_action(action, asset_id, user_id, target_user_id=None, metadata=None):
     db.session.commit()
 
 
-def send_email(to_email, subject, message):
-    # replace later with Flask-Mail or SMTP service
-    print(f"EMAIL → {to_email} | {subject} | {message}")
-
-
 # ----------------------------
-# GET ALL ASSETS
+# GET ALL ASSETS (with pagination, search, filtering)
 # ----------------------------
 
 @assets_bp.route("/assets", methods=["GET"])
-def get_assets():
-    page = int(request.args.get("page", 1))
-    per_page = int(request.args.get("per_page", 10))
+@token_required
+def get_assets(current_user_id):
+    """Get all assets with search and filtering"""
+    try:
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
+        search = request.args.get("search", "").lower()
+        status = request.args.get("status", "").lower()
 
-    assets_query = Asset.query
+        # Base query
+        query = Asset.query.filter_by(is_active=True)
 
-    assets = assets_query.paginate(page=page, per_page=per_page, error_out=False)
+        # Search by asset name or code
+        if search:
+            query = query.filter(
+                (Asset.asset_name.ilike(f"%{search}%")) |
+                (Asset.asset_code.ilike(f"%{search}%"))
+            )
 
-    # return jsonify({
-    #     "assets": [
-    #         {
-    #             "id": a.id,
-    #             "name": a.name,
-    #             "category": a.category,
-    #             "status": a.status,
-    #             "assigned_to": {
-    #                 "id": a.assigned_to_user.id,
-    #                 "name": a.assigned_to_user.first_name
-    #             } if a.assigned_to_user else None
-    #         }
-    #         for a in assets.items
-    #     ],
-    #     "total": assets.total
-    # })
-    return jsonify({
-        "assets": [a.to_dict() for a in assets.items],
-        "total": assets.total
-    })
+        # Filter by status
+        if status:
+            query = query.filter(Asset.status.ilike(status))
+
+        # Paginate
+        paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+
+        return jsonify({
+            "assets": [a.to_dict() for a in paginated.items],
+            "total": paginated.total,
+            "page": page,
+            "per_page": per_page,
+            "pages": paginated.pages
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ----------------------------
+# GET SINGLE ASSET
+# ----------------------------
+
+@assets_bp.route("/assets/<int:asset_id>", methods=["GET"])
+@token_required
+def get_asset(current_user_id, asset_id):
+    """Get single asset by ID"""
+    try:
+        asset = Asset.query.get(asset_id)
+        if not asset:
+            return jsonify({'error': 'Asset not found'}), 404
+
+        return jsonify(asset.to_dict()), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # ----------------------------
 # ASSIGN ASSET
 # ----------------------------
 
-# @assets_bp.route("/assets/<int:asset_id>/assign", methods=["POST"])
-# def assign_asset(asset_id):
-#     data = request.json
-#     user_id = data.get("user_id")
-#     current_user_id = data.get("current_user_id")
-
-#     asset = Asset.query.get_or_404(asset_id)
-#     user = User.query.get_or_404(user_id)
-#     current_user = User.query.get_or_404(current_user_id)
-
-#     # validation
-#     # if asset.status == "Assigned":
-#     #     return jsonify({"error": "Asset already assigned"}), 400
-#     if asset.status != "Available":
-#      return jsonify({"error": "Asset not available"}), 400
-
-#     # asset.status = "Assigned"
-#     # asset.assigned_to = user.id
-#     # asset.updated_at = datetime.utcnow()
-#     asset.assign_to(user.id)
-
-#     db.session.commit()
-
-#     log_action(
-#         "ASSIGN_ASSET",
-#         asset.id,
-#         current_user.id,
-#         user.id,
-#         # {"asset": asset.name}
-#         {"asset": asset.asset_name}
-#     )
-
-#     send_email(
-#         user.email,
-#         "Asset Assigned",
-#         f"You have been assigned {asset.name}"
-#     )
-
-#     # return jsonify({"message": "Asset assigned successfully"})
-#     return jsonify({
-#         "message": "Asset assigned successfully",
-#         "asset": asset.to_dict()
-#     }), 200
 @assets_bp.route("/assets/<int:asset_id>/assign", methods=["POST"])
-def assign_asset(asset_id):
-    data = request.get_json() or {}
+@token_required
+def assign_asset(current_user_id, asset_id):
+    """Assign asset to a user (admin/manager only)"""
+    try:
+        user = User.query.get(current_user_id)
+        if not user or user.role.hierarchy_level > 1:  # Admin/SuperAdmin only
+            return jsonify({'error': 'Permission denied'}), 403
 
-    user_id = data.get("user_id")
+        data = request.get_json() or {}
+        user_id = data.get("user_id")
 
-    asset = Asset.query.get_or_404(asset_id)
-    user = User.query.get_or_404(user_id)
+        if not user_id:
+            return jsonify({'error': 'user_id is required'}), 400
 
-    # prevent double assignment
-    if asset.assigned_to:
-        return jsonify({"error": "Asset already assigned"}), 400
+        asset = Asset.query.get(asset_id)
+        if not asset:
+            return jsonify({'error': 'Asset not found'}), 404
 
-    asset.assigned_to = user.id
-    asset.status = "Assigned"
-    asset.assigned_at = datetime.utcnow()
-    asset.updated_at = datetime.utcnow()
+        target_user = User.query.get(user_id)
+        if not target_user:
+            return jsonify({'error': 'User not found'}), 404
 
-    asset.unassign()
-    db.session.commit()
-    db.session.refresh(asset)
+        # Prevent double assignment
+        if asset.assigned_to:
+            return jsonify({'error': 'Asset already assigned'}), 400
 
-    return jsonify({
-        "message": "Asset assigned successfully",
-        "asset": asset.to_dict()
-    }), 200
+        # Assign
+        asset.assign_to(user_id)
+        db.session.commit()
+
+        # Log action
+        log_action(
+            'ASSET_ASSIGNED',
+            asset.id,
+            current_user_id,
+            user_id,
+            {'asset': asset.asset_name}
+        )
+
+        return jsonify({
+            'message': 'Asset assigned successfully',
+            'asset': asset.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 
 # ----------------------------
-# RETURN ASSET
+# RETURN / UNASSIGN ASSET
 # ----------------------------
 
 @assets_bp.route("/assets/<int:asset_id>/return", methods=["POST"])
-def return_asset(asset_id):
-    data = request.json
-    current_user_id = data.get("current_user_id")
+@token_required
+def return_asset(current_user_id, asset_id):
+    """Return asset (unassign from user)"""
+    try:
+        user = User.query.get(current_user_id)
+        if not user or user.role.hierarchy_level > 1:  # Admin/Manager
+            return jsonify({'error': 'Permission denied'}), 403
 
-    asset = Asset.query.get_or_404(asset_id)
-    current_user = User.query.get_or_404(current_user_id)
+        asset = Asset.query.get(asset_id)
+        if not asset:
+            return jsonify({'error': 'Asset not found'}), 404
 
-    asset.status = "Available"
-    asset.assigned_to = None
-    asset.updated_at = datetime.utcnow()
+        if not asset.assigned_to:
+            return jsonify({'error': 'Asset is not currently assigned'}), 400
 
-    db.session.commit()
+        # Unassign
+        asset.unassign()
+        db.session.commit()
 
-    log_action(
-        "RETURN_ASSET",
-        asset.id,
-        current_user.id,
-        # metadata={"asset": asset.name}
-        metadata={"asset": asset.asset_name}
-    )
+        # Log action
+        log_action(
+            'ASSET_RETURNED',
+            asset.id,
+            current_user_id,
+            None,
+            {'asset': asset.asset_name}
+        )
 
-    return jsonify({"message": "Asset returned successfully"})
+        return jsonify({
+            'message': 'Asset returned successfully',
+            'asset': asset.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 
 # ----------------------------
@@ -175,19 +219,69 @@ def return_asset(asset_id):
 # ----------------------------
 
 @assets_bp.route("/assets/<int:asset_id>/history", methods=["GET"])
-def asset_history(asset_id):
-    logs = AuditLog.query.filter_by(asset_id=asset_id).order_by(AuditLog.timestamp.desc()).all()
+@token_required
+def asset_history(current_user_id, asset_id):
+    """Get audit log history for an asset"""
+    try:
+        asset = Asset.query.get(asset_id)
+        if not asset:
+            return jsonify({'error': 'Asset not found'}), 404
 
-    return jsonify({
-        "history": [
-            {
-                "id": l.id,
-                "action": l.action,
-                "performed_by": l.performed_by,
-                "target": l.target,
-                "metadata": json.loads(l.metadata or "{}"),
-                "timestamp": l.timestamp
-            }
-            for l in logs
-        ]
-    })
+        logs = AuditLog.query.filter_by(asset_id=asset_id).order_by(
+            AuditLog.timestamp.desc()
+        ).all()
+
+        return jsonify({
+            'asset_id': asset_id,
+            'history': [
+                {
+                    'id': l.id,
+                    'action': l.action,
+                    'performed_by': l.performed_by,
+                    'target_user': l.target_user,
+                    'metadata': json.loads(l.metadata or '{}'),
+                    'timestamp': l.timestamp.isoformat() if l.timestamp else None
+                }
+                for l in logs
+            ],
+            'total': len(logs)
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+@assets_bp.route('/<int:asset_id>/barcode', methods=['GET'])
+@jwt_required()
+def get_asset_barcode(asset_id):
+    """Get barcode image for an asset"""
+    try:
+        asset = Asset.query.get(asset_id)
+        if not asset:
+            return jsonify({'error': 'Asset not found'}), 404
+        
+        if not asset.barcode_image:
+            return jsonify({'error': 'Barcode not generated'}), 400
+        
+        # Return as PNG
+        return send_file(
+            io.BytesIO(asset.barcode_image),
+            mimetype='image/png',
+            as_attachment=False
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@assets_bp.route('/barcode/<barcode_code>', methods=['GET'])
+@jwt_required()
+def lookup_asset_by_barcode(barcode_code):
+    """Lookup asset by barcode code"""
+    try:
+        asset = Asset.query.filter_by(barcode_data=barcode_code).first()
+        if not asset:
+            return jsonify({'error': 'Asset not found'}), 404
+        
+        return jsonify({'asset': asset.to_dict()}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

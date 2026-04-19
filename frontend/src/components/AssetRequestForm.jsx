@@ -53,6 +53,9 @@ const AssetRequestForm = ({ onRequestSubmitted }) => {
     setError('');
     setSuccess('');
 
+    const user = JSON.parse(localStorage.getItem('user'));
+    formData.department_id = user.department_id; 
+
     // Validation
     if (!formData.asset_type_id) {
       setError('Please select an asset type');

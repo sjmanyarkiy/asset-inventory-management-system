@@ -186,6 +186,31 @@ const App = () => {
             </ProtectedRoute>
           } />
 
+          {/* <Route path="/admin/assets/create" element={
+            <AdminRoute>
+              <AppLayout>
+                <CreateAssetPage />
+              </AppLayout>
+            </AdminRoute>
+          } /> */}
+
+          {/* <Route path="/admin/assets" element={
+            <AdminRoute>
+              <AppLayout>
+                <ViewAssetsPage />
+              </AppLayout>
+            </AdminRoute>
+          } /> */}
+
+          {/* // View Routes (Protected) */}
+          {/* <Route path="/assets" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <ViewAssetsPage />
+              </AppLayout>
+            </ProtectedRoute>
+          } /> */}
+
           {/* Root redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 

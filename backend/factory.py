@@ -82,7 +82,7 @@ def create_app(config_object=None):
     
 
     # Import blueprints
-    from assetlist.routes import asset_bp
+    from blueprints.assets import assets_bp
     from blueprints.admin import admin_bp
     from blueprints.reports import reports_bp
     from blueprints.requests import requests_bp
@@ -94,7 +94,7 @@ def create_app(config_object=None):
 
     # Register blueprints
     app.register_blueprint(auth_bp)
-    app.register_blueprint(asset_bp, url_prefix="/api")
+    app.register_blueprint(assets_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(reports_bp, url_prefix="/api")
     app.register_blueprint(requests_bp)

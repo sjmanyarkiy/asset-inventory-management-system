@@ -2,7 +2,7 @@
 Comprehensive seed script for Asset Inventory Management System
 Populates database with:
 - Roles (Super Admin, Admin, Manager, Employee)
-- Users with assigned roles
+- Users with assigned roles AND departments
 - Asset Categories
 - Asset Types
 - Vendors
@@ -18,15 +18,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
-
-# from app import create_app
-# from app import create_app
-
 
 from extensions import db
 from models.user import User
@@ -39,7 +34,7 @@ app_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(app_module)
 create_app = app_module.create_app
 
-# Import additional models if they exist in models/ directory
+# Import additional models
 try:
     from models.asset_category import AssetCategory
 except ImportError:
@@ -90,16 +85,21 @@ def seed_database():
                 print("   Creating new roles...")
                 roles = create_roles()
             
-            # 2. Create Users with roles
-            print("👥 Creating users...")
-            users = create_users(roles)
-            
-            # 3. Create additional data (if models exist)
+            # 2. Create departments FIRST (before users)
             categories = []
             asset_types = []
             vendors = []
             departments = []
             
+            if Department:
+                print("🏛️  Creating departments...")
+                departments = create_departments()
+            
+            # 3. Create Users with roles AND department assignments
+            print("👥 Creating users and assigning to departments...")
+            users = create_users(roles, departments)
+            
+            # 4. Create additional data (if models exist)
             if AssetCategory:
                 print("🏷️  Creating asset categories...")
                 categories = create_asset_categories()
@@ -112,22 +112,23 @@ def seed_database():
                 print("🏢 Creating vendors...")
                 vendors = create_vendors()
             
-            if Department:
-                print("🏛️  Creating departments...")
-                departments = create_departments()
+            # 5. Assign managers to departments (set manager_id on departments)
+            if departments:
+                print("👔 Assigning managers to departments...")
+                assign_managers_to_departments(users, departments)
             
-            # 4. Create sample assets
+            # 6. Create sample assets
             if categories and asset_types:
                 print("📦 Creating sample assets...")
                 create_sample_assets(users, categories, asset_types, vendors, departments)
 
-            # 5. Create service reports
+            # 7. Create service reports
             if Report:
                 print("📊 Creating service reports...")
                 create_reports(users)
             
             print("\n✅ Database seeded successfully!\n")
-            print_seed_summary(users, roles)
+            print_seed_summary(users, roles, departments)
             
         except Exception as e:
             db.session.rollback()
@@ -207,14 +208,42 @@ def create_roles():
     return roles
 
 
-def create_users(roles):
-    """Create test users with different roles"""
+def create_departments():
+    """Create departments FIRST (before users)"""
+    
+    departments_data = [
+        {'name': 'Information Technology', 'code': 'IT'},
+        {'name': 'Human Resources', 'code': 'HR'},
+        {'name': 'Finance', 'code': 'FIN'},
+        {'name': 'Operations', 'code': 'OPS'},
+        {'name': 'Sales', 'code': 'SAL'},
+        {'name': 'Marketing', 'code': 'MKT'},
+    ]
+    
+    departments = []
+    for dept_data in departments_data:
+        department = Department(**dept_data)
+        db.session.add(department)
+        departments.append(department)
+    
+    db.session.commit()
+    print(f"   ✓ Created {len(departments)} departments")
+    return departments
+
+
+def create_users(roles, departments=None):
+    """Create test users with different roles AND assign to departments"""
     
     if not roles:
         raise ValueError("❌ Roles must be created before users")
     
     # Map role names to role objects
     role_map = {role.name: role for role in roles}
+    
+    # Map departments by code for easier lookup
+    dept_map = {}
+    if departments:
+        dept_map = {d.code: d for d in departments}
     
     users_data = [
         {
@@ -225,7 +254,8 @@ def create_users(roles):
             'password': 'Admin@123!',
             'is_active': True,
             'is_email_verified': True,
-            'role': role_map.get('Super Admin')
+            'role': role_map.get('Super Admin'),
+            'department_id': None  # Super Admin has no department
         },
         {
             'username': 'teresa',
@@ -235,7 +265,8 @@ def create_users(roles):
             'password': 'Teresa@123!',
             'is_active': True,
             'is_email_verified': True,
-            'role': role_map.get('Admin')
+            'role': role_map.get('Admin'),
+            'department_id': None  # Admin has no department
         },
         {
             'username': 'managermkubwa',
@@ -245,7 +276,8 @@ def create_users(roles):
             'password': 'Manager@123!',
             'is_active': True,
             'is_email_verified': True,
-            'role': role_map.get('Manager')
+            'role': role_map.get('Manager'),
+            'department_id': dept_map.get('IT').id if 'IT' in dept_map else None
         },
         {
             'username': 'managermdogo',
@@ -255,7 +287,8 @@ def create_users(roles):
             'password': 'Manager@123!',
             'is_active': True,
             'is_email_verified': True,
-            'role': role_map.get('Manager')
+            'role': role_map.get('Manager'),
+            'department_id': dept_map.get('HR').id if 'HR' in dept_map else None
         },
         {
             'username': 'alice-kamongo',
@@ -265,7 +298,8 @@ def create_users(roles):
             'password': 'alice@123!',
             'is_active': True,
             'is_email_verified': True,
-            'role': role_map.get('Employee')
+            'role': role_map.get('Employee'),
+            'department_id': dept_map.get('IT').id if 'IT' in dept_map else None
         },
         {
             'username': 'kevin-wamalwa',
@@ -275,7 +309,8 @@ def create_users(roles):
             'password': 'kevin@123!',
             'is_active': True,
             'is_email_verified': True,
-            'role': role_map.get('Employee')
+            'role': role_map.get('Employee'),
+            'department_id': dept_map.get('IT').id if 'IT' in dept_map else None
         },
         {
             'username': 'carol-cheboi',
@@ -285,7 +320,8 @@ def create_users(roles):
             'password': 'carol@123!',
             'is_active': True,
             'is_email_verified': True,
-            'role': role_map.get('Employee')
+            'role': role_map.get('Employee'),
+            'department_id': dept_map.get('HR').id if 'HR' in dept_map else None
         },
         {
             'username': 'david-maingi',
@@ -295,7 +331,8 @@ def create_users(roles):
             'password': 'david@123!',
             'is_active': True,
             'is_email_verified': True,
-            'role': role_map.get('Employee')
+            'role': role_map.get('Employee'),
+            'department_id': dept_map.get('FIN').id if 'FIN' in dept_map else None
         },
         {
             'username': 'mwenda-zake',
@@ -305,7 +342,8 @@ def create_users(roles):
             'password': 'mwenda@123!',
             'is_active': False,
             'is_email_verified': False,
-            'role': role_map.get('Employee')
+            'role': role_map.get('Employee'),
+            'department_id': dept_map.get('OPS').id if 'OPS' in dept_map else None
         }
     ]
     
@@ -318,8 +356,37 @@ def create_users(roles):
         users.append(user)
     
     db.session.commit()
-    print(f"   ✓ Created {len(users)} users")
+    print(f"   ✓ Created {len(users)} users with department assignments")
     return users
+
+
+def assign_managers_to_departments(users, departments):
+    """Assign managers to departments they manage (set manager_id on departments)"""
+    try:
+        # Find managers by username
+        manager1 = next((u for u in users if u.username == 'managermkubwa'), None)
+        manager2 = next((u for u in users if u.username == 'managermdogo'), None)
+        
+        # Find departments by code
+        it_dept = next((d for d in departments if d.code == 'IT'), None)
+        hr_dept = next((d for d in departments if d.code == 'HR'), None)
+        
+        # Assign managers to departments
+        if manager1 and it_dept:
+            it_dept.manager_id = manager1.id
+            db.session.add(it_dept)
+            print(f"   ✓ Assigned {manager1.username} as manager of {it_dept.name}")
+        
+        if manager2 and hr_dept:
+            hr_dept.manager_id = manager2.id
+            db.session.add(hr_dept)
+            print(f"   ✓ Assigned {manager2.username} as manager of {hr_dept.name}")
+        
+        db.session.commit()
+            
+    except Exception as e:
+        print(f"   ⚠ Error assigning managers: {str(e)}")
+        db.session.rollback()
 
 
 def create_asset_categories():
@@ -435,29 +502,6 @@ def create_vendors():
     return vendors
 
 
-def create_departments():
-    """Create departments"""
-    
-    departments_data = [
-        {'name': 'Information Technology', 'code': 'IT'},
-        {'name': 'Human Resources', 'code': 'HR'},
-        {'name': 'Finance', 'code': 'FIN'},
-        {'name': 'Operations', 'code': 'OPS'},
-        {'name': 'Sales', 'code': 'SAL'},
-        {'name': 'Marketing', 'code': 'MKT'},
-    ]
-    
-    departments = []
-    for dept_data in departments_data:
-        department = Department(**dept_data)
-        db.session.add(department)
-        departments.append(department)
-    
-    db.session.commit()
-    print(f"   ✓ Created {len(departments)} departments")
-    return departments
-
-
 def create_sample_assets(users, categories, asset_types, vendors, departments):
     """Create sample assets"""
     
@@ -483,8 +527,8 @@ def create_sample_assets(users, categories, asset_types, vendors, departments):
         {
             'asset_name': 'MacBook Pro 16" 2023',
             'asset_code': 'LAPTOP-001',
-            'asset_type': laptop_type,
-            'category': it_category,
+            'asset_type_id': laptop_type.id,
+            'category_id': it_category.id,
             'description': 'High-performance laptop for development',
             'serial_number': 'SN-MACBOOK-001',
             'purchase_date': datetime.now() - timedelta(days=180),
@@ -494,15 +538,15 @@ def create_sample_assets(users, categories, asset_types, vendors, departments):
             'assigned_to': employees[0].id if employees else None,
             'status': 'Assigned',
             'condition': 'Good',
-            'vendor': vendor1,
-            'department': it_dept,
+            'vendor_id': vendor1.id if vendor1 else None,
+            'department_id': it_dept.id if it_dept else None,
             'created_by': admin_user.id
         },
         {
             'asset_name': 'Dell XPS 15 Laptop',
             'asset_code': 'LAPTOP-002',
-            'asset_type': laptop_type,
-            'category': it_category,
+            'asset_type_id': laptop_type.id,
+            'category_id': it_category.id,
             'description': 'Premium laptop for design work',
             'serial_number': 'SN-DELL-XPS-001',
             'purchase_date': datetime.now() - timedelta(days=200),
@@ -512,15 +556,15 @@ def create_sample_assets(users, categories, asset_types, vendors, departments):
             'assigned_to': employees[1].id if len(employees) > 1 else None,
             'status': 'Assigned',
             'condition': 'Good',
-            'vendor': vendor1,
-            'department': it_dept,
+            'vendor_id': vendor1.id if vendor1 else None,
+            'department_id': it_dept.id if it_dept else None,
             'created_by': admin_user.id
         },
         {
             'asset_name': 'iMac 27" 2023',
             'asset_code': 'DESKTOP-001',
-            'asset_type': desktop_type,
-            'category': it_category,
+            'asset_type_id': desktop_type.id,
+            'category_id': it_category.id,
             'description': 'All-in-one desktop for office use',
             'serial_number': 'SN-IMAC-001',
             'purchase_date': datetime.now() - timedelta(days=150),
@@ -530,15 +574,15 @@ def create_sample_assets(users, categories, asset_types, vendors, departments):
             'assigned_to': None,
             'status': 'Available',
             'condition': 'Good',
-            'vendor': vendor1,
-            'department': it_dept,
+            'vendor_id': vendor1.id if vendor1 else None,
+            'department_id': it_dept.id if it_dept else None,
             'created_by': admin_user.id
         },
         {
             'asset_name': 'LG 27" 4K Monitor',
             'asset_code': 'MONITOR-001',
-            'asset_type': monitor_type,
-            'category': it_category,
+            'asset_type_id': monitor_type.id,
+            'category_id': it_category.id,
             'description': '4K Ultra HD Monitor',
             'serial_number': 'SN-LG-MONITOR-001',
             'purchase_date': datetime.now() - timedelta(days=120),
@@ -548,15 +592,15 @@ def create_sample_assets(users, categories, asset_types, vendors, departments):
             'assigned_to': employees[0].id if employees else None,
             'status': 'Assigned',
             'condition': 'Good',
-            'vendor': vendor1,
-            'department': it_dept,
+            'vendor_id': vendor1.id if vendor1 else None,
+            'department_id': it_dept.id if it_dept else None,
             'created_by': admin_user.id
         },
         {
             'asset_name': 'Ergonomic Office Chair - Black',
             'asset_code': 'CHAIR-001',
-            'asset_type': chair_type,
-            'category': furniture_category,
+            'asset_type_id': chair_type.id,
+            'category_id': furniture_category.id,
             'description': 'Comfortable ergonomic chair with lumbar support',
             'serial_number': 'SN-CHAIR-BLACK-001',
             'purchase_date': datetime.now() - timedelta(days=300),
@@ -566,15 +610,15 @@ def create_sample_assets(users, categories, asset_types, vendors, departments):
             'assigned_to': employees[0].id if employees else None,
             'status': 'Assigned',
             'condition': 'Fair',
-            'vendor': vendor2,
-            'department': hr_dept,
+            'vendor_id': vendor2.id if vendor2 else None,
+            'department_id': hr_dept.id if hr_dept else None,
             'created_by': admin_user.id
         },
         {
             'asset_name': 'Ergonomic Office Chair - Gray',
             'asset_code': 'CHAIR-002',
-            'asset_type': chair_type,
-            'category': furniture_category,
+            'asset_type_id': chair_type.id,
+            'category_id': furniture_category.id,
             'description': 'Comfortable ergonomic chair with lumbar support',
             'serial_number': 'SN-CHAIR-GRAY-001',
             'purchase_date': datetime.now() - timedelta(days=280),
@@ -584,15 +628,15 @@ def create_sample_assets(users, categories, asset_types, vendors, departments):
             'assigned_to': None,
             'status': 'Available',
             'condition': 'Good',
-            'vendor': vendor2,
-            'department': hr_dept,
+            'vendor_id': vendor2.id if vendor2 else None,
+            'department_id': hr_dept.id if hr_dept else None,
             'created_by': admin_user.id
         },
         {
             'asset_name': 'Standing Desk - Oak',
             'asset_code': 'DESK-001',
-            'asset_type': next((t for t in asset_types if 'Desk' in t.name), asset_types[7]),
-            'category': furniture_category,
+            'asset_type_id': next((t.id for t in asset_types if 'Desk' in t.name), asset_types[7].id),
+            'category_id': furniture_category.id,
             'description': 'Electric height-adjustable standing desk',
             'serial_number': 'SN-DESK-OAK-001',
             'purchase_date': datetime.now() - timedelta(days=250),
@@ -602,15 +646,15 @@ def create_sample_assets(users, categories, asset_types, vendors, departments):
             'assigned_to': employees[1].id if len(employees) > 1 else None,
             'status': 'Assigned',
             'condition': 'Good',
-            'vendor': vendor2,
-            'department': hr_dept,
+            'vendor_id': vendor2.id if vendor2 else None,
+            'department_id': hr_dept.id if hr_dept else None,
             'created_by': admin_user.id
         },
         {
             'asset_name': 'HP LaserJet Pro Printer',
             'asset_code': 'PRINTER-001',
-            'asset_type': next((t for t in asset_types if 'Printer' in t.name), asset_types[3]),
-            'category': it_category,
+            'asset_type_id': next((t.id for t in asset_types if 'Printer' in t.name), asset_types[3].id),
+            'category_id': it_category.id,
             'description': 'Network printer for office use',
             'serial_number': 'SN-HP-PRINTER-001',
             'purchase_date': datetime.now() - timedelta(days=365),
@@ -620,8 +664,8 @@ def create_sample_assets(users, categories, asset_types, vendors, departments):
             'assigned_to': None,
             'status': 'Available',
             'condition': 'Good',
-            'vendor': vendor1,
-            'department': it_dept,
+            'vendor_id': vendor1.id if vendor1 else None,
+            'department_id': it_dept.id if it_dept else None,
             'created_by': admin_user.id
         },
     ]
@@ -633,6 +677,16 @@ def create_sample_assets(users, categories, asset_types, vendors, departments):
     db.session.commit()
     print(f"   ✓ Created {len(assets_data)} sample assets")
 
+    print("   📊 Generating barcodes...")
+    all_assets = Asset.query.all()
+    for asset in all_assets:
+        asset.generate_barcode()
+        asset.generate_qr_code()
+        db.session.add(asset)
+    
+    db.session.commit()
+    print(f"   ✓ Generated barcodes for {len(all_assets)} assets")
+
 
 def create_reports(users):
     """Create sample service reports"""
@@ -641,7 +695,6 @@ def create_reports(users):
         print("   ⚠ Report model not found, skipping reports creation")
         return []
 
-    # pick some users
     admin_user = next((u for u in users if u.username == "admin"), users[0])
     employees = [u for u in users if u.role and u.role.name == "Employee"]
 
@@ -687,7 +740,7 @@ def create_reports(users):
     return reports
 
 
-def print_seed_summary(users, roles):
+def print_seed_summary(users, roles, departments):
     """Print summary of seeded data"""
     
     print("=" * 70)
@@ -699,63 +752,26 @@ def print_seed_summary(users, roles):
         user_count = len(role.users) if hasattr(role, 'users') and role.users else 0
         print(f"   • {role.name} (Level {role.hierarchy_level}) - {user_count} users")
     
-    print("\n👥 TEST USERS:")
-    print("   Status Username              Email                          Role")
+    print("\n🏛️  DEPARTMENTS:")
+    for dept in departments:
+        manager_name = f"{dept.manager.first_name} {dept.manager.last_name}" if dept.manager else "No Manager"
+        print(f"   • {dept.code}: {dept.name} (Manager: {manager_name})")
+    
+    print("\n👥 TEST USERS & ASSIGNMENTS:")
+    print("   Username              Role              Department")
     print("   " + "-" * 67)
     for user in users:
         role_name = user.role.name if user.role else "None"
-        status = "✓" if user.is_active else "✗"
-        verified = "✅" if user.is_email_verified else "⚠"
-        print(f"   {status} {verified}  {user.username:<20} {user.email:<30} {role_name}")
+        dept_name = user.department.name if user.department else "None"
+        print(f"   {user.username:<20} {role_name:<15} {dept_name}")
     
     print("\n🔐 LOGIN CREDENTIALS (All verified users ready to login):")
     print("   Admin (Super Admin): admin / Admin@123!")
     print("   Admin: teresa / Teresa@123!")
-    print("   Managers: managermkubwa or managermdogo / Manager@123!")
-    print("   Employees: alice-kamongo, kevin-wamalwa, etc. / [their password]")
+    print("   Manager (IT): managermkubwa / Manager@123!")
+    print("   Manager (HR): managermdogo / Manager@123!")
+    print("   Employees: alice-kamongo, kevin-wamalwa, carol-cheboi, david-maingi")
     print("   ⚠ mwenda-zake is inactive/unverified (demo purposes)")
-    
-    print("\n" + "=" * 70)
-    print("✨ Database seeding complete! Ready for testing.")
-    print("=" * 70 + "\n")
-    """Print summary of seeded data"""
-    
-    print("=" * 70)
-    print("🎉 SEED DATA SUMMARY")
-    print("=" * 70)
-    
-    print("\n📋 ROLES:")
-    for role in roles:
-        user_count = len(role.users) if hasattr(role, 'users') and role.users else 0
-        print(f"   • {role.name} (Level {role.hierarchy_level}) - {user_count} users")
-    
-    print("\n👥 TEST USERS:")
-    print("   Status Username              Email                          Role")
-    print("   " + "-" * 67)
-    for user in users:
-        role_name = user.role.name if user.role else "None"
-        status = "✓" if user.is_active else "✗"
-        print(f"   {status}      {user.username:<20} {user.email:<30} {role_name}")
-    
-    print("\n🔐 LOGIN CREDENTIALS:")
-    print("   Admin (Super Admin):")
-    print("      • Username: admin")
-    print("      • Password: Admin@123!")
-    print("")
-    print("   Admin (Regular Admin):")
-    print("      • Username: teresa")
-    print("      • Password: Teresa@123!")
-    print("")
-    print("   Managers:")
-    print("      • Username: managermkubwa or managermdogo")
-    print("      • Password: Manager@123!")
-    print("")
-    print("   Employees (use individual passwords as set in code)")
-    print("      • alice-kamongo: alice@123!")
-    print("      • kevin-wamalwa: kevin@123!")
-    print("      • carol-cheboi: carol@123!")
-    print("      • david-maingi: david@123!")
-    print("      • mwenda-zake: mwenda@123!")
     
     print("\n" + "=" * 70)
     print("✨ Database seeding complete! Ready for testing.")

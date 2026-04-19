@@ -143,9 +143,9 @@ const RequestApprovalPage = () => {
 
   return (
     <Container fluid className="py-4">
-      <Button variant="outline-primary" onClick={fetchAllRequests} className="ms-2">
+      {/* <Button variant="outline-primary" onClick={fetchAllRequests} className="ms-2">
         🔄 Refresh
-      </Button>
+      </Button> */}
       {/* Header */}
       <Row className="mb-4">
         <Col>
