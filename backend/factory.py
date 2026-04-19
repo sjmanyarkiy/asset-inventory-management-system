@@ -46,7 +46,18 @@ def create_app(config_object=None):
     db.init_app(app)
     
     # CORS Configuration - Allow both local development and Render URLs
-    allowed_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3000').split(',')
+    allowed_origins = os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:5173,http://localhost:3000"
+    ).split(",")
+
+    CORS(
+        app,
+        origins=allowed_origins,
+        methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"],
+        supports_credentials=True
+    )
     print(f"DEBUG: CORS allowed origins = {allowed_origins}") 
 
     # CORS(
