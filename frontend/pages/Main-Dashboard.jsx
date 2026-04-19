@@ -5,7 +5,7 @@ import MenuBar from "../src/components/MenuBar";
 import SearchBar from "../src/components/SearchBar";
 import AssetList from "../src/components/AssetList";
 
-import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+// import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useNavigate } from "react-router-dom";
 
 function MainDashboard() {
@@ -66,7 +66,7 @@ function MainDashboard() {
           </Card>
         </Col>
       </Row>
-      <Row className="mb-4">
+      {/* <Row className="mb-4">
         <Col md={6}>
           <Card className="shadow-sm border-0">
             <Card.Body>
@@ -91,7 +91,7 @@ function MainDashboard() {
             </Card.Body>
           </Card>
         </Col>
-      </Row>
+      </Row> */}
       <Card className="shadow-sm border-0 mt-4">
         <Card.Body>
           <h5>Recent Assets</h5>
