@@ -1,8 +1,8 @@
 from datetime import datetime
 from extensions import db
-import barcode
-from barcode.writer import ImageWriter
-import qrcode
+# import barcode
+# from barcode.writer import ImageWriter
+# import qrcode
 from io import BytesIO
 import base64
 import os
@@ -26,7 +26,8 @@ class Asset(db.Model):
     description = db.Column(db.Text)
 
     barcode_data = db.Column(db.String(100), unique=True, nullable=True)  # e.g., "ASSET-001"
-    barcode_image = db.Column(db.LargeBinary, nullable=True)  # Binary image data
+    # barcode_image = db.Column(db.LargeBinary, nullable=True)  # Binary image data
+    asset_code = db.Column(db.String(50), unique=True) 
     qr_code_image = db.Column(db.LargeBinary, nullable=True)   # QR code binary data
     barcode_generated = db.Column(db.Boolean, default=False)
 
