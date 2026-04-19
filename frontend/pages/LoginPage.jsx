@@ -49,8 +49,17 @@ function LoginPage() {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
       navigate('/dashboard')
-    } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Login failed. Please try again.';
+    } 
+    catch (err) {
+    //   const errorMessage = err.response?.data?.error || 'Login failed. Please try again.';
+    const raw = err.response?.data?.error;
+
+    const errorMessage =
+      typeof raw === 'string'
+        ? raw
+        : raw?.message
+        ? raw.message
+        : 'Login failed. Please try again.';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -74,7 +83,10 @@ function LoginPage() {
                 {error && (
                   <Alert variant="danger" className="mb-4" dismissible onClose={() => setError('')}>
                     <Alert.Heading className="mb-2">Log In Failed</Alert.Heading>
-                    <p className="mb-0">{error}</p>
+                    <p className="mb-0">
+                      {/* {error} */}
+                      {typeof error === 'string' ? error : JSON.stringify(error)}
+                    </p>
                   </Alert>
                 )}
 
