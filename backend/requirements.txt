@@ -16,11 +16,11 @@ alembic==1.14.1
 bcrypt==4.1.2
 python-dotenv==1.0.0
 
-# BARCODE SYSTEM (✅ greenlet fixed)
-greenlet==3.0.3
-python-barcode==0.15.1
-qrcode[pil]==7.4.2
-Pillow==10.4.0
+# BARCODE SYSTEM 
+# greenlet==3.0.3
+# python-barcode==0.15.1
+# qrcode[pil]==7.4.2
+# Pillow==10.4.0
 
 # Production
 gunicorn==23.0.0
