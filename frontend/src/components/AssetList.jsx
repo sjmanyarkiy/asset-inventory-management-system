@@ -173,7 +173,7 @@ function AssetList({ searchTerm = "" }) {
               <td>{asset.asset_category?.name || '-'}</td>
               <td>{getStatusBadge(asset.status)}</td>
               <td>{asset.assigned_user ? `${asset.assigned_user.first_name} ${asset.assigned_user.last_name}`.trim() || '-' : '-'}</td>
-              <td>
+              {/* <td>
                 {asset.barcode_image ? (
                   <Button
                     size="sm"
@@ -184,6 +184,13 @@ function AssetList({ searchTerm = "" }) {
                   </Button>
                 ) : (
                   <span className="text-muted">No barcode</span>
+                )}
+              </td> */}
+              <td>
+                {asset.barcode_image ? (
+                  <Button onClick={() => handleViewBarcode(asset)}>📊 View</Button>
+                ) : (
+                  <span className="text-muted">Barcode coming soon</span>
                 )}
               </td>
               <td>

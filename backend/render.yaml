@@ -2,13 +2,12 @@ services:
   - type: web
     name: asset-inventory-backend
     env: python
-    pythonVersion: "3.12.7"  # ✅ FIXED
-    buildCommand: "pip install -r requirements.txt"
+    pythonVersion: "3.12.7"
+    buildCommand: |
+      pip install --only-binary=all: greenlet
+      pip install --only-binary=all: python-barcode,qrcode,Pillow
+      pip install -r requirements.txt --only-binary=:all:
     startCommand: "bash start.sh"
     envVars:
       - key: FLASK_ENV
         value: production
-      - key: DATABASE_URL
-        fromDatabase:
-          name: asset_inventory
-          property: connectionString
