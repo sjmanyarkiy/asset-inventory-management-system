@@ -159,6 +159,13 @@ def create_app(config_object=None):
     print("REGISTERED ROUTES:")
     print(app.url_map)  
 
+    @app.route('/debug/seed', methods=['GET'])
+    def seed_db():
+        from seed import create_users  # or your seed function
+
+        create_users()
+        return {"message": "Seeding complete"}
+
     return app
 
 
