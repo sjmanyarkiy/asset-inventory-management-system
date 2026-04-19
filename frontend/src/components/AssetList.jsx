@@ -30,7 +30,11 @@ function AssetList({ searchTerm = "" }) {
   const fetchAssets = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('access_token'); // defined token, logout if token is null
+        if (!token) {
+          console.error('No token - redirect to login');
+          return;
+        }
       const headers = { 'Authorization': `Bearer ${token}` };
       const response = await axios.get(`${API_URL}/api/assets`, { headers });
       setAssets(response.data.assets || []);
