@@ -1,293 +1,278 @@
 """
-Review Routes Blueprint - handles request review and approval for managers/admins
+Main Flask application entry point
+Asset Inventory Management System
 """
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from datetime import datetime
+
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
+
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
+from flask_migrate import Migrate
+
 from extensions import db
-from models.user import User
-from models.asset_request import AssetRequest
-from models.repair_request import RepairRequest
-
-review_bp = Blueprint('review', __name__)
+from config import get_config
 
 
-# ===========================
-# ASSET REQUESTS FOR REVIEW
-# ===========================
-
-@review_bp.route('/assets', methods=['GET'])
-@jwt_required()
-def get_asset_requests_for_review():
+def create_app(config_object=None):
     """
-    Get asset requests for review (manager/admin only)
-    - Managers: see department requests
-    - Admin: see all requests
+    Application factory function
+    Creates and configures the Flask app
     """
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
-    
-    # Only managers and admins can review
-    if user.role.hierarchy_level > 2:
-        return jsonify({'error': 'Only managers and admins can review requests'}), 403
-    
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 10))
-    status = request.args.get('status', '')
-    
-    query = AssetRequest.query
-    
-    # Filter based on role
-    if user.role.hierarchy_level == 2:  # Manager
-        query = query.filter_by(department_id=user.department_id)
-    # Admin (hierarchy 0-1) sees all
-    
-    # Filter by status if provided (default to pending)
-    if status:
-        query = query.filter_by(status=status)
+    app = Flask(__name__)
+
+    # Configuration - Load from config.py based on environment
+    if config_object:
+        app.config.from_object(get_config(config_object))
     else:
-        query = query.filter_by(status='Pending')
+        app.config.from_object(get_config())
     
-    pagination = query.order_by(AssetRequest.created_at.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
+    # Override with environment variables if present
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', app.config.get('SECRET_KEY', 'dev-secret-key-change-in-production'))
+    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', app.config.get('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production'))
+    app.config['RESEND_API_KEY'] = os.getenv('RESEND_API_KEY')
+    app.config['FRONTEND_URL'] = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+
+    # =========================
+    # PREVENT TRAILING SLASH REDIRECT ISSUES
+    # =========================
+    app.url_map.strict_slashes = False
+
+    # Initialize extensions
+    db.init_app(app)
+    
+    # CORS Configuration - Allow both local development and Render URLs
+    allowed_origins = os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:5173,http://localhost:3000"
+    ).split(",")
+
+    CORS(
+        app,
+        origins=allowed_origins,
+        methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"],
+        supports_credentials=True
     )
-    
-    return jsonify({
-        'requests': [r.to_dict() for r in pagination.items],
-        'total': pagination.total,
-        'pages': pagination.pages,
-        'current_page': page
-    }), 200
+    print(f"DEBUG: CORS allowed origins = {allowed_origins}") 
 
+    @app.before_request
+    def handle_options():
+        if request.method == "OPTIONS":
+            return jsonify(), 200
 
-@review_bp.route('/assets/<int:request_id>/approve', methods=['POST'])
-@jwt_required()
-def approve_asset_request(request_id):
-    """Approve an asset request"""
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
+    # CORS(
+    #     app,
+    #     resources={r"/*": {
+    #         "origins": allowed_origins,
+    #         "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    #         "allow_headers": ["Content-Type", "Authorization"],
+    #         "supports_credentials": True
+    #     }}
+    # )
+    # CORS(app, 
+    #      origins=["http://localhost:5173", "http://localhost:3000"],
+    #      methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    #      allow_headers=["Content-Type", "Authorization"],
+    #      supports_credentials=True
+    # )
+    # print("✓ CORS enabled for localhost:5173 and localhost:3000")
+
+    jwt = JWTManager(app)
+
+    # Import models
+    from models.user import User
+    from models.role import Role
+    from models.asset import Asset
+    from models.audit_log import AuditLog
+    from models.asset_type import AssetType
+    from models.asset_category import AssetCategory
+    from models.department import Department
+    from models.vendor import Vendor
+    from models.asset_request import AssetRequest
+    from models.repair_request import RepairRequest
     
-    # Only managers and admins can approve
-    if user.role.hierarchy_level > 2:
-        return jsonify({'error': 'Only managers and admins can approve requests'}), 403
-    
-    data = request.get_json() or {}
-    asset_req = AssetRequest.query.get_or_404(request_id)
-    
-    # Manager can only approve their department's requests
-    if user.role.hierarchy_level == 2 and asset_req.department_id != user.department_id:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    try:
-        asset_req.status = 'Approved'
-        asset_req.reviewed_by = current_user_id
-        asset_req.review_notes = data.get('notes', '')
-        asset_req.reviewed_at = datetime.utcnow()
-        
-        db.session.commit()
-        
-        return jsonify({
-            'message': 'Request approved successfully',
-            'request': asset_req.to_dict()
-        }), 200
-        
-    except Exception as e:
+
+    # Import blueprints
+    from blueprints.assets import assets_bp
+    from blueprints.admin import admin_bp
+    from blueprints.reports import reports_bp
+    from blueprints.requests import requests_bp
+    from blueprints.auth import auth_bp
+    from blueprints.asset_types_routes import asset_types_bp
+    from blueprints.review_routes import review_bp
+    from blueprints.department_routes import department_bp
+    from blueprints.category_routes import category_bp
+    from blueprints.type_routes import type_bp
+    from blueprints.vendor_routes import vendor_bp
+
+    migrate = Migrate(app, db)
+
+    # Register blueprints
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(assets_bp, url_prefix="/api/assets")       
+    app.register_blueprint(admin_bp, url_prefix="/api")        
+    app.register_blueprint(reports_bp, url_prefix="/api")      
+    app.register_blueprint(requests_bp, url_prefix="/api/requests")  
+    app.register_blueprint(asset_types_bp, url_prefix="/api/asset-types")
+    app.register_blueprint(review_bp, url_prefix="/api/review") 
+
+    app.register_blueprint(department_bp, url_prefix="/api/department") 
+    app.register_blueprint(category_bp, url_prefix="/api")
+    app.register_blueprint(vendor_bp, url_prefix="/api/vendors")
+    app.register_blueprint(type_bp, url_prefix="/api")
+
+    # Error handlers
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({'error': 'Resource not found'}), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
         db.session.rollback()
-        return jsonify({'error': f'Failed to approve request: {str(e)}'}), 500
+        return jsonify({'error': 'Internal server error'}), 500
 
+    # Routes
+    @app.route('/health', methods=['GET'])
+    def health_check():
+        return jsonify({'status': 'ok', 'message': 'Asset Inventory API is running'}), 200
 
-@review_bp.route('/assets/<int:request_id>/reject', methods=['POST'])
-@jwt_required()
-def reject_asset_request(request_id):
-    """Reject an asset request"""
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
+    @app.route('/', methods=['GET'])
+    def home():
+        return jsonify({'message': 'Asset Inventory Backend is running!'}), 200
     
-    # Only managers and admins can reject
-    if user.role.hierarchy_level > 2:
-        return jsonify({'error': 'Only managers and admins can reject requests'}), 403
-    
-    data = request.get_json() or {}
-    asset_req = AssetRequest.query.get_or_404(request_id)
-    
-    # Manager can only reject their department's requests
-    if user.role.hierarchy_level == 2 and asset_req.department_id != user.department_id:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    try:
-        asset_req.status = 'Rejected'
-        asset_req.reviewed_by = current_user_id
-        asset_req.review_notes = data.get('notes', '')
-        asset_req.reviewed_at = datetime.utcnow()
-        
-        db.session.commit()
-        
+    @app.route('/debug/users', methods=['GET'])
+    def debug_users():
+        from models.user import User
+
+        users = User.query.all()
+
         return jsonify({
-            'message': 'Request rejected successfully',
-            'request': asset_req.to_dict()
+            "count": len(users),
+            "users": [
+                {
+                    "id": u.id,
+                    "username": u.username,
+                    "email": u.email,
+                    "role_id": u.role_id
+                }
+                for u in users
+            ]
+        })
+
+    # Initialize DB
+    with app.app_context():
+        db.create_all()
+        create_default_roles()
+        print("Database initialized successfully!")
+
+    print("REGISTERED ROUTES:")
+    print(app.url_map)  
+
+    @app.route('/debug/seed', methods=['GET'])
+    def seed_db():
+        from seed import create_users  # or your seed function
+
+        create_users()
+        return {"message": "Seeding complete"}
+    
+    @app.route('/debug/token', methods=['GET'])
+    @jwt_required()
+    def debug_token():
+        from flask_jwt_extended import get_jwt
+        current_user_id = get_jwt_identity()
+        jwt_data = get_jwt()
+        return jsonify({
+            'current_user_id': current_user_id,
+            'current_user_id_type': str(type(current_user_id)),
+            'jwt_sub': jwt_data.get('sub'),
+            'jwt_sub_type': str(type(jwt_data.get('sub')))
         }), 200
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': f'Failed to reject request: {str(e)}'}), 500
+
+    return app
 
 
-# ===========================
-# REPAIR REQUESTS FOR REVIEW
-# ===========================
+def create_default_roles():
+    """Create default system roles"""
+    from models.role import Role
 
-@review_bp.route('/repairs', methods=['GET'])
-@jwt_required()
-def get_repair_requests_for_review():
-    """
-    Get repair requests for review (manager/admin only)
-    - Managers: see department requests
-    - Admin: see all requests
-    """
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
-    
-    # Only managers and admins can review
-    if user.role.hierarchy_level > 2:
-        return jsonify({'error': 'Only managers and admins can review requests'}), 403
-    
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 10))
-    status = request.args.get('status', '')
-    
-    query = RepairRequest.query
-    
-    # Filter based on role
-    if user.role.hierarchy_level == 2:  # Manager
-        query = query.filter_by(department_id=user.department_id)
-    # Admin (hierarchy 0-1) sees all
-    
-    # Filter by status if provided (default to pending)
-    if status:
-        query = query.filter_by(status=status)
-    else:
-        query = query.filter_by(status='Pending')
-    
-    pagination = query.order_by(RepairRequest.created_at.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
+    if Role.query.first():
+        return
+
+    roles_data = [
+        {
+            'name': 'Super Admin',
+            'description': 'Full system access',
+            'hierarchy_level': 0,
+            'is_system': True,
+            'permissions': {
+                'manage_users': True,
+                'manage_roles': True,
+                'manage_permissions': True,
+                'view_audit_logs': True,
+                'manage_assets': True,
+                'manage_requests': True
+            }
+        },
+        {
+            'name': 'Admin',
+            'description': 'Can manage users and assign roles',
+            'hierarchy_level': 1,
+            'is_system': True,
+            'permissions': {
+                'manage_users': True,
+                'manage_assets': True,
+                'manage_requests': True,
+                'view_audit_logs': True
+            }
+        },
+        {
+            'name': 'Manager',
+            'description': 'Can approve requests and manage assets',
+            'hierarchy_level': 2,
+            'is_system': True,
+            'permissions': {
+                'approve_requests': True,
+                'manage_assets': True,
+                'view_reports': True
+            }
+        },
+        {
+            'name': 'Employee',
+            'description': 'Standard employee access',
+            'hierarchy_level': 3,
+            'is_system': True,
+            'permissions': {
+                'request_assets': True,
+                'view_assets': True,
+                'create_service_requests': True
+            }
+        }
+    ]
+
+    for role_data in roles_data:
+        role = Role(**role_data)
+        db.session.add(role)
+
+    db.session.commit()
+    print("Default roles created successfully!")
+
+
+
+# app = create_app()
+
+if __name__ == '__main__':
+    app = create_app()
+
+    debug = os.getenv('FLASK_ENV') == 'development'
+    app.run(
+        host='0.0.0.0',
+        port=int(os.getenv('PORT', 5000)),
+        debug=debug
     )
-    
-    return jsonify({
-        'requests': [r.to_dict() for r in pagination.items],
-        'total': pagination.total,
-        'pages': pagination.pages,
-        'current_page': page
-    }), 200
 
-
-@review_bp.route('/repairs/<int:request_id>/approve', methods=['POST'])
-@jwt_required()
-def approve_repair_request(request_id):
-    """Approve a repair request"""
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    
-    # Only managers and admins can approve
-    if user.role.hierarchy_level > 2:
-        return jsonify({'error': 'Only managers and admins can approve requests'}), 403
-    
-    data = request.get_json() or {}
-    repair_req = RepairRequest.query.get_or_404(request_id)
-    
-    # Manager can only approve their department's requests
-    if user.role.hierarchy_level == 2 and repair_req.department_id != user.department_id:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    try:
-        repair_req.status = 'Approved'
-        repair_req.reviewed_by = current_user_id
-        repair_req.review_notes = data.get('notes', '')
-        repair_req.reviewed_at = datetime.utcnow()
-        
-        db.session.commit()
-        
-        return jsonify({
-            'message': 'Request approved successfully',
-            'request': repair_req.to_dict()
-        }), 200
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': f'Failed to approve request: {str(e)}'}), 500
-
-
-@review_bp.route('/repairs/<int:request_id>/reject', methods=['POST'])
-@jwt_required()
-def reject_repair_request(request_id):
-    """Reject a repair request"""
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    
-    # Only managers and admins can reject
-    if user.role.hierarchy_level > 2:
-        return jsonify({'error': 'Only managers and admins can reject requests'}), 403
-    
-    data = request.get_json() or {}
-    repair_req = RepairRequest.query.get_or_404(request_id)
-    
-    # Manager can only reject their department's requests
-    if user.role.hierarchy_level == 2 and repair_req.department_id != user.department_id:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    try:
-        repair_req.status = 'Rejected'
-        repair_req.reviewed_by = current_user_id
-        repair_req.review_notes = data.get('notes', '')
-        repair_req.reviewed_at = datetime.utcnow()
-        
-        db.session.commit()
-        
-        return jsonify({
-            'message': 'Request rejected successfully',
-            'request': repair_req.to_dict()
-        }), 200
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': f'Failed to reject request: {str(e)}'}), 500
-
-
-@review_bp.route('/repairs/<int:request_id>/complete', methods=['POST'])
-@jwt_required()
-def complete_repair_request(request_id):
-    """Mark a repair request as completed"""
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    
-    # Only managers and admins can mark complete
-    if user.role.hierarchy_level > 2:
-        return jsonify({'error': 'Only managers and admins can complete requests'}), 403
-    
-    data = request.get_json() or {}
-    repair_req = RepairRequest.query.get_or_404(request_id)
-    
-    # Manager can only complete their department's requests
-    if user.role.hierarchy_level == 2 and repair_req.department_id != user.department_id:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    try:
-        repair_req.status = 'Completed'
-        repair_req.completed_at = datetime.utcnow()
-        repair_req.completion_notes = data.get('notes', '')
-        
-        db.session.commit()
-        
-        return jsonify({
-            'message': 'Request completed successfully',
-            'request': repair_req.to_dict()
-        }), 200
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': f'Failed to complete request: {str(e)}'}), 500
+    print(app.url_map)
