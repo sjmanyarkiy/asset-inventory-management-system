@@ -6,7 +6,8 @@ export const fetchVendors = createAsyncThunk(
   "vendors/fetch",
   async ({ page = 1, search = "" } = {}, thunkAPI) => {
     try {
-      const res = await api.get(`/vendors/?page=${page}&search=${search}`);
+      // const res = await api.get(`/vendors/?page=${page}&search=${search}`);
+      const res = await api.get(`/vendors`, { params: { page, search } });
       console.log("FETCH VENDORS RESPONSE:", res.data);
       return res.data;
     } catch (err) {
@@ -23,7 +24,7 @@ export const createVendor = createAsyncThunk(
     try {
       console.log("CREATE PAYLOAD SENT:", data);
 
-      const res = await api.post("/vendors/", data);
+      const res = await api.post(`/vendors`, data);
 
       console.log("CREATE RESPONSE RECEIVED:", res.data);
 
@@ -45,6 +46,7 @@ export const updateVendor = createAsyncThunk(
       console.log("UPDATE ID:", id);
       console.log("UPDATE PAYLOAD SENT:", data);
 
+      // const res = await api.put(`/vendors/${id}`, data);
       const res = await api.put(`/vendors/${id}`, data);
 
       console.log("UPDATE RESPONSE RECEIVED:", res.data);
