@@ -80,8 +80,8 @@ const UserManagementPage = () => {
       );
 
       setUsers(response.data.users);
-      // setTotalPages(response.data.pages);
-      setTotalPages(1);
+      setTotalPages(response.data.pages);
+      // setTotalPages(1);
       setCurrentPage(page);
       setError('');
     } catch (err) {

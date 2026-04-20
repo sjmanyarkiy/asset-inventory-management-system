@@ -44,10 +44,16 @@ def get_users():
 
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
+    # return jsonify({
+    #     "users": [u.to_dict() for u in pagination.items],
+    #     "total": pagination.total,
+    #     "page": page
+    # })
     return jsonify({
         "users": [u.to_dict() for u in pagination.items],
         "total": pagination.total,
-        "page": page
+        "pages": pagination.pages,
+        "page": pagination.page
     })
 
 
