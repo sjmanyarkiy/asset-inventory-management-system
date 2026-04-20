@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "../../src/api/axios";
 
 const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
   const [categories, setCategories] = useState([]);
@@ -11,7 +11,7 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
 
   // const BASE_URL = "http://127.0.0.1:5000";
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  // const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 
   // =========================
@@ -27,22 +27,18 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
   const fetchDropdownData = async () => {
     try {
       const [catRes, typeRes, vendorRes, deptRes] = await Promise.all([
-        axios.get(`${API_URL}/api/asset-categories`),
-        axios.get(`${API_URL}/api/asset-types`),
-        axios.get(`${API_URL}/api/vendors`),
-        axios.get(`${API_URL}/api/departments`)
-      ]);
-
+      axios.get("/api/categories"),
+      axios.get("/api/types"),
+      axios.get("/api/vendors"),
+      axios.get("/api/departments")
+    ]);
 
       setCategories(extractData(catRes));
       setTypes(extractData(typeRes));
       setVendors(extractData(vendorRes));
       setDepartments(extractData(deptRes));
-
     } catch (err) {
       console.error("Dropdown load error:", err);
-
-      // fallback to prevent blank UI
       setCategories([]);
       setTypes([]);
       setVendors([]);
