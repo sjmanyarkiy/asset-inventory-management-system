@@ -12,9 +12,9 @@ function MainDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate(); 
   const data = [
-    { name: "Assigned", value: 80 },
-    { name: "Available", value: 30 },
-    { name: "Maintenance", value: 10 },
+    { name: "Assigned", value: 0 },
+    { name: "Available", value: 0 },
+    { name: "Maintenance", value: 0 },
   ];
 
   const COLORS = ["#28a745", "#007bff", "#dc3545"];
