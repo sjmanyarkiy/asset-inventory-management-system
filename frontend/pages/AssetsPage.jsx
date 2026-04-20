@@ -58,7 +58,8 @@ const AssetsPage = () => {
           ...filters
         }
       });
-      setAssets(res.data.data || []);
+
+      setAssets(res.data.assets || []);
     } catch (err) {
       console.error("Fetch assets error:", err);
     }
