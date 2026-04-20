@@ -23,6 +23,9 @@ const RequestApprovalPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const [approvedAssetRequests, setApprovedAssetRequests] = useState([]);
+  const [approvedRepairRequests, setApprovedRepairRequests] = useState([]);
+
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -38,24 +41,53 @@ const RequestApprovalPage = () => {
     fetchAllRequests();
   }, []);
 
+  // const fetchAllRequests = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const token = localStorage.getItem('access_token');
+  //     const headers = { 'Authorization': `Bearer ${token}` };
+
+  //     // Fetch asset requests
+  //     const assetRes = await axios.get(`${API_URL}/api/review/assets`, { headers });
+  //     setAssetRequests(assetRes.data.requests || []);
+
+  //     // Fetch repair requests
+  //     const repairRes = await axios.get(`${API_URL}/api/review/repairs`, { headers });
+  //     setRepairRequests(repairRes.data.requests || []);
+
+  //     setError('');
+  //   } catch (err) {
+  //     console.error('Failed to fetch requests:', err);
+  //     setError('Failed to load requests. Make sure you have manager permissions.');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const fetchAllRequests = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('access_token');
-      const headers = { 'Authorization': `Bearer ${token}` };
+      const headers = { Authorization: `Bearer ${token}` };
 
-      // Fetch asset requests
-      const assetRes = await axios.get(`${API_URL}/api/review/assets`, { headers });
+      const [assetRes, repairRes, approvedAssetRes, approvedRepairRes] =
+        await Promise.all([
+          axios.get(`${API_URL}/api/review/assets?status=Pending`, { headers }),
+          axios.get(`${API_URL}/api/review/repairs?status=Pending`, { headers }),
+
+          axios.get(`${API_URL}/api/review/assets?status=Approved`, { headers }),
+          axios.get(`${API_URL}/api/review/repairs?status=Approved`, { headers }),
+        ]);
+
       setAssetRequests(assetRes.data.requests || []);
-
-      // Fetch repair requests
-      const repairRes = await axios.get(`${API_URL}/api/review/repairs`, { headers });
       setRepairRequests(repairRes.data.requests || []);
+
+      setApprovedAssetRequests(approvedAssetRes.data.requests || []);
+      setApprovedRepairRequests(approvedRepairRes.data.requests || []);
 
       setError('');
     } catch (err) {
-      console.error('Failed to fetch requests:', err);
-      setError('Failed to load requests. Make sure you have manager permissions.');
+      console.error(err);
+      setError('Failed to load requests');
     } finally {
       setLoading(false);
     }
@@ -314,6 +346,85 @@ const RequestApprovalPage = () => {
                       </tbody>
                     </Table>
                   </div>
+                )}
+              </Card.Body>
+            </Card>
+          </Tab>
+          {/* APPROVED REQUEST*/}
+          <Tab eventKey="approved" title={`Approved Requests (${approvedAssetRequests.length + approvedRepairRequests.length})`}>
+            <Card className="shadow-sm border-0">
+              <Card.Body>
+                <h5 className="mb-3">Approved Asset Requests</h5>
+
+                {approvedAssetRequests.length === 0 ? (
+                  <p className="text-muted text-center py-4">
+                    No approved asset requests.
+                  </p>
+                ) : (
+                  <Table striped hover>
+                    <thead>
+                      <tr>
+                        <th>Requested By</th>
+                        <th>Asset Type</th>
+                        <th>Qty</th>
+                        <th>Department</th>
+                        <th>Urgency</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {approvedAssetRequests.map(req => (
+                        <tr key={req.id}>
+                          <td>
+                            {req.requested_by?.first_name} {req.requested_by?.last_name}
+                          </td>
+                          <td>{req.asset_type?.name}</td>
+                          <td>{req.quantity}</td>
+                          <td>{req.department?.name}</td>
+                          <td>{getUrgencyBadge(req.urgency)}</td>
+                          <td>{getStatusBadge(req.status)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                )}
+              </Card.Body>
+            </Card>
+            <Card className="shadow-sm border-0 mt-4">
+              <Card.Body>
+                <h5 className="mb-3">Approved Repair Requests</h5>
+
+                {approvedRepairRequests.length === 0 ? (
+                  <p className="text-muted text-center py-4">
+                    No approved repair requests.
+                  </p>
+                ) : (
+                  <Table striped hover>
+                    <thead>
+                      <tr>
+                        <th>Requested By</th>
+                        <th>Asset</th>
+                        <th>Issue</th>
+                        <th>Urgency</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {approvedRepairRequests.map(req => (
+                        <tr key={req.id}>
+                          <td>
+                            {req.requested_by?.first_name} {req.requested_by?.last_name}
+                          </td>
+                          <td>{req.asset?.asset_name}</td>
+                          <td>{req.issue_description}</td>
+                          <td>{getUrgencyBadge(req.urgency)}</td>
+                          <td>{getStatusBadge(req.status)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
                 )}
               </Card.Body>
             </Card>
