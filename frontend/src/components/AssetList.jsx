@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Modal, Button, Form, Badge, Spinner } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/slices/authSlice";
-import axios from "axios";
+// import axios from "axios";
+import axios from "../api/axios"
 
 function AssetList({ searchTerm = "" }) {
   const user = useSelector(selectUser);  // Role check
@@ -23,53 +24,75 @@ function AssetList({ searchTerm = "" }) {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [assigning, setAssigning] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  // const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   useEffect(() => { setPage(1); }, [searchTerm, status]);
+
+  // const fetchAssets = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const token = localStorage.getItem('access_token'); // defined token, logout if token is null
+  //       if (!token) {
+  //         console.error('No token - redirect to login');
+  //         return;
+  //       }
+  //     const headers = { 'Authorization': `Bearer ${token}` };
+  //     const response = await axios.get(`${API_URL}/api/assets`, { headers });
+  //     setAssets(response.data.assets || []);
+  //   } catch (error) {
+  //     console.error('Failed to fetch assets:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+    
+  //   try {
+  //     const params = new URLSearchParams({
+  //       search: searchTerm,
+  //       status,
+  //       page: page.toString(),
+  //       per_page: perPage.toString(),
+  //     });
+      
+  //     const response = await fetch(`${API_URL}/api/assets?${params}`, {
+  //       headers: { 
+  //         'Authorization': `Bearer ${token}`,
+  //         'Content-Type': 'application/json'
+  //       }
+  //     });
+      
+  //     if (!response.ok) {
+  //       console.error('Assets API failed:', response.status, await response.text());
+  //       return;
+  //     }
+      
+  //     const data = await response.json();
+  //     console.log('✅ Assets loaded:', data.assets?.length || 0);
+  //     setAssets(data.assets || []);
+  //     setTotalPages(Math.ceil((data.total || 0) / perPage));
+  //   } catch (err) {
+  //     console.error('❌ Assets fetch error:', err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const fetchAssets = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('access_token'); // defined token, logout if token is null
-        if (!token) {
-          console.error('No token - redirect to login');
-          return;
-        }
-      const headers = { 'Authorization': `Bearer ${token}` };
-      const response = await axios.get(`${API_URL}/api/assets`, { headers });
-      setAssets(response.data.assets || []);
-    } catch (error) {
-      console.error('Failed to fetch assets:', error);
-    } finally {
-      setLoading(false);
-    }
-    
-    try {
-      const params = new URLSearchParams({
+      // Axios will attach Authorization automatically via interceptor
+      const params = {
         search: searchTerm,
         status,
         page: page.toString(),
         per_page: perPage.toString(),
-      });
-      
-      const response = await fetch(`${API_URL}/api/assets?${params}`, {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        console.error('Assets API failed:', response.status, await response.text());
-        return;
-      }
-      
-      const data = await response.json();
-      console.log('✅ Assets loaded:', data.assets?.length || 0);
-      setAssets(data.assets || []);
-      setTotalPages(Math.ceil((data.total || 0) / perPage));
+      };
+
+      const response = await axios.get("/api/assets", { params });
+
+      setAssets(response.data.assets || []);
+      setTotalPages(Math.ceil((response.data.total || 0) / perPage));
     } catch (err) {
-      console.error('❌ Assets fetch error:', err);
+      console.error("❌ Failed to fetch assets:", err);
     } finally {
       setLoading(false);
     }
@@ -80,15 +103,26 @@ function AssetList({ searchTerm = "" }) {
     setShowBarcodeModal(true);
   };
 
+  // const fetchEmployees = async () => {
+  //   try {
+  //     const token = localStorage.getItem('access_token');
+  //     const res = await axios.get(`${API_URL}/api/admin/users?role=Employee`, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     setEmployees(res.data.users || []);
+  //   } catch (err) {
+  //     console.error('Employees fetch failed:', err);
+  //   }
+  // };
+
   const fetchEmployees = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const res = await axios.get(`${API_URL}/api/admin/users?role=Employee`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await axios.get("/api/admin/users", {
+        params: { role: "Employee" },
       });
       setEmployees(res.data.users || []);
     } catch (err) {
-      console.error('Employees fetch failed:', err);
+      console.error("Employees fetch failed:", err);
     }
   };
 
@@ -101,40 +135,70 @@ function AssetList({ searchTerm = "" }) {
     fetchEmployees();
   };
 
+  // const assignAsset = async () => {
+  //   if (!selectedAsset || !selectedUserId) return;
+    
+  //   setAssigning(true);
+  //   const token = localStorage.getItem('access_token');
+    
+  //   try {
+  //     const res = await axios.post(
+  //       `${API_URL}/api/assets/${selectedAsset.id}/assign`,
+  //       { user_id: parseInt(selectedUserId) },
+  //       { headers: { Authorization: `Bearer ${token}` } }
+  //     );
+      
+  //     // Optimistic update
+  //     setAssets(prev => prev.map(a => 
+  //       a.id === selectedAsset.id ? res.data.asset : a
+  //     ));
+  //     setShowModal(false);
+  //   } catch (err) {
+  //     console.error('Assign failed:', err);
+  //   } finally {
+  //     setAssigning(false);
+  //   }
+  // };
+
   const assignAsset = async () => {
     if (!selectedAsset || !selectedUserId) return;
-    
+
     setAssigning(true);
-    const token = localStorage.getItem('access_token');
-    
     try {
       const res = await axios.post(
-        `${API_URL}/api/assets/${selectedAsset.id}/assign`,
-        { user_id: parseInt(selectedUserId) },
-        { headers: { Authorization: `Bearer ${token}` } }
+        `/api/assets/${selectedAsset.id}/assign`,
+        { user_id: parseInt(selectedUserId) }
       );
-      
-      // Optimistic update
-      setAssets(prev => prev.map(a => 
-        a.id === selectedAsset.id ? res.data.asset : a
-      ));
+
+      setAssets((prev) =>
+        prev.map((a) => (a.id === selectedAsset.id ? res.data.asset : a))
+      );
       setShowModal(false);
     } catch (err) {
-      console.error('Assign failed:', err);
+      console.error("Assign failed:", err);
     } finally {
       setAssigning(false);
     }
   };
 
+  // const returnAsset = async (assetId) => {
+  //   const token = localStorage.getItem('access_token');
+  //   try {
+  //     await axios.post(`${API_URL}/api/assets/${assetId}/return`, {}, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     fetchAssets();  // Refresh
+  //   } catch (err) {
+  //     console.error('Return failed:', err);
+  //   }
+  // };
+
   const returnAsset = async (assetId) => {
-    const token = localStorage.getItem('access_token');
     try {
-      await axios.post(`${API_URL}/api/assets/${assetId}/return`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchAssets();  // Refresh
+      await axios.post(`/api/assets/${assetId}/return`);
+      fetchAssets(); // refresh
     } catch (err) {
-      console.error('Return failed:', err);
+      console.error("Return failed:", err);
     }
   };
 
