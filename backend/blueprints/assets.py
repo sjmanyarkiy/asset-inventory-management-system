@@ -228,6 +228,27 @@ def asset_history(asset_id):
         return jsonify({'error': str(e)}), 500
     
 
+@assets_bp.route('/debug/seed-assets', methods=['GET'])
+def seed_assets():
+    from models.asset import Asset
+    from extensions import db
+
+    if Asset.query.first():
+        return {"message": "Assets already exist"}
+
+    asset = Asset(
+        asset_name="Test Laptop",
+        asset_code="AST-001",
+        asset_type_id=1,
+        category_id=None,
+        status="Available"
+    )
+
+    db.session.add(asset)
+    db.session.commit()
+
+    return {"message": "Assets seeded successfully"}
+
 # @assets_bp.route('/<int:asset_id>/barcode', methods=['GET'])
 # @jwt_required()
 # def get_asset_barcode(asset_id):

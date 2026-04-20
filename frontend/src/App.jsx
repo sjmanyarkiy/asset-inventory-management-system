@@ -18,7 +18,7 @@ import RequestApprovalPage from "../pages/RequestApprovalPage.jsx";
 import UserProfilePage from "../pages/UserProfilePage.jsx";
 
 
-import AssetsPage from "../pages/AssetsList.jsx";
+import AssetsPage from "./components/AssetList.jsx";
 import VendorsPage from "../pages/VendorsPage.jsx";
 import DepartmentsPage from "../pages/DepartmentsPage.jsx";
 import CategoriesPage from "../pages/CategoriesPage.jsx";
