@@ -11,7 +11,7 @@ import jwt
 import os
 import json
 
-assets_bp = Blueprint("assets", __name__, url_prefix="/api")
+# assets_bp = Blueprint("assets", __name__, url_prefix="/api")
 
 
 def token_required(f):
