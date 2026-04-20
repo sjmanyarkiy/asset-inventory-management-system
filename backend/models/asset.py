@@ -13,8 +13,8 @@ class Asset(db.Model):
     __tablename__ = 'assets'
 
     id = db.Column(db.Integer, primary_key=True)
-    asset_name = db.Column(db.String(120), nullable=False)
-    asset_code = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    # asset_name = db.Column(db.String(120), nullable=False)
+    # asset_code = db.Column(db.String(50), unique=True, nullable=False, index=True)
 
     # Identity & Classification
     asset_name = db.Column(db.String(120), nullable=False, index=True)
@@ -58,6 +58,7 @@ class Asset(db.Model):
     # Relationships (no backrefs - they're defined on the other side)
     assigned_user = db.relationship('User', foreign_keys=[assigned_to], backref='assigned_assets')
     creator = db.relationship('User', foreign_keys=[created_by], backref='created_assets')
+    department = db.relationship("Department", back_populates="assets")
 
 
     def generate_barcode(self):
