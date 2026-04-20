@@ -228,37 +228,37 @@ def asset_history(asset_id):
         return jsonify({'error': str(e)}), 500
     
 
-@assets_bp.route('/<int:asset_id>/barcode', methods=['GET'])
-@jwt_required()
-def get_asset_barcode(asset_id):
-    """Get barcode image for an asset"""
-    try:
-        asset = Asset.query.get(asset_id)
-        if not asset:
-            return jsonify({'error': 'Asset not found'}), 404
+# @assets_bp.route('/<int:asset_id>/barcode', methods=['GET'])
+# @jwt_required()
+# def get_asset_barcode(asset_id):
+#     """Get barcode image for an asset"""
+#     try:
+#         asset = Asset.query.get(asset_id)
+#         if not asset:
+#             return jsonify({'error': 'Asset not found'}), 404
         
-        if not asset.barcode_image:
-            return jsonify({'error': 'Barcode not generated'}), 400
+#         if not asset.barcode_image:
+#             return jsonify({'error': 'Barcode not generated'}), 400
         
-        # Return as PNG
-        return send_file(
-            io.BytesIO(asset.barcode_image),
-            mimetype='image/png',
-            as_attachment=False
-        )
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+#         # Return as PNG
+#         return send_file(
+#             io.BytesIO(asset.barcode_image),
+#             mimetype='image/png',
+#             as_attachment=False
+#         )
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
 
-@assets_bp.route('/barcode/<barcode_code>', methods=['GET'])
-@jwt_required()
-def lookup_asset_by_barcode(barcode_code):
-    """Lookup asset by barcode code"""
-    try:
-        asset = Asset.query.filter_by(barcode_data=barcode_code).first()
-        if not asset:
-            return jsonify({'error': 'Asset not found'}), 404
+# @assets_bp.route('/barcode/<barcode_code>', methods=['GET'])
+# @jwt_required()
+# def lookup_asset_by_barcode(barcode_code):
+#     """Lookup asset by barcode code"""
+#     try:
+#         asset = Asset.query.filter_by(barcode_data=barcode_code).first()
+#         if not asset:
+#             return jsonify({'error': 'Asset not found'}), 404
         
-        return jsonify({'asset': asset.to_dict()}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+#         return jsonify({'asset': asset.to_dict()}), 200
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
