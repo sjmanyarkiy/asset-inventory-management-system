@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+// import axios from "axios";
+import axios from "../../frontend/src/api/axios";
 
 const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
-  const BASE_URL = "http://127.0.0.1:5000";
+  // const BASE_URL = "http://127.0.0.1:5000";
 
   const [formData, setFormData] = useState({
     name: "",
@@ -50,12 +51,12 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [cat, type, ven, dep] = await Promise.all([
-          axios.get(`${BASE_URL}/categories`),
-          axios.get(`${BASE_URL}/types`),
-          axios.get(`${BASE_URL}/vendors`),
-          axios.get(`${BASE_URL}/departments`)
-        ]);
+          const [cat, type, ven, dep] = await Promise.all([
+            axios.get("/api/categories"),
+            axios.get("/api/types"),
+            axios.get("/api/vendors"),
+            axios.get("/api/departments")
+          ]);
 
         setCategories(cat.data.data || []);
         setTypes(type.data.data || []);
@@ -99,12 +100,12 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
       if (selectedAsset) {
         // UPDATE
         await axios.put(
-          `${BASE_URL}/assets/${selectedAsset.id}`,
+          `/api/assets/${selectedAsset.id}`,
           payload
         );
       } else {
         // CREATE
-        await axios.post(`${BASE_URL}/assets`, payload);
+        await axios.post("/api/assets", payload);
       }
 
       onSuccess();

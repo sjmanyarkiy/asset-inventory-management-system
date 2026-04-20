@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "../../frontend/src/api/axios";
 
 import AssetSearch from "../src/components/AssetSearch";
 import AssetList from "../src/components/AssetList";
@@ -23,28 +23,45 @@ const AssetsPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
 
-  const BASE_URL = "http://127.0.0.1:5000";
+  // const BASE_URL = "http://127.0.0.1:5000";
 
   // =========================
   // FETCH ASSETS (FIXED QUERY MATCH BACKEND)
   // =========================
+  // const fetchAssets = async () => {
+  //   setLoading(true);
+
+  //   try {
+  //     const res = await axios.get(`${BASE_URL}/assets`, {
+  //       params: {
+  //         page,
+  //         q: search,
+  //         ...filters
+  //       }
+  //     });
+
+  //     setAssets(res.data.data || []);
+  //   } catch (err) {
+  //     console.error("Fetch assets error:", err);
+  //   }
+
+  //   setLoading(false);
+  // };
+
   const fetchAssets = async () => {
     setLoading(true);
-
     try {
-      const res = await axios.get(`${BASE_URL}/assets`, {
+      const res = await axios.get("/api/assets", {
         params: {
           page,
           q: search,
           ...filters
         }
       });
-
       setAssets(res.data.data || []);
     } catch (err) {
       console.error("Fetch assets error:", err);
     }
-
     setLoading(false);
   };
 
@@ -55,11 +72,21 @@ const AssetsPage = () => {
   // =========================
   // DELETE
   // =========================
+  // const handleDelete = async (id) => {
+  //   if (!window.confirm("Delete this asset?")) return;
+
+  //   try {
+  //     await axios.delete(`${BASE_URL}/assets/${id}`);
+  //     fetchAssets();
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this asset?")) return;
-
     try {
-      await axios.delete(`${BASE_URL}/assets/${id}`);
+      await axios.delete(`/api/assets/${id}`);
       fetchAssets();
     } catch (err) {
       console.error(err);
