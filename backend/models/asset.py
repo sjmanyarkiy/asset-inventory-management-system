@@ -25,11 +25,11 @@ class Asset(db.Model):
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
     description = db.Column(db.Text)
 
-    barcode_data = db.Column(db.String(100), unique=True, nullable=True)  # e.g., "ASSET-001"
-    barcode_image = db.Column(db.LargeBinary, nullable=True)  # Binary image data
-    # asset_code = db.Column(db.String(50), unique=True) 
-    qr_code_image = db.Column(db.LargeBinary, nullable=True)   # QR code binary data
-    barcode_generated = db.Column(db.Boolean, default=False)
+    # barcode_data = db.Column(db.String(100), unique=True, nullable=True)  # e.g., "ASSET-001"
+    # # barcode_image = db.Column(db.LargeBinary, nullable=True)  # Binary image data
+    # # asset_code = db.Column(db.String(50), unique=True) 
+    # qr_code_image = db.Column(db.LargeBinary, nullable=True)   # QR code binary data
+    # barcode_generated = db.Column(db.Boolean, default=False)
 
     # Tracking
     serial_number = db.Column(db.String(100), unique=True, nullable=True)
