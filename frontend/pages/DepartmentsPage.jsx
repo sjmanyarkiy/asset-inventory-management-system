@@ -8,43 +8,38 @@ export default function DepartmentsPage() {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // const BASE_URL = "http://localhost:5000/departments";
   const BASE_URL = `${import.meta.env.VITE_API_URL}/api/departments`;
+
+  const getAuthHeaders = () => ({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+  });
 
   // =========================
   // FETCH
   // =========================
-  // const fetchDepartments = async (search = "") => {
-  //   try {
-  //     setLoading(true);
-
-  //     const res = await fetch(
-  //       `${BASE_URL}/?page=1&search=${search}`
-  //     );
-
-  //     const data = await res.json();
-
-  //     setDepartments(data.data || []);
-  //   } catch (error) {
-  //     console.error("FETCH ERROR:", error);
-  //     toast.error("Failed to load departments ❌");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const fetchDepartments = async (search = "") => {
     setLoading(true);
 
     try {
       const res = await fetch(
-        `${BASE_URL}?page=1&search=${encodeURIComponent(search)}`
+        `${BASE_URL}?page=1&search=${encodeURIComponent(search)}`,
+        {
+          headers: getAuthHeaders(),
+        }
       );
 
       const data = await res.json();
-      // setDepartments(data.requests || data.data || []);
-      setDepartments(data.departments || []);
+
+      if (!res.ok) {
+        toast.error(data.error || "Failed to fetch departments");
+        return;
+      }
+
+      setDepartments(data.data || []);
     } catch (error) {
-      console.error(error);
+      console.error("FETCH ERROR:", error);
+      toast.error("Network error while loading departments");
     } finally {
       setLoading(false);
     }
@@ -55,10 +50,10 @@ export default function DepartmentsPage() {
   }, []);
 
   // =========================
-  // SEARCH (LIVE)
+  // SEARCH
   // =========================
-  const handleSearch = (searchText) => {
-    fetchDepartments(searchText);
+  const handleSearch = (text) => {
+    fetchDepartments(text);
   };
 
   // =========================
@@ -68,35 +63,22 @@ export default function DepartmentsPage() {
     try {
       let res;
 
-      // =====================
-      // UPDATE
-      // =====================
       if (selectedDepartment) {
-        const confirmUpdate = window.confirm(
-          "⚠️ Are you sure you want to update this department?"
-        );
-
+        const confirmUpdate = window.confirm("Update this department?");
         if (!confirmUpdate) return;
 
         res = await fetch(`${BASE_URL}/${selectedDepartment.id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
           body: JSON.stringify(formData),
         });
-
       } else {
-        // =====================
-        // CREATE
-        // =====================
-        const confirmCreate = window.confirm(
-          "✔️ Do you want to create this department?"
-        );
-
+        const confirmCreate = window.confirm("Create this department?");
         if (!confirmCreate) return;
 
-        res = await fetch(`${BASE_URL}/`, {
+        res = await fetch(BASE_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
           body: JSON.stringify(formData),
         });
       }
@@ -104,23 +86,21 @@ export default function DepartmentsPage() {
       const result = await res.json();
 
       if (!res.ok) {
-        toast.error(result.error || "Operation failed ❌");
+        toast.error(result.error || "Operation failed");
         return;
       }
 
-      // SUCCESS TOASTS
-      if (selectedDepartment) {
-        toast.success("Department updated successfully 🎉");
-      } else {
-        toast.success("Department created successfully 🎉");
-      }
+      toast.success(selectedDepartment
+        ? "Department updated"
+        : "Department created"
+      );
 
-      fetchDepartments();
       setSelectedDepartment(null);
+      fetchDepartments();
 
     } catch (err) {
-      console.error("SAVE ERROR:", err);
-      toast.error("Something went wrong ❌");
+      console.error(err);
+      toast.error("Something went wrong");
     }
   };
 
@@ -128,55 +108,45 @@ export default function DepartmentsPage() {
   // DELETE
   // =========================
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "⚠️ Are you sure you want to delete this department?"
-    );
-
+    const confirmDelete = window.confirm("Delete this department?");
     if (!confirmDelete) return;
 
     try {
       const res = await fetch(`${BASE_URL}/${id}`, {
         method: "DELETE",
+        headers: getAuthHeaders(),
       });
 
       const result = await res.json();
 
       if (!res.ok) {
-        toast.error(result.error || "Delete failed ❌");
+        toast.error(result.error || "Delete failed");
         return;
       }
 
-      toast.success("Department deleted successfully 🗑️");
-
+      toast.success("Department deleted");
       fetchDepartments();
 
     } catch (err) {
-      console.error("DELETE ERROR:", err);
-      toast.error("Something went wrong ❌");
+      console.error(err);
+      toast.error("Delete error");
     }
   };
 
   return (
     <div className="p-4">
+      <h2 className="text-xl font-bold mb-4">Departments Management</h2>
 
-      <h2 className="text-xl font-bold mb-4">
-        Departments Management
-      </h2>
-
-      {/* FORM */}
       <DepartmentForm
         onSubmit={handleSubmit}
         selectedDepartment={selectedDepartment}
         clearSelection={() => setSelectedDepartment(null)}
       />
 
-      {/* SEARCH */}
       <DepartmentSearch onSearch={handleSearch} />
 
-      {/* LOADING */}
-      {loading && <p className="mt-2">Loading...</p>}
+      {loading && <p>Loading...</p>}
 
-      {/* TABLE */}
       <table className="w-full border mt-4">
         <thead>
           <tr className="bg-gray-100">
@@ -196,7 +166,6 @@ export default function DepartmentsPage() {
                 <td className="border p-2">{dept.location}</td>
 
                 <td className="border p-2">
-                  {/* EDIT */}
                   <button
                     onClick={() => setSelectedDepartment(dept)}
                     className="bg-yellow-400 px-2 py-1 rounded mr-2"
@@ -204,7 +173,6 @@ export default function DepartmentsPage() {
                     Edit
                   </button>
 
-                  {/* DELETE */}
                   <button
                     onClick={() => handleDelete(dept.id)}
                     className="bg-red-500 text-white px-2 py-1 rounded"
@@ -216,14 +184,13 @@ export default function DepartmentsPage() {
             ))
           ) : (
             <tr>
-              <td colSpan="4" className="text-center p-4">
+              <td className="text-center p-4" colSpan="4">
                 No departments found
               </td>
             </tr>
           )}
         </tbody>
       </table>
-
     </div>
   );
 }
