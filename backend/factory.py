@@ -18,6 +18,75 @@ from extensions import db
 from config import get_config
 
 
+def initialize_default_roles():
+    """Create default system roles (idempotent - safe to call multiple times)"""
+    from models.role import Role
+    
+    roles_data = [
+        {
+            'name': 'Super Admin',
+            'description': 'Full system access and control',
+            'hierarchy_level': 0,
+            'is_system': True,
+            'permissions': {
+                'manage_users': True,
+                'manage_roles': True,
+                'manage_permissions': True,
+                'view_audit_logs': True,
+                'manage_assets': True,
+                'manage_requests': True,
+                'manage_reports': True,
+                'system_settings': True
+            }
+        },
+        {
+            'name': 'Admin',
+            'description': 'Administrative access - manage users and assets',
+            'hierarchy_level': 1,
+            'is_system': True,
+            'permissions': {
+                'manage_users': True,
+                'manage_assets': True,
+                'manage_requests': True,
+                'view_audit_logs': True,
+                'manage_reports': True
+            }
+        },
+        {
+            'name': 'Manager',
+            'description': 'Manager access - approve requests and manage department assets',
+            'hierarchy_level': 2,
+            'is_system': True,
+            'permissions': {
+                'approve_requests': True,
+                'manage_assets': True,
+                'view_reports': True
+            }
+        },
+        {
+            'name': 'Employee',
+            'description': 'Standard employee access',
+            'hierarchy_level': 3,
+            'is_system': True,
+            'permissions': {
+                'request_assets': True,
+                'view_assets': True,
+                'create_service_requests': True
+            }
+        }
+    ]
+    
+    for role_data in roles_data:
+        # Check if role exists before creating
+        existing = Role.query.filter_by(name=role_data['name']).first()
+        if not existing:
+            role = Role(**role_data)
+            db.session.add(role)
+    
+    db.session.commit()
+    print("✅ Default roles initialized successfully")
+
+
 def create_app(config_object=None):
     """
     Application factory function
@@ -112,6 +181,34 @@ def create_app(config_object=None):
 
     migrate = Migrate(app, db)
 
+    # ============================================================================
+    # DATABASE INITIALIZATION - Run migrations and seed on startup (Render-safe)
+    # ============================================================================
+    with app.app_context():
+        try:
+            # Create tables if they don't exist
+            db.create_all()
+            
+            # Upgrade to latest migration
+            from flask_migrate import upgrade as alembic_upgrade
+            try:
+                alembic_upgrade()
+                print("✅ Database migrations applied successfully")
+            except Exception as e:
+                print(f"⚠️  Migration note: {str(e)}")
+            
+            # Initialize default roles if missing (idempotent)
+            from models.role import Role
+            existing_roles = Role.query.first()
+            if not existing_roles:
+                print("🌱 Creating default system roles...")
+                initialize_default_roles()
+            else:
+                print("✓ System roles already initialized")
+        
+        except Exception as e:
+            print(f"⚠️  Database initialization warning: {str(e)}")
+    
     # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(assets_bp, url_prefix="/api/assets")       
@@ -172,7 +269,7 @@ def create_app(config_object=None):
     # Initialize DB
     with app.app_context():
         db.create_all()
-        create_default_roles()
+        initialize_default_roles()
         print("Database initialized successfully!")
 
     print("REGISTERED ROUTES:")
@@ -199,73 +296,6 @@ def create_app(config_object=None):
         }), 200
 
     return app
-
-
-def create_default_roles():
-    """Create default system roles"""
-    from models.role import Role
-
-    if Role.query.first():
-        return
-
-    roles_data = [
-        {
-            'name': 'Super Admin',
-            'description': 'Full system access',
-            'hierarchy_level': 0,
-            'is_system': True,
-            'permissions': {
-                'manage_users': True,
-                'manage_roles': True,
-                'manage_permissions': True,
-                'view_audit_logs': True,
-                'manage_assets': True,
-                'manage_requests': True
-            }
-        },
-        {
-            'name': 'Admin',
-            'description': 'Can manage users and assign roles',
-            'hierarchy_level': 1,
-            'is_system': True,
-            'permissions': {
-                'manage_users': True,
-                'manage_assets': True,
-                'manage_requests': True,
-                'view_audit_logs': True
-            }
-        },
-        {
-            'name': 'Manager',
-            'description': 'Can approve requests and manage assets',
-            'hierarchy_level': 2,
-            'is_system': True,
-            'permissions': {
-                'approve_requests': True,
-                'manage_assets': True,
-                'view_reports': True
-            }
-        },
-        {
-            'name': 'Employee',
-            'description': 'Standard employee access',
-            'hierarchy_level': 3,
-            'is_system': True,
-            'permissions': {
-                'request_assets': True,
-                'view_assets': True,
-                'create_service_requests': True
-            }
-        }
-    ]
-
-    for role_data in roles_data:
-        role = Role(**role_data)
-        db.session.add(role)
-
-    db.session.commit()
-    print("Default roles created successfully!")
-
 
 
 # app = create_app()

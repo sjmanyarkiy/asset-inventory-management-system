@@ -4,7 +4,7 @@ services:
     env: python
     rootDir: backend
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && python init_db.py
     startCommand: gunicorn wsgi:app
     healthCheckPath: /health
     envVars:
@@ -16,6 +16,10 @@ services:
         generateValue: true
       - key: JWT_SECRET_KEY
         generateValue: true
+      - key: DEFAULT_ADMIN_PASSWORD
+        value: Admin@12345
+      - key: DEFAULT_ADMIN_EMAIL
+        value: admin@assetinventory.local
       - key: DATABASE_URL
         sync: false
       - key: CORS_ORIGINS

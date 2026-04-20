@@ -67,11 +67,6 @@ def seed_database():
     app = create_app(os.getenv('FLASK_ENV', 'development'))
     
     with app.app_context():
-        # Check if already seeded
-        # if User.query.filter_by(username='admin').first():
-        #     print("✓ Database already seeded. Skipping...\n")
-        #     return
-        
         try:
             print("🌱 Starting database seed...\n")
             
@@ -348,15 +343,31 @@ def create_users(roles, departments=None):
     ]
     
     users = []
+    created_count = 0
+    skipped_count = 0
+    
     for user_data in users_data:
+        # Check if user already exists (by username or email)
+        existing = User.query.filter(
+            (User.username == user_data['username']) | 
+            (User.email == user_data['email'])
+        ).first()
+        
+        if existing:
+            print(f"   ⊘ Skipped user '{user_data['username']}' (already exists)")
+            users.append(existing)
+            skipped_count += 1
+            continue
+        
         password = user_data.pop('password')
         user = User(**user_data)
         user.set_password(password)
         db.session.add(user)
         users.append(user)
+        created_count += 1
     
     db.session.commit()
-    print(f"   ✓ Created {len(users)} users with department assignments")
+    print(f"   ✓ Created {created_count} new users, skipped {skipped_count} duplicates")
     return users
 
 
