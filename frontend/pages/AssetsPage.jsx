@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "../../frontend/src/api/axios";
+import axios from "../src/api/axios";
 
 import AssetSearch from "../src/components/AssetSearch";
 import AssetList from "../src/components/AssetList";
@@ -54,7 +54,7 @@ const AssetsPage = () => {
       const res = await axios.get("/api/assets", {
         params: {
           page,
-          q: search,
+          search,
           ...filters
         }
       });
