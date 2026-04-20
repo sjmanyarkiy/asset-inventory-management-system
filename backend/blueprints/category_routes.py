@@ -3,7 +3,7 @@ from extensions import db
 from models.asset_category import AssetCategory
 from sqlalchemy import or_
 
-category_bp = Blueprint('category_bp', __name__, url_prefix='/categories')
+category_bp = Blueprint('category_bp', __name__)
 
 
 # =========================

@@ -5,7 +5,7 @@ from models.asset_type import AssetType
 from models.vendor import Vendor
 from models.department import Department
 
-ref_bp = Blueprint('reference', __name__, url_prefix='/api')
+ref_bp = Blueprint('reference', __name__)
 
 @ref_bp.route('/asset-categories', methods=['GET'])
 @jwt_required()

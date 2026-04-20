@@ -4,7 +4,7 @@ from models.vendor import Vendor
 from sqlalchemy.exc import IntegrityError
 from services.vendor_service import generate_vendor_code
 
-vendor_bp = Blueprint('vendor_bp', __name__, url_prefix='/vendors')
+vendor_bp = Blueprint('vendor_bp', __name__)
 
 
 # =========================

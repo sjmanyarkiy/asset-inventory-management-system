@@ -3,7 +3,7 @@ from extensions import db
 from models.user import User
 from models.role import Role
 
-admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
+admin_bp = Blueprint("admin", __name__)
 
 
 # -------------------------

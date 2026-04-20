@@ -15,7 +15,7 @@ from functools import wraps
 import jwt
 import os
 
-asset_types_bp = Blueprint('asset_types', __name__, url_prefix='/api/asset-types')
+asset_types_bp = Blueprint('asset_types', __name__)
 # current_user_id = get_jwt_identity()
 
 

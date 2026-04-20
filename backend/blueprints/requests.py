@@ -12,7 +12,7 @@ from models.asset_type import AssetType
 from models.department import Department
 from models.asset import Asset
 
-requests_bp = Blueprint('requests', __name__, url_prefix='/api/requests')
+requests_bp = Blueprint('requests', __name__)
 
 
 # ===========================

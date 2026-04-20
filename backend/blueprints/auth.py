@@ -12,7 +12,7 @@ import uuid
 
 
 
-auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
+auth_bp = Blueprint('auth', __name__)
 
 
 # Error response helper

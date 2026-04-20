@@ -14,7 +14,7 @@ import jwt
 import os
 from datetime import datetime
 
-review_bp = Blueprint('review', __name__, url_prefix='/api/review')
+review_bp = Blueprint('review', __name__)
 # current_user_id = get_jwt_identity()
 
 

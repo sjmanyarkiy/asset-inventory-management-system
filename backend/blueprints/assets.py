@@ -11,7 +11,7 @@ import jwt
 import os
 import json
 
-assets_bp = Blueprint("assets", __name__, url_prefix="/api")
+assets_bp = Blueprint("assets", __name__)
 
 def log_action(action, asset_id, user_id, target_user_id=None, metadata=None):
     """Log asset actions to audit trail"""

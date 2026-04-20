@@ -107,7 +107,6 @@ def create_app(config_object=None):
     from blueprints.review_routes import review_bp
     from blueprints.department_routes import department_bp
     from blueprints.category_routes import category_bp
-    from blueprints.asset_types_routes import asset_types_bp
     from blueprints.type_routes import type_bp
     from blueprints.vendor_routes import vendor_bp
 

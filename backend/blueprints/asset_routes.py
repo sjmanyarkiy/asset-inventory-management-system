@@ -12,7 +12,7 @@ from app.services.asset_service import (
     check_asset_duplicates
 )
 
-asset_bp = Blueprint('asset_bp', __name__, url_prefix='/assets')
+asset_bp = Blueprint('asset_bp', __name__)
 
 UPLOAD_FOLDER = "uploads/assets"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
