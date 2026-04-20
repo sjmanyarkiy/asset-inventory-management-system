@@ -1,10 +1,10 @@
-import api from "../../services/api";
+import axios from "../api/axios";
 
 // --------------------
 // GET all assets (with optional pagination)
 // --------------------
 export const getAssets = (params = {}) =>
-  api.get("/assets/", { params });
+  axios.get("/assets/", { params });
 
 // Example usage:
 // getAssets({ page: 1, per_page: 10 })
@@ -13,22 +13,22 @@ export const getAssets = (params = {}) =>
 // GET single asset
 // --------------------
 export const getAssetById = (id) =>
-  api.get(`/assets/${id}`);
+  axios.get(`/assets/${id}`);
 
 // --------------------
 // CREATE asset
 // --------------------
 export const createAsset = (data) =>
-  api.post("/assets/", data);
+  axios.post("/assets/", data);
 
 // --------------------
 // UPDATE asset
 // --------------------
 export const updateAsset = (id, data) =>
-  api.put(`/assets/${id}`, data);
+  axios.put(`/assets/${id}`, data);
 
 // --------------------
 // DELETE asset
 // --------------------
 export const deleteAsset = (id) =>
-  api.delete(`/assets/${id}`);
+  axios.delete(`/assets/${id}`);
