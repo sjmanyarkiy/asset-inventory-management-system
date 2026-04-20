@@ -98,10 +98,10 @@ function AssetList({ searchTerm = "" }) {
     }
   };
 
-  const handleViewBarcode = (asset) => {
-    setSelectedAsset(asset);
-    setShowBarcodeModal(true);
-  };
+  // const handleViewBarcode = (asset) => {
+  //   setSelectedAsset(asset);
+  //   setShowBarcodeModal(true);
+  // };
 
   // const fetchEmployees = async () => {
   //   try {
@@ -251,11 +251,12 @@ function AssetList({ searchTerm = "" }) {
                 )}
               </td> */}
               <td>
-                {asset.barcode_image ? (
+                <span className="text-muted">Barcode coming soon</span>
+                {/* {asset.barcode_image ? (
                   <Button onClick={() => handleViewBarcode(asset)}>📊 View</Button>
                 ) : (
                   <span className="text-muted">Barcode coming soon</span>
-                )}
+                )} */}
               </td>
               <td>
                 <Button size="sm" variant="outline-info">
