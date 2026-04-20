@@ -41,8 +41,12 @@ def create_department():
 
         return jsonify(dept.to_dict()), 201
 
+    # except Exception as e:
+    #     db.session.rollback()
+    #     return jsonify({"error": str(e)}), 500
     except Exception as e:
         db.session.rollback()
+        print("DEPARTMENTS CREATE ERROR:", str(e))
         return jsonify({"error": str(e)}), 500
 
 
@@ -128,8 +132,12 @@ def update_department(id):
 
         return jsonify(dept.to_dict())
 
+    # except Exception as e:
+    #     db.session.rollback()
+    #     return jsonify({"error": str(e)}), 500
     except Exception as e:
         db.session.rollback()
+        print("DEPARTMENTS CREATE ERROR:", str(e))
         return jsonify({"error": str(e)}), 500
 
 
@@ -146,6 +154,10 @@ def delete_department(id):
 
         return jsonify({"message": "Department deleted successfully"})
 
+    # except Exception as e:
+    #     db.session.rollback()
+    #     return jsonify({"error": str(e)}), 500
     except Exception as e:
         db.session.rollback()
+        print("DEPARTMENTS CREATE ERROR:", str(e))
         return jsonify({"error": str(e)}), 500

@@ -48,7 +48,7 @@ def create_app(config_object=None):
     # CORS Configuration - Allow both local development and Render URLs
     allowed_origins = os.getenv(
         "CORS_ORIGINS",
-        "http://localhost:5173,http://localhost:3000"
+        "http://localhost:5173,http://localhost:3000, https://asset-inventory-management-system.vercel.app/"
     ).split(",")
 
     CORS(
@@ -59,11 +59,6 @@ def create_app(config_object=None):
         supports_credentials=True
     )
     print(f"DEBUG: CORS allowed origins = {allowed_origins}") 
-
-    @app.before_request
-    def handle_options():
-        if request.method == "OPTIONS":
-            return jsonify(), 200
 
     # CORS(
     #     app,
