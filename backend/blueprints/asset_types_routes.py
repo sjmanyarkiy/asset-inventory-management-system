@@ -46,7 +46,7 @@ asset_types_bp = Blueprint('asset_types', __name__)
 #     return decorated
 
 
-@asset_types_bp.route('', methods=['GET'])
+@asset_types_bp.route('/', methods=['GET'])
 @jwt_required()
 def get_all_asset_types(current_user_id):
     current_user_id = get_jwt_identity()
@@ -76,7 +76,7 @@ def get_asset_type(current_user_id, asset_type_id):
         return jsonify({'error': str(e)}), 500
 
 
-@asset_types_bp.route('', methods=['POST'])
+@asset_types_bp.route('/', methods=['POST'])
 @jwt_required()
 def create_asset_type(current_user_id):
     """Create new asset type (admin only)"""
