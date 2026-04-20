@@ -2,8 +2,17 @@ from datetime import datetime
 from extensions import db
 
 
+# =========================
+# Association Table FIRST
+# =========================
+user_department = db.Table(
+    'user_department',
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
+    db.Column('department_id', db.Integer, db.ForeignKey('departments.id'), primary_key=True)
+)
+
+
 class Department(db.Model):
-    """Department model - represents organizational departments"""
     __tablename__ = 'departments'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -19,28 +28,26 @@ class Department(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    # manager = db.relationship('User', foreign_keys=[manager_id], backref='managed_departments')
-    # users = db.relationship('User', secondary='user_department', backref='departments')
-    manager = db.relationship('User', foreign_keys=[manager_id], backref='managed_departments')
-    users = db.relationship('User', secondary='user_department', backref='user_departments')
+    manager = db.relationship(
+        'User',
+        foreign_keys=[manager_id],
+        backref='managed_departments'
+    )
+
+    users = db.relationship(
+        'User',
+        secondary=user_department,
+        backref='departments'
+    )
 
     def to_dict(self):
-        """Convert to dictionary for JSON response"""
         return {
-            'id': self.id,
-            'name': self.name,
-            'department_code': self.department_code,
-            'description': self.description,
-            'location': self.location,
-            'manager_id': self.manager_id,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            "id": self.id,
+            "name": self.name,
+            "department_code": self.department_code,
+            "description": self.description,
+            "location": self.location,
+            "manager_id": self.manager_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
-
-
-# Association table for User-Department many-to-many relationship
-user_department = db.Table(
-    'user_department',
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
-    db.Column('department_id', db.Integer, db.ForeignKey('departments.id'), primary_key=True)
-)
