@@ -9,7 +9,7 @@ category_bp = Blueprint('category_bp', __name__)
 # =========================
 # CREATE CATEGORY
 # =========================
-@category_bp.route('', methods=['POST'])
+@category_bp.route('/', methods=['POST'])
 def create_category():
     data = request.get_json()
 
@@ -53,7 +53,7 @@ def create_category():
 # =========================
 # GET ALL CATEGORIES (FOR DROPDOWN + SEARCH)
 # =========================
-@category_bp.route('', methods=['GET'])
+@category_bp.route('/', methods=['GET'])
 def get_categories():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 100, type=int)

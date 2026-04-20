@@ -9,7 +9,7 @@ department_bp = Blueprint('department_bp', __name__)
 # =========================
 # CREATE
 # =========================
-@department_bp.route('', methods=['POST'])
+@department_bp.route('/', methods=['POST'])
 def create_department():
     try:
         data = request.get_json()
@@ -47,7 +47,7 @@ def create_department():
 # =========================
 # GET ALL (FIXED FOR DROPDOWN)
 # =========================
-@department_bp.route('', methods=['GET'])
+@department_bp.route('/', methods=['GET'])
 def get_departments():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 100, type=int)

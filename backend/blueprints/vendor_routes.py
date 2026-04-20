@@ -10,7 +10,7 @@ vendor_bp = Blueprint('vendor_bp', __name__)
 # =========================
 # CREATE VENDOR (CLEAN FIXED)
 # =========================
-@vendor_bp.route('', methods=['POST'])
+@vendor_bp.route('/', methods=['POST'])
 def create_vendor():
     try:
         data = request.get_json()
@@ -66,7 +66,7 @@ def create_vendor():
 # =========================
 # GET ALL VENDORS (FIXED FOR DROPDOWN)
 # =========================
-@vendor_bp.route('', methods=['GET'])
+@vendor_bp.route('/', methods=['GET'])
 def get_vendors():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 100, type=int)
