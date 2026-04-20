@@ -10,7 +10,7 @@ export default function DepartmentSearch({ onSearch }) {
     }, 400); // wait 400ms after user stops typing
 
     return () => clearTimeout(delay);
-  }, [input]);
+  }, [input, onSearch]);
 
   return (
     <div className="flex items-center border rounded overflow-hidden w-full md:w-80">

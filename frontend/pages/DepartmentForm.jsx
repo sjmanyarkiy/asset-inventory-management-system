@@ -21,6 +21,13 @@ export default function DepartmentForm({
         description: selectedDepartment.description || "",
         location: selectedDepartment.location || "",
       });
+    } else {
+      setForm({
+        name: "",
+        department_code: "",
+        description: "",
+        location: "",
+      });
     }
   }, [selectedDepartment]);
 
@@ -43,7 +50,6 @@ export default function DepartmentForm({
 
     onSubmit(form);
 
-    // Reset form after create
     if (!selectedDepartment) {
       setForm({
         name: "",

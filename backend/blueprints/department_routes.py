@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from extensions import db
 from models.department import Department
 from sqlalchemy import or_
+from flask_jwt_extended import jwt_required
 
 department_bp = Blueprint('department_bp', __name__)
 
@@ -10,6 +11,7 @@ department_bp = Blueprint('department_bp', __name__)
 # CREATE
 # =========================
 @department_bp.route('/', methods=['POST'])
+@jwt_required()
 def create_department():
     try:
         data = request.get_json()
@@ -99,8 +101,15 @@ def update_department(id):
         if not data:
             return jsonify({"error": "No input data"}), 400
 
-        if 'department_code' in data:
-            return jsonify({"error": "department_code cannot be updated"}), 400
+        # if 'department_code' in data:
+        #     return jsonify({"error": "department_code cannot be updated"}), 400
+
+        existing = Department.query.filter(
+            Department.id != id,
+            or_(
+                Department.name == data.get('name')
+            )
+        ).first()
 
         existing = Department.query.filter(
             Department.id != id,

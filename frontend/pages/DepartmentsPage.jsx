@@ -8,25 +8,43 @@ export default function DepartmentsPage() {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const BASE_URL = "http://localhost:5000/departments";
+  // const BASE_URL = "http://localhost:5000/departments";
+  const BASE_URL = `${import.meta.env.VITE_API_URL}/api/departments`;
 
   // =========================
   // FETCH
   // =========================
-  const fetchDepartments = async (search = "") => {
-    try {
-      setLoading(true);
+  // const fetchDepartments = async (search = "") => {
+  //   try {
+  //     setLoading(true);
 
+  //     const res = await fetch(
+  //       `${BASE_URL}/?page=1&search=${search}`
+  //     );
+
+  //     const data = await res.json();
+
+  //     setDepartments(data.data || []);
+  //   } catch (error) {
+  //     console.error("FETCH ERROR:", error);
+  //     toast.error("Failed to load departments ❌");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  const fetchDepartments = async (search = "") => {
+    setLoading(true);
+
+    try {
       const res = await fetch(
-        `${BASE_URL}/?page=1&search=${search}`
+        `${BASE_URL}?page=1&search=${encodeURIComponent(search)}`
       );
 
       const data = await res.json();
-
-      setDepartments(data.data || []);
+      // setDepartments(data.requests || data.data || []);
+      setDepartments(data.departments || []);
     } catch (error) {
-      console.error("FETCH ERROR:", error);
-      toast.error("Failed to load departments ❌");
+      console.error(error);
     } finally {
       setLoading(false);
     }
