@@ -50,6 +50,7 @@ def create_department():
 # GET ALL (FIXED FOR DROPDOWN)
 # =========================
 @department_bp.route('/', methods=['GET'])
+@jwt_required()
 def get_departments():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 100, type=int)
@@ -84,6 +85,7 @@ def get_departments():
 # GET SINGLE
 # =========================
 @department_bp.route('/<int:id>', methods=['GET'])
+@jwt_required()
 def get_department(id):
     dept = Department.query.get_or_404(id)
     return jsonify(dept.to_dict())
@@ -93,6 +95,7 @@ def get_department(id):
 # UPDATE
 # =========================
 @department_bp.route('/<int:id>', methods=['PUT'])
+@jwt_required()
 def update_department(id):
     try:
         dept = Department.query.get_or_404(id)
@@ -107,17 +110,13 @@ def update_department(id):
         existing = Department.query.filter(
             Department.id != id,
             or_(
-                Department.name == data.get('name')
-            )
-        ).first()
-
-        existing = Department.query.filter(
-            Department.id != id,
-            or_(
                 Department.name == data.get('name'),
                 Department.department_code == data.get('department_code')
             )
         ).first()
+
+        if not data.get('name'):
+            return jsonify({"error": "name is required"}), 400 
 
         if existing:
             return jsonify({"error": "Department already exists"}), 400
@@ -139,6 +138,7 @@ def update_department(id):
 # DELETE
 # =========================
 @department_bp.route('/<int:id>', methods=['DELETE'])
+@jwt_required()
 def delete_department(id):
     try:
         dept = Department.query.get_or_404(id)
