@@ -13,34 +13,6 @@ import json
 
 assets_bp = Blueprint("assets", __name__, url_prefix="/api")
 
-
-def token_required(f):
-    """Verify JWT token"""
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
-        if 'Authorization' in request.headers:
-            auth_header = request.headers['Authorization']
-            try:
-                token = auth_header.split(" ")[1]
-            except IndexError:
-                return jsonify({'error': 'Invalid token format'}), 401
-
-        if not token:
-            return jsonify({'error': 'Token is missing'}), 401
-
-        try:
-            data = jwt.decode(token, os.getenv('JWT_SECRET_KEY'), algorithms=['HS256'])
-            current_user_id = data.get('user_id')
-        except jwt.ExpiredSignatureError:
-            return jsonify({'error': 'Token has expired'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'error': 'Invalid token'}), 401
-
-        return f(current_user_id, *args, **kwargs)
-    return decorated
-
-
 def log_action(action, asset_id, user_id, target_user_id=None, metadata=None):
     """Log asset actions to audit trail"""
     log = AuditLog(
@@ -60,8 +32,9 @@ def log_action(action, asset_id, user_id, target_user_id=None, metadata=None):
 # ----------------------------
 
 @assets_bp.route("/assets", methods=["GET"])
-@token_required
+@jwt_required()
 def get_assets(current_user_id):
+    current_user_id = get_jwt_identity()
     """Get all assets with search and filtering"""
     try:
         page = int(request.args.get("page", 1))
@@ -103,8 +76,9 @@ def get_assets(current_user_id):
 # ----------------------------
 
 @assets_bp.route("/assets/<int:asset_id>", methods=["GET"])
-@token_required
+@jwt_required()
 def get_asset(current_user_id, asset_id):
+    current_user_id = get_jwt_identity()
     """Get single asset by ID"""
     try:
         asset = Asset.query.get(asset_id)
@@ -122,8 +96,9 @@ def get_asset(current_user_id, asset_id):
 # ----------------------------
 
 @assets_bp.route("/assets/<int:asset_id>/assign", methods=["POST"])
-@token_required
+@jwt_required()
 def assign_asset(current_user_id, asset_id):
+    current_user_id = get_jwt_identity()
     """Assign asset to a user (admin/manager only)"""
     try:
         user = User.query.get(current_user_id)
@@ -176,8 +151,9 @@ def assign_asset(current_user_id, asset_id):
 # ----------------------------
 
 @assets_bp.route("/assets/<int:asset_id>/return", methods=["POST"])
-@token_required
+@jwt_required()
 def return_asset(current_user_id, asset_id):
+    current_user_id = get_jwt_identity()
     """Return asset (unassign from user)"""
     try:
         user = User.query.get(current_user_id)
@@ -219,8 +195,9 @@ def return_asset(current_user_id, asset_id):
 # ----------------------------
 
 @assets_bp.route("/assets/<int:asset_id>/history", methods=["GET"])
-@token_required
+@jwt_required()
 def asset_history(current_user_id, asset_id):
+    current_user_id = get_jwt_identity()
     """Get audit log history for an asset"""
     try:
         asset = Asset.query.get(asset_id)

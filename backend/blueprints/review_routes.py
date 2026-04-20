@@ -15,34 +15,35 @@ import os
 from datetime import datetime
 
 review_bp = Blueprint('review', __name__, url_prefix='/api/review')
+# current_user_id = get_jwt_identity()
 
 
-def token_required(f):
-    """Verify JWT token"""
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
-        if 'Authorization' in request.headers:
-            auth_header = request.headers['Authorization']
-            try:
-                token = auth_header.split(" ")[1]
-            except IndexError:
-                return jsonify({'error': 'Invalid token format'}), 401
+# def token_required(f):
+#     """Verify JWT token"""
+#     @wraps(f)
+#     def decorated(*args, **kwargs):
+#         token = None
+#         if 'Authorization' in request.headers:
+#             auth_header = request.headers['Authorization']
+#             try:
+#                 token = auth_header.split(" ")[1]
+#             except IndexError:
+#                 return jsonify({'error': 'Invalid token format'}), 401
 
-        if not token:
-            return jsonify({'error': 'Token is missing'}), 401
+#         if not token:
+#             return jsonify({'error': 'Token is missing'}), 401
 
-        try:
-            data = jwt.decode(token, os.getenv('JWT_SECRET_KEY'), algorithms=['HS256'])
-            # current_user_id = data.get('user_id')
-            current_user_id = data.get('sub')
-        except jwt.ExpiredSignatureError:
-            return jsonify({'error': 'Token has expired'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'error': 'Invalid token'}), 401
+#         try:
+#             data = jwt.decode(token, os.getenv('JWT_SECRET_KEY'), algorithms=['HS256'])
+#             # current_user_id = data.get('user_id')
+#             current_user_id = data.get('sub')
+#         except jwt.ExpiredSignatureError:
+#             return jsonify({'error': 'Token has expired'}), 401
+#         except jwt.InvalidTokenError:
+#             return jsonify({'error': 'Invalid token'}), 401
 
-        return f(current_user_id, *args, **kwargs)
-    return decorated
+#         return f(current_user_id, *args, **kwargs)
+#     return decorated
 
 
 # ============================================================================
@@ -50,9 +51,10 @@ def token_required(f):
 # ============================================================================
 
 @review_bp.route('/assets', methods=['GET'])
-@token_required
+@jwt_required()
 def get_asset_requests_for_review(current_user_id):
     try:
+        current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
         if not user:
             return jsonify({'error': 'User not found'}), 404
@@ -81,10 +83,11 @@ def get_asset_requests_for_review(current_user_id):
         return jsonify({'error': str(e)}), 500
 
 @review_bp.route('/assets/<int:request_id>/approve', methods=['POST'])
-@token_required
+@jwt_required()
 def approve_asset_request(current_user_id, request_id):
     """Manager approves an asset request"""
     try:
+        current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
         if not user or user.role.hierarchy_level > 2:
             return jsonify({'error': 'Permission denied'}), 403
@@ -125,10 +128,11 @@ def approve_asset_request(current_user_id, request_id):
 
 
 @review_bp.route('/assets/<int:request_id>/reject', methods=['POST'])
-@token_required
+@jwt_required()
 def reject_asset_request(current_user_id, request_id):
     """Manager rejects an asset request"""
     try:
+        current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
         if not user or user.role.hierarchy_level > 1:
             return jsonify({'error': 'Permission denied'}), 403
@@ -175,10 +179,11 @@ def reject_asset_request(current_user_id, request_id):
 # ============================================================================
 
 @review_bp.route('/repairs', methods=['GET'])
-@token_required
+@jwt_required()
 def get_repair_requests_for_review(current_user_id):
     """Get repair requests for manager review"""
     try:
+        current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
         if not user:
             return jsonify({'error': 'User not found'}), 404
@@ -231,10 +236,11 @@ def get_repair_requests_for_review(current_user_id):
 
 
 @review_bp.route('/repairs/<int:request_id>/approve', methods=['POST'])
-@token_required
+@jwt_required()
 def approve_repair_request(current_user_id, request_id):
     """Manager approves a repair request (assigns to maintenance)"""
     try:
+        current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
         if not user or user.role.hierarchy_level > 1:
             return jsonify({'error': 'Permission denied'}), 403
@@ -273,10 +279,11 @@ def approve_repair_request(current_user_id, request_id):
 
 
 @review_bp.route('/repairs/<int:request_id>/reject', methods=['POST'])
-@token_required
+@jwt_required()
 def reject_repair_request(current_user_id, request_id):
     """Manager rejects a repair request"""
     try:
+        current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
         if not user or user.role.hierarchy_level > 1:
             return jsonify({'error': 'Permission denied'}), 403
@@ -317,10 +324,11 @@ def reject_repair_request(current_user_id, request_id):
 
 
 @review_bp.route('/repairs/<int:request_id>/complete', methods=['POST'])
-@token_required
+@jwt_required()
 def complete_repair_request(current_user_id, request_id):
     """Mark repair request as completed"""
     try:
+        current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
         if not user or user.role.hierarchy_level > 1:
             return jsonify({'error': 'Permission denied'}), 403
