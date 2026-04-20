@@ -33,7 +33,7 @@ def log_action(action, asset_id, user_id, target_user_id=None, metadata=None):
 
 @assets_bp.route("/", methods=["GET"])
 @jwt_required()
-def get_assets(current_user_id):
+def get_assets():
     current_user_id = get_jwt_identity()
     """Get all assets with search and filtering"""
     try:
@@ -77,7 +77,7 @@ def get_assets(current_user_id):
 
 @assets_bp.route("/<int:asset_id>", methods=["GET"])
 @jwt_required()
-def get_asset(current_user_id, asset_id):
+def get_asset(asset_id):
     current_user_id = get_jwt_identity()
     """Get single asset by ID"""
     try:
@@ -97,7 +97,7 @@ def get_asset(current_user_id, asset_id):
 
 @assets_bp.route("/<int:asset_id>/assign", methods=["POST"])
 @jwt_required()
-def assign_asset(current_user_id, asset_id):
+def assign_asset(asset_id):
     current_user_id = get_jwt_identity()
     """Assign asset to a user (admin/manager only)"""
     try:
@@ -152,7 +152,7 @@ def assign_asset(current_user_id, asset_id):
 
 @assets_bp.route("/<int:asset_id>/return", methods=["POST"])
 @jwt_required()
-def return_asset(current_user_id, asset_id):
+def return_asset(asset_id):
     current_user_id = get_jwt_identity()
     """Return asset (unassign from user)"""
     try:
@@ -196,7 +196,7 @@ def return_asset(current_user_id, asset_id):
 
 @assets_bp.route("/<int:asset_id>/history", methods=["GET"])
 @jwt_required()
-def asset_history(current_user_id, asset_id):
+def asset_history(asset_id):
     current_user_id = get_jwt_identity()
     """Get audit log history for an asset"""
     try:
