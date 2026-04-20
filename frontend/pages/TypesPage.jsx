@@ -11,6 +11,11 @@ import {
   deleteAssetType,
 } from "../redux/slices/typeSlice";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  "http://127.0.0.1:5001";
+
 export default function AssetTypesPage() {
   const dispatch = useDispatch();
   const { data, loading } = useSelector((state) => state.types);
@@ -40,7 +45,7 @@ export default function AssetTypesPage() {
     const fetchCategories = async () => {
       try {
         const res = await fetch(
-          "http://localhost:5000/categories?page=1&per_page=100"
+          `${API_BASE_URL}/categories?page=1&per_page=100`
         );
         const data = await res.json();
         setCategories(data.data || []);

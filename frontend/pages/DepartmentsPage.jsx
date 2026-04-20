@@ -3,12 +3,17 @@ import DepartmentSearch from "../src/components/DepartmentSearch";
 import DepartmentForm from "../pages/DepartmentForm";
 import toast from "react-hot-toast";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  "http://127.0.0.1:5001";
+
 export default function DepartmentsPage() {
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const BASE_URL = "http://localhost:5000/departments";
+  const BASE_URL = `${API_BASE_URL}/departments`;
 
   // =========================
   // FETCH
