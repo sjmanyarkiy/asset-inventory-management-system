@@ -1,6 +1,6 @@
 import re
 from extensions import db
-from models.vendors import Vendor
+from models.vendor import Vendor
 
 
 def generate_vendor_code(name: str) -> str:

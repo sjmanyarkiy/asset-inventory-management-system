@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
-from app import db
-from app.models.vendors import Vendor
+from extensions import db
+from models.vendor import Vendor
 from sqlalchemy.exc import IntegrityError
-from app.services.vendor_service import generate_vendor_code
+from services.vendor_service import generate_vendor_code
 
 vendor_bp = Blueprint('vendor_bp', __name__, url_prefix='/vendors')
 

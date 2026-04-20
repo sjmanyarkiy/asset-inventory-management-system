@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app import db
+from extensions import db
 from app.models.asset_type import AssetType
 from app.models.asset_category import AssetCategory
 from sqlalchemy import or_

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
-from app import db
-from app.models.asset_type import AssetType
-from app.models.asset_category import AssetCategory
+from extensions import db
+from models.asset_type import AssetType
+from models.asset_category import AssetCategory
 from sqlalchemy import or_
 
 type_bp = Blueprint('type_bp', __name__, url_prefix='/types')

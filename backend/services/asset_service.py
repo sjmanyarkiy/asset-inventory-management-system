@@ -3,8 +3,8 @@ from extensions import db
 from models.asset import Asset
 from models.asset_category import AssetCategory
 from models.asset_type import AssetType
-from models.vendors import Vendor
-from models.departments import Department
+from models.vendor import Vendor
+from models.department import Department
 
 
 # =========================

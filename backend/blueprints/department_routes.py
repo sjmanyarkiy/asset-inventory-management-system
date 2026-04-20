@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
-from app import db
-from app.models.departments import Department
+from extensions import db
+from models.department import Department
 from sqlalchemy import or_
 
 department_bp = Blueprint('department_bp', __name__, url_prefix='/departments')

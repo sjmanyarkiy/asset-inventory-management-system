@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from models.assets import Asset
+from models.asset import Asset
 
 dashboard_bp = Blueprint("dashboard", __name__)
 

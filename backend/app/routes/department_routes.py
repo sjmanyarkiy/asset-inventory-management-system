@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app import db
+from extensions import db
 from app.models.departments import Department
 from sqlalchemy import or_
 
