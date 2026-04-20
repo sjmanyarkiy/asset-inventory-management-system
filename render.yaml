@@ -4,8 +4,8 @@ services:
     env: python
     rootDir: backend
     plan: free
-    buildCommand: pip install -r requirements.txt && python init_db.py
-    startCommand: gunicorn --config gunicorn_config.py wsgi:app
+    buildCommand: pip install -r requirements.txt && flask db upgrade && python init_db.py
+    startCommand: gunicorn wsgi:app
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION

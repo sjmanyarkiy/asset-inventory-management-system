@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 """
-Database Initialization Script for Production (Render)
+Database Post-Migration Setup Script
+IMPORTANT: This runs AFTER 'flask db upgrade' in buildCommand
 Safely handles:
-- Database migrations
 - Default role initialization
 - Default admin user creation (migration-based)
+- Schema verification
 - No duplicates or errors on subsequent runs
 
-Run before app startup: python backend/init_db.py
+Usage: python backend/init_db.py (after 'flask db upgrade' completes)
 """
 
 import os
@@ -24,13 +25,13 @@ from extensions import db
 
 
 def init_database():
-    """Initialize database safely for production"""
+    """Initialize database after migrations (called after 'flask db upgrade')"""
     
     print("=" * 70)
-    print("🚀 Asset Inventory Database Initialization")
+    print("🚀 Asset Inventory Post-Migration Setup")
     print("=" * 70)
     
-    # Use development config to avoid strict validation, then switch to requested env
+    # Use development config to avoid strict validation
     app = create_app('development')
     
     # Update to production if needed
@@ -40,43 +41,24 @@ def init_database():
     
     with app.app_context():
         try:
-            # Step 1: Run migrations FIRST (most important)
-            print("\n📜 Step 1: Applying database migrations...")
-            try:
-                from flask_migrate import upgrade as alembic_upgrade
-                alembic_upgrade()
-                print("   ✅ Migrations applied successfully")
-            except Exception as e:
-                error_str = str(e).lower()
-                if 'no such table: alembic_version' in error_str or 'relation "alembic_version"' in error_str:
-                    print("   ℹ️  First run - initializing migrations...")
-                    try:
-                        db.create_all()
-                        alembic_upgrade()
-                        print("   ✅ Migrations initialized and applied")
-                    except Exception as e2:
-                        print(f"   ⚠️  Migration retry: {str(e2)}")
-                else:
-                    print(f"   ⚠️  Migration note: {str(e)}")
-            
-            # Step 2: Create tables (if migrations didn't)
-            print("\n📊 Step 2: Creating database schema...")
+            # Step 1: Create tables (migrations should have done this)
+            print("\n📊 Step 1: Ensuring database schema...")
             try:
                 db.create_all()
                 print("   ✅ Database schema ready")
             except Exception as e:
                 print(f"   ⚠️  Schema info: {str(e)}")
             
-            # Step 3: Initialize default roles
-            print("\n👥 Step 3: Initializing system roles...")
+            # Step 2: Initialize default roles
+            print("\n👥 Step 2: Initializing system roles...")
             try:
                 initialize_default_roles()
                 print("   ✅ System roles initialized")
             except Exception as e:
                 print(f"   ⚠️  Roles info: {str(e)}")
             
-            # Step 4: Verify setup
-            print("\n✔️ Step 4: Verifying database setup...")
+            # Step 3: Verify setup
+            print("\n✔️ Step 3: Verifying database setup...")
             from models.role import Role
             from models.user import User
             
@@ -91,10 +73,10 @@ def init_database():
             if admin_user:
                 print(f"   ✓ Default admin user exists: {admin_user.email}")
             else:
-                print("   ℹ️  Default admin user will be created by migration on first login")
+                print("   ℹ️  Default admin user will be created by migration")
             
             print("\n" + "=" * 70)
-            print("✅ Database initialization complete!")
+            print("✅ Database setup complete!")
             print("=" * 70)
             
             print("\n📝 Default Admin Credentials:")
@@ -107,7 +89,7 @@ def init_database():
             return True
             
         except Exception as e:
-            print(f"\n❌ Initialization failed: {str(e)}")
+            print(f"\n❌ Setup failed: {str(e)}")
             import traceback
             traceback.print_exc()
             return False
