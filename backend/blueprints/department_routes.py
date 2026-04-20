@@ -50,7 +50,6 @@ def create_department():
 # GET ALL (FIXED FOR DROPDOWN)
 # =========================
 @department_bp.route('/', methods=['GET'])
-@jwt_required()
 def get_departments():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 100, type=int)
