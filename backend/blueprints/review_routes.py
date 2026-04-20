@@ -1,366 +1,293 @@
 """
-Manager Request Review Routes
-Managers can view, approve, and reject asset/repair requests from their department
+Review Routes Blueprint - handles request review and approval for managers/admins
 """
-
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from datetime import datetime
+from extensions import db
+from models.user import User
 from models.asset_request import AssetRequest
 from models.repair_request import RepairRequest
-from models.user import User
-from extensions import db
-from functools import wraps
-import jwt
-import os
-from datetime import datetime
 
 review_bp = Blueprint('review', __name__)
-# current_user_id = get_jwt_identity()
 
 
-# def token_required(f):
-#     """Verify JWT token"""
-#     @wraps(f)
-#     def decorated(*args, **kwargs):
-#         token = None
-#         if 'Authorization' in request.headers:
-#             auth_header = request.headers['Authorization']
-#             try:
-#                 token = auth_header.split(" ")[1]
-#             except IndexError:
-#                 return jsonify({'error': 'Invalid token format'}), 401
-
-#         if not token:
-#             return jsonify({'error': 'Token is missing'}), 401
-
-#         try:
-#             data = jwt.decode(token, os.getenv('JWT_SECRET_KEY'), algorithms=['HS256'])
-#             # current_user_id = data.get('user_id')
-#             current_user_id = data.get('sub')
-#         except jwt.ExpiredSignatureError:
-#             return jsonify({'error': 'Token has expired'}), 401
-#         except jwt.InvalidTokenError:
-#             return jsonify({'error': 'Invalid token'}), 401
-
-#         return f(current_user_id, *args, **kwargs)
-#     return decorated
-
-
-# ============================================================================
-# ASSET REQUEST REVIEWS
-# ============================================================================
+# ===========================
+# ASSET REQUESTS FOR REVIEW
+# ===========================
 
 @review_bp.route('/assets', methods=['GET'])
 @jwt_required()
-def get_asset_requests_for_review(current_user_id):
-    try:
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
+def get_asset_requests_for_review():
+    """
+    Get asset requests for review (manager/admin only)
+    - Managers: see department requests
+    - Admin: see all requests
+    """
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Only managers and admins can review
+    if user.role.hierarchy_level > 2:
+        return jsonify({'error': 'Only managers and admins can review requests'}), 403
+    
+    page = int(request.args.get('page', 1))
+    per_page = int(request.args.get('per_page', 10))
+    status = request.args.get('status', '')
+    
+    query = AssetRequest.query
+    
+    # Filter based on role
+    if user.role.hierarchy_level == 2:  # Manager
+        query = query.filter_by(department_id=user.department_id)
+    # Admin (hierarchy 0-1) sees all
+    
+    # Filter by status if provided (default to pending)
+    if status:
+        query = query.filter_by(status=status)
+    else:
+        query = query.filter_by(status='Pending')
+    
+    pagination = query.order_by(AssetRequest.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    return jsonify({
+        'requests': [r.to_dict() for r in pagination.items],
+        'total': pagination.total,
+        'pages': pagination.pages,
+        'current_page': page
+    }), 200
 
-        # ✅ FIXED: Managers (1) + Admins (2+) can review
-        if user.role.hierarchy_level > 2:  # Employees (0) cannot
-            return jsonify({'error': 'Permission denied'}), 403
-
-        query = AssetRequest.query.filter_by(status='Pending')
-
-        # Managers filter by their departments
-        if user.role.hierarchy_level == 2:  # Manager only sees OWN dept
-            if user.managed_departments:
-                dept_ids = [d.id for d in user.managed_departments]
-                query = query.filter(AssetRequest.department_id.in_(dept_ids))
-            else:
-                return jsonify({'requests': []}), 200
-
-        requests_list = query.all()
-        return jsonify({
-            'requests': [r.to_dict() for r in requests_list],  # Use model method
-            'count': len(requests_list)
-        }), 200
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @review_bp.route('/assets/<int:request_id>/approve', methods=['POST'])
 @jwt_required()
-def approve_asset_request(current_user_id, request_id):
-    """Manager approves an asset request"""
+def approve_asset_request(request_id):
+    """Approve an asset request"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    # Only managers and admins can approve
+    if user.role.hierarchy_level > 2:
+        return jsonify({'error': 'Only managers and admins can approve requests'}), 403
+    
+    data = request.get_json() or {}
+    asset_req = AssetRequest.query.get_or_404(request_id)
+    
+    # Manager can only approve their department's requests
+    if user.role.hierarchy_level == 2 and asset_req.department_id != user.department_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
     try:
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        if not user or user.role.hierarchy_level > 2:
-            return jsonify({'error': 'Permission denied'}), 403
-
-        asset_request = AssetRequest.query.get(request_id)
-        if not asset_request:
-            return jsonify({'error': 'Request not found'}), 404
-
-        if asset_request.status != 'Pending':
-            return jsonify({'error': f'Cannot approve {asset_request.status} request'}), 400
-
-        # Verify manager has permission
-        if user.role.hierarchy_level == 1:  # Manager
-            dept_ids = [d.id for d in user.managed_departments]
-            if asset_request.department_id not in dept_ids:
-                return jsonify({'error': 'Permission denied - not your department'}), 403
-
-        data = request.get_json() or {}
-
-        # Update request
-        asset_request.status = 'Approved'
-        asset_request.reviewed_by = current_user_id
-        asset_request.reviewed_at = datetime.utcnow()
-        asset_request.review_notes = data.get('notes', '')
-
+        asset_req.status = 'Approved'
+        asset_req.reviewed_by = current_user_id
+        asset_req.review_notes = data.get('notes', '')
+        asset_req.reviewed_at = datetime.utcnow()
+        
         db.session.commit()
-
+        
         return jsonify({
-            'message': 'Request approved',
-            'request_id': asset_request.id,
-            'status': asset_request.status,
-            'reviewed_at': asset_request.reviewed_at.isoformat()
+            'message': 'Request approved successfully',
+            'request': asset_req.to_dict()
         }), 200
-
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'Failed to approve request: {str(e)}'}), 500
 
 
 @review_bp.route('/assets/<int:request_id>/reject', methods=['POST'])
 @jwt_required()
-def reject_asset_request(current_user_id, request_id):
-    """Manager rejects an asset request"""
+def reject_asset_request(request_id):
+    """Reject an asset request"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    # Only managers and admins can reject
+    if user.role.hierarchy_level > 2:
+        return jsonify({'error': 'Only managers and admins can reject requests'}), 403
+    
+    data = request.get_json() or {}
+    asset_req = AssetRequest.query.get_or_404(request_id)
+    
+    # Manager can only reject their department's requests
+    if user.role.hierarchy_level == 2 and asset_req.department_id != user.department_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
     try:
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        if not user or user.role.hierarchy_level > 1:
-            return jsonify({'error': 'Permission denied'}), 403
-
-        asset_request = AssetRequest.query.get(request_id)
-        if not asset_request:
-            return jsonify({'error': 'Request not found'}), 404
-
-        if asset_request.status != 'Pending':
-            return jsonify({'error': f'Cannot reject {asset_request.status} request'}), 400
-
-        # Verify manager has permission
-        if user.role.hierarchy_level == 1:  # Manager
-            dept_ids = [d.id for d in user.managed_departments]
-            if asset_request.department_id not in dept_ids:
-                return jsonify({'error': 'Permission denied - not your department'}), 403
-
-        data = request.get_json()
-        if not data or not data.get('notes'):
-            return jsonify({'error': 'Rejection notes are required'}), 400
-
-        # Update request
-        asset_request.status = 'Rejected'
-        asset_request.reviewed_by = current_user_id
-        asset_request.reviewed_at = datetime.utcnow()
-        asset_request.review_notes = data.get('notes')
-
+        asset_req.status = 'Rejected'
+        asset_req.reviewed_by = current_user_id
+        asset_req.review_notes = data.get('notes', '')
+        asset_req.reviewed_at = datetime.utcnow()
+        
         db.session.commit()
-
+        
         return jsonify({
-            'message': 'Request rejected',
-            'request_id': asset_request.id,
-            'status': asset_request.status,
-            'reviewed_at': asset_request.reviewed_at.isoformat()
+            'message': 'Request rejected successfully',
+            'request': asset_req.to_dict()
         }), 200
-
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'Failed to reject request: {str(e)}'}), 500
 
 
-# ============================================================================
-# REPAIR REQUEST REVIEWS
-# ============================================================================
+# ===========================
+# REPAIR REQUESTS FOR REVIEW
+# ===========================
 
 @review_bp.route('/repairs', methods=['GET'])
 @jwt_required()
-def get_repair_requests_for_review(current_user_id):
-    """Get repair requests for manager review"""
-    try:
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
-
-        # Check if manager or admin
-        if user.role.hierarchy_level > 1:
-            return jsonify({'error': 'Permission denied'}), 403
-
-        # Get filter status (pending, completed, etc)
-        status_filter = request.args.get('status', 'Pending')
-
-        query = RepairRequest.query.filter_by(status=status_filter)
-
-        # If Manager, filter by department
-        if user.role.hierarchy_level == 1:
-            if user.managed_departments:
-                dept_ids = [d.id for d in user.managed_departments]
-                query = query.filter(RepairRequest.department_id.in_(dept_ids))
-            else:
-                return jsonify({'requests': []}), 200
-
-        repairs_list = query.all()
-
-        return jsonify({
-            'requests': [
-                {
-                    'id': r.id,
-                    'asset_id': r.asset_id,
-                    'asset': {'id': r.asset.id, 'asset_name': r.asset.asset_name} if r.asset else None,
-                    'issue_description': r.issue_description,
-                    'urgency': r.urgency,
-                    'status': r.status,
-                    'department_id': r.department_id,
-                    'requested_by': {
-                        'id': r.requested_user.id,
-                        'username': r.requested_user.username,
-                        'first_name': r.requested_user.first_name,
-                        'last_name': r.requested_user.last_name,
-                    } if r.requested_user else None,
-                    'created_at': r.created_at.isoformat() if r.created_at else None,
-                    'completed_at': r.completed_at.isoformat() if r.completed_at else None,
-                }
-                for r in repairs_list
-            ],
-            'count': len(repairs_list)
-        }), 200
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+def get_repair_requests_for_review():
+    """
+    Get repair requests for review (manager/admin only)
+    - Managers: see department requests
+    - Admin: see all requests
+    """
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Only managers and admins can review
+    if user.role.hierarchy_level > 2:
+        return jsonify({'error': 'Only managers and admins can review requests'}), 403
+    
+    page = int(request.args.get('page', 1))
+    per_page = int(request.args.get('per_page', 10))
+    status = request.args.get('status', '')
+    
+    query = RepairRequest.query
+    
+    # Filter based on role
+    if user.role.hierarchy_level == 2:  # Manager
+        query = query.filter_by(department_id=user.department_id)
+    # Admin (hierarchy 0-1) sees all
+    
+    # Filter by status if provided (default to pending)
+    if status:
+        query = query.filter_by(status=status)
+    else:
+        query = query.filter_by(status='Pending')
+    
+    pagination = query.order_by(RepairRequest.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    return jsonify({
+        'requests': [r.to_dict() for r in pagination.items],
+        'total': pagination.total,
+        'pages': pagination.pages,
+        'current_page': page
+    }), 200
 
 
 @review_bp.route('/repairs/<int:request_id>/approve', methods=['POST'])
 @jwt_required()
-def approve_repair_request(current_user_id, request_id):
-    """Manager approves a repair request (assigns to maintenance)"""
+def approve_repair_request(request_id):
+    """Approve a repair request"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    # Only managers and admins can approve
+    if user.role.hierarchy_level > 2:
+        return jsonify({'error': 'Only managers and admins can approve requests'}), 403
+    
+    data = request.get_json() or {}
+    repair_req = RepairRequest.query.get_or_404(request_id)
+    
+    # Manager can only approve their department's requests
+    if user.role.hierarchy_level == 2 and repair_req.department_id != user.department_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
     try:
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        if not user or user.role.hierarchy_level > 1:
-            return jsonify({'error': 'Permission denied'}), 403
-
-        repair_request = RepairRequest.query.get(request_id)
-        if not repair_request:
-            return jsonify({'error': 'Request not found'}), 404
-
-        if repair_request.status != 'Pending':
-            return jsonify({'error': f'Cannot approve {repair_request.status} request'}), 400
-
-        # Verify manager has permission
-        if user.role.hierarchy_level == 1:
-            dept_ids = [d.id for d in user.managed_departments]
-            if repair_request.department_id not in dept_ids:
-                return jsonify({'error': 'Permission denied'}), 403
-
-        data = request.get_json() or {}
-
-        repair_request.status = 'Approved'
-        repair_request.reviewed_by = current_user_id
-        repair_request.reviewed_at = datetime.utcnow()
-        repair_request.review_notes = data.get('notes', '')
-
+        repair_req.status = 'Approved'
+        repair_req.reviewed_by = current_user_id
+        repair_req.review_notes = data.get('notes', '')
+        repair_req.reviewed_at = datetime.utcnow()
+        
         db.session.commit()
-
+        
         return jsonify({
-            'message': 'Repair request approved',
-            'request_id': repair_request.id,
-            'status': repair_request.status
+            'message': 'Request approved successfully',
+            'request': repair_req.to_dict()
         }), 200
-
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'Failed to approve request: {str(e)}'}), 500
 
 
 @review_bp.route('/repairs/<int:request_id>/reject', methods=['POST'])
 @jwt_required()
-def reject_repair_request(current_user_id, request_id):
-    """Manager rejects a repair request"""
+def reject_repair_request(request_id):
+    """Reject a repair request"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    # Only managers and admins can reject
+    if user.role.hierarchy_level > 2:
+        return jsonify({'error': 'Only managers and admins can reject requests'}), 403
+    
+    data = request.get_json() or {}
+    repair_req = RepairRequest.query.get_or_404(request_id)
+    
+    # Manager can only reject their department's requests
+    if user.role.hierarchy_level == 2 and repair_req.department_id != user.department_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
     try:
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        if not user or user.role.hierarchy_level > 1:
-            return jsonify({'error': 'Permission denied'}), 403
-
-        repair_request = RepairRequest.query.get(request_id)
-        if not repair_request:
-            return jsonify({'error': 'Request not found'}), 404
-
-        if repair_request.status != 'Pending':
-            return jsonify({'error': f'Cannot reject {repair_request.status} request'}), 400
-
-        # Verify manager has permission
-        if user.role.hierarchy_level == 1:
-            dept_ids = [d.id for d in user.managed_departments]
-            if repair_request.department_id not in dept_ids:
-                return jsonify({'error': 'Permission denied'}), 403
-
-        data = request.get_json()
-        if not data or not data.get('notes'):
-            return jsonify({'error': 'Rejection notes are required'}), 400
-
-        repair_request.status = 'Rejected'
-        repair_request.reviewed_by = current_user_id
-        repair_request.reviewed_at = datetime.utcnow()
-        repair_request.review_notes = data.get('notes')
-
+        repair_req.status = 'Rejected'
+        repair_req.reviewed_by = current_user_id
+        repair_req.review_notes = data.get('notes', '')
+        repair_req.reviewed_at = datetime.utcnow()
+        
         db.session.commit()
-
+        
         return jsonify({
-            'message': 'Repair request rejected',
-            'request_id': repair_request.id,
-            'status': repair_request.status
+            'message': 'Request rejected successfully',
+            'request': repair_req.to_dict()
         }), 200
-
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'Failed to reject request: {str(e)}'}), 500
 
 
 @review_bp.route('/repairs/<int:request_id>/complete', methods=['POST'])
 @jwt_required()
-def complete_repair_request(current_user_id, request_id):
-    """Mark repair request as completed"""
+def complete_repair_request(request_id):
+    """Mark a repair request as completed"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    # Only managers and admins can mark complete
+    if user.role.hierarchy_level > 2:
+        return jsonify({'error': 'Only managers and admins can complete requests'}), 403
+    
+    data = request.get_json() or {}
+    repair_req = RepairRequest.query.get_or_404(request_id)
+    
+    # Manager can only complete their department's requests
+    if user.role.hierarchy_level == 2 and repair_req.department_id != user.department_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
     try:
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        if not user or user.role.hierarchy_level > 1:
-            return jsonify({'error': 'Permission denied'}), 403
-
-        repair_request = RepairRequest.query.get(request_id)
-        if not repair_request:
-            return jsonify({'error': 'Request not found'}), 404
-
-        if repair_request.status != 'Approved':
-            return jsonify({'error': 'Can only complete approved requests'}), 400
-
-        # Verify manager has permission
-        if user.role.hierarchy_level == 1:
-            dept_ids = [d.id for d in user.managed_departments]
-            if repair_request.department_id not in dept_ids:
-                return jsonify({'error': 'Permission denied'}), 403
-
-        data = request.get_json() or {}
-
-        repair_request.status = 'Completed'
-        repair_request.completed_at = datetime.utcnow()
-        repair_request.completion_notes = data.get('notes', '')
-
+        repair_req.status = 'Completed'
+        repair_req.completed_at = datetime.utcnow()
+        repair_req.completion_notes = data.get('notes', '')
+        
         db.session.commit()
-
+        
         return jsonify({
-            'message': 'Repair request completed',
-            'request_id': repair_request.id,
-            'status': repair_request.status,
-            'completed_at': repair_request.completed_at.isoformat()
+            'message': 'Request completed successfully',
+            'request': repair_req.to_dict()
         }), 200
-
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'Failed to complete request: {str(e)}'}), 500
