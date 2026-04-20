@@ -40,19 +40,32 @@ def init_database():
     
     with app.app_context():
         try:
-            # Step 1: Create tables
-            print("\n📊 Step 1: Creating database schema...")
-            db.create_all()
-            print("   ✅ Database schema ready")
-            
-            # Step 2: Run migrations
-            print("\n📜 Step 2: Applying database migrations...")
+            # Step 1: Run migrations FIRST (most important)
+            print("\n📜 Step 1: Applying database migrations...")
             try:
                 from flask_migrate import upgrade as alembic_upgrade
                 alembic_upgrade()
                 print("   ✅ Migrations applied successfully")
             except Exception as e:
-                print(f"   ⚠️  Migration info: {str(e)}")
+                error_str = str(e).lower()
+                if 'no such table: alembic_version' in error_str or 'relation "alembic_version"' in error_str:
+                    print("   ℹ️  First run - initializing migrations...")
+                    try:
+                        db.create_all()
+                        alembic_upgrade()
+                        print("   ✅ Migrations initialized and applied")
+                    except Exception as e2:
+                        print(f"   ⚠️  Migration retry: {str(e2)}")
+                else:
+                    print(f"   ⚠️  Migration note: {str(e)}")
+            
+            # Step 2: Create tables (if migrations didn't)
+            print("\n📊 Step 2: Creating database schema...")
+            try:
+                db.create_all()
+                print("   ✅ Database schema ready")
+            except Exception as e:
+                print(f"   ⚠️  Schema info: {str(e)}")
             
             # Step 3: Initialize default roles
             print("\n👥 Step 3: Initializing system roles...")
