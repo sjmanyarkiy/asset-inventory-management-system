@@ -212,12 +212,12 @@ def create_departments():
     """Create departments FIRST (before users)"""
     
     departments_data = [
-        {'name': 'Information Technology', 'code': 'IT'},
-        {'name': 'Human Resources', 'code': 'HR'},
-        {'name': 'Finance', 'code': 'FIN'},
-        {'name': 'Operations', 'code': 'OPS'},
-        {'name': 'Sales', 'code': 'SAL'},
-        {'name': 'Marketing', 'code': 'MKT'},
+        {'name': 'Information Technology', 'department_code': 'IT'},
+        {'name': 'Human Resources', 'department_code': 'HR'},
+        {'name': 'Finance', 'department_code': 'FIN'},
+        {'name': 'Operations', 'department_code': 'OPS'},
+        {'name': 'Sales', 'department_code': 'SAL'},
+        {'name': 'Marketing', 'department_code': 'MKT'},
     ]
     
     departments = []
@@ -243,7 +243,7 @@ def create_users(roles, departments=None):
     # Map departments by code for easier lookup
     dept_map = {}
     if departments:
-        dept_map = {d.code: d for d in departments}
+        dept_map = {d.department_code: d for d in departments}
     
     users_data = [
         {
@@ -368,8 +368,8 @@ def assign_managers_to_departments(users, departments):
         manager2 = next((u for u in users if u.username == 'managermdogo'), None)
         
         # Find departments by code
-        it_dept = next((d for d in departments if d.code == 'IT'), None)
-        hr_dept = next((d for d in departments if d.code == 'HR'), None)
+        it_dept = next((d for d in departments if d.department_code == 'IT'), None)
+        hr_dept = next((d for d in departments if d.department_code == 'HR'), None)
         
         # Assign managers to departments
         if manager1 and it_dept:
