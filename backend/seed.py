@@ -68,9 +68,9 @@ def seed_database():
     
     with app.app_context():
         # Check if already seeded
-        if User.query.filter_by(username='admin').first():
-            print("✓ Database already seeded. Skipping...\n")
-            return
+        # if User.query.filter_by(username='admin').first():
+        #     print("✓ Database already seeded. Skipping...\n")
+        #     return
         
         try:
             print("🌱 Starting database seed...\n")

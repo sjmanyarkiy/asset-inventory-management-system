@@ -105,12 +105,12 @@ def create_app(config_object=None):
 
     # Register blueprints
     app.register_blueprint(auth_bp)
-    app.register_blueprint(assets_bp)
-    app.register_blueprint(admin_bp)
-    app.register_blueprint(reports_bp, url_prefix="/api")
-    app.register_blueprint(requests_bp)
-    app.register_blueprint(asset_types_bp)
-    app.register_blueprint(review_bp)
+    app.register_blueprint(assets_bp, url_prefix="/api")       
+    app.register_blueprint(admin_bp, url_prefix="/api")        
+    app.register_blueprint(reports_bp, url_prefix="/api")      
+    app.register_blueprint(requests_bp, url_prefix="/api")    
+    app.register_blueprint(asset_types_bp, url_prefix="/api") 
+    app.register_blueprint(review_bp, url_prefix="/api") 
 
     # Error handlers
     @app.errorhandler(404)

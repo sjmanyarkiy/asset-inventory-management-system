@@ -131,3 +131,20 @@ def assign_asset(asset_id):
         "message": "Asset assigned successfully",
         "asset": asset.to_dict()
     }), 200
+
+@admin_bp.route('/seed-db', methods=['POST'])
+def seed_database():
+    """Emergency seed endpoint - DELETE THIS AFTER USING"""
+    try:
+        from seed import create_users, create_sample_assets, create_departments
+        
+        # Get roles first (they should already exist from create_default_roles)
+        roles = Role.query.all()
+        departments = create_departments()
+        users = create_users(roles, departments)
+        assets = create_sample_assets(users, None, None, None, departments)
+        
+        return jsonify({'message': 'Database seeded successfully'}), 200
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
