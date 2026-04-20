@@ -60,6 +60,11 @@ def create_app(config_object=None):
     )
     print(f"DEBUG: CORS allowed origins = {allowed_origins}") 
 
+    @app.before_request
+    def handle_options():
+        if request.method == "OPTIONS":
+            return jsonify(), 200
+
     # CORS(
     #     app,
     #     resources={r"/*": {
@@ -102,6 +107,7 @@ def create_app(config_object=None):
     from blueprints.review_routes import review_bp
     from blueprints.department_routes import department_bp
     from blueprints.category_routes import category_bp
+    from blueprints.asset_types_routes import asset_types_bp
     from blueprints.type_routes import type_bp
     from blueprints.vendor_routes import vendor_bp
 
@@ -118,8 +124,9 @@ def create_app(config_object=None):
 
     app.register_blueprint(department_bp, url_prefix="/api") 
     app.register_blueprint(category_bp, url_prefix="/api")
-    app.register_blueprint(type_bp, url_prefix="/api")
+    app.register_blueprint(asset_types_bp, url_prefix="/api")
     app.register_blueprint(vendor_bp, url_prefix="/api")
+    app.register_blueprint(type_bp, url_prefix="/api")
 
     # Error handlers
     @app.errorhandler(404)
