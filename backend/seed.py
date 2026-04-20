@@ -204,7 +204,7 @@ def create_roles():
 
 
 def create_departments():
-    """Create departments FIRST (before users)"""
+    """Create departments FIRST (before users) - safe duplicate checking"""
     
     departments_data = [
         {'name': 'Information Technology', 'code': 'IT'},
@@ -216,13 +216,29 @@ def create_departments():
     ]
     
     departments = []
+    created_count = 0
+    skipped_count = 0
+    
     for dept_data in departments_data:
+        # Check if department already exists (by name or code)
+        existing = Department.query.filter(
+            (Department.name == dept_data['name']) | 
+            (Department.code == dept_data['code'])
+        ).first()
+        
+        if existing:
+            print(f"   ⊘ Skipped department '{dept_data['name']}' (already exists)")
+            departments.append(existing)
+            skipped_count += 1
+            continue
+        
         department = Department(**dept_data)
         db.session.add(department)
         departments.append(department)
+        created_count += 1
     
     db.session.commit()
-    print(f"   ✓ Created {len(departments)} departments")
+    print(f"   ✓ Created {created_count} new departments, skipped {skipped_count} duplicates")
     return departments
 
 
@@ -401,7 +417,7 @@ def assign_managers_to_departments(users, departments):
 
 
 def create_asset_categories():
-    """Create asset categories"""
+    """Create asset categories - safe duplicate checking"""
     
     categories_data = [
         {'name': 'IT Equipment', 'description': 'Computers, servers, and networking equipment'},
@@ -413,18 +429,28 @@ def create_asset_categories():
     ]
     
     categories = []
+    created_count = 0
+    skipped_count = 0
+    
     for cat_data in categories_data:
+        existing = AssetCategory.query.filter_by(name=cat_data['name']).first()
+        if existing:
+            categories.append(existing)
+            skipped_count += 1
+            continue
+        
         category = AssetCategory(**cat_data)
         db.session.add(category)
         categories.append(category)
+        created_count += 1
     
     db.session.commit()
-    print(f"   ✓ Created {len(categories)} asset categories")
+    print(f"   ✓ Created {created_count} new categories, skipped {skipped_count} duplicates")
     return categories
 
 
 def create_asset_types():
-    """Create asset types"""
+    """Create asset types - safe duplicate checking"""
     
     types_data = [
         {'name': 'Laptop', 'description': 'Portable computers'},
@@ -441,18 +467,28 @@ def create_asset_types():
     ]
     
     types = []
+    created_count = 0
+    skipped_count = 0
+    
     for type_data in types_data:
+        existing = AssetType.query.filter_by(name=type_data['name']).first()
+        if existing:
+            types.append(existing)
+            skipped_count += 1
+            continue
+        
         asset_type = AssetType(**type_data)
         db.session.add(asset_type)
         types.append(asset_type)
+        created_count += 1
     
     db.session.commit()
-    print(f"   ✓ Created {len(types)} asset types")
+    print(f"   ✓ Created {created_count} new types, skipped {skipped_count} duplicates")
     return types
 
 
 def create_vendors():
-    """Create vendors"""
+    """Create vendors - safe duplicate checking"""
     
     vendors_data = [
         {
@@ -503,13 +539,27 @@ def create_vendors():
     ]
     
     vendors = []
+    created_count = 0
+    skipped_count = 0
+    
     for vendor_data in vendors_data:
+        existing = Vendor.query.filter(
+            (Vendor.name == vendor_data['name']) | 
+            (Vendor.vendor_code == vendor_data['vendor_code'])
+        ).first()
+        
+        if existing:
+            vendors.append(existing)
+            skipped_count += 1
+            continue
+        
         vendor = Vendor(**vendor_data)
         db.session.add(vendor)
         vendors.append(vendor)
+        created_count += 1
     
     db.session.commit()
-    print(f"   ✓ Created {len(vendors)} vendors")
+    print(f"   ✓ Created {created_count} new vendors, skipped {skipped_count} duplicates")
     return vendors
 
 
