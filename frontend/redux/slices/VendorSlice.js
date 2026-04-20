@@ -1,13 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../../src/services/api";
+import axios from "../../src/api/axios";
+
+const API_BASE = "/api/vendors";
 
 /* ---------------- FETCH ---------------- */
 export const fetchVendors = createAsyncThunk(
   "vendors/fetch",
   async ({ page = 1, search = "" } = {}, thunkAPI) => {
     try {
-      // const res = await api.get(`/vendors/?page=${page}&search=${search}`);
-      const res = await api.get(`/vendors`, { params: { page, search } });
+      const res = await axios.get(`${API_BASE}`, { params: { page, search } });
       console.log("FETCH VENDORS RESPONSE:", res.data);
       return res.data;
     } catch (err) {
@@ -23,11 +24,8 @@ export const createVendor = createAsyncThunk(
   async (data, thunkAPI) => {
     try {
       console.log("CREATE PAYLOAD SENT:", data);
-
-      const res = await api.post(`/vendors`, data);
-
+      const res = await axios.post(`${API_BASE}`, data);
       console.log("CREATE RESPONSE RECEIVED:", res.data);
-
       return res.data;
     } catch (err) {
       console.error("CREATE ERROR:", err.response?.data || err.message);
@@ -45,12 +43,8 @@ export const updateVendor = createAsyncThunk(
     try {
       console.log("UPDATE ID:", id);
       console.log("UPDATE PAYLOAD SENT:", data);
-
-      // const res = await api.put(`/vendors/${id}`, data);
-      const res = await api.put(`/vendors/${id}`, data);
-
+      const res = await axios.put(`${API_BASE}/${id}`, data);
       console.log("UPDATE RESPONSE RECEIVED:", res.data);
-
       return res.data;
     } catch (err) {
       console.error("UPDATE ERROR:", err.response?.data || err.message);
@@ -66,7 +60,7 @@ export const deleteVendor = createAsyncThunk(
   "vendors/delete",
   async (id, thunkAPI) => {
     try {
-      await api.delete(`/vendors/${id}`);
+      await axios.delete(`${API_BASE}/${id}`);
       console.log("DELETED VENDOR ID:", id);
       return id;
     } catch (err) {
