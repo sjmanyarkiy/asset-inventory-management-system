@@ -44,7 +44,7 @@ def get_asset_requests():
     if user.role.hierarchy_level >= 3:  # Employee
         query = query.filter_by(requested_by=current_user_id)
     elif user.role.hierarchy_level == 2:  # Manager
-        query = query.filter_by(department_id=user.role_id)  # Assuming user has department_id
+        query = query.filter_by(department_id=user.department_id) 
     # Admin (hierarchy 0-1) sees all
     
     # Filter by status if provided
@@ -219,7 +219,7 @@ def get_repair_requests():
     if user.role.hierarchy_level >= 3:  # Employee
         query = query.filter_by(requested_by=current_user_id)
     elif user.role.hierarchy_level == 2:  # Manager
-        query = query.filter_by(department_id=user.role_id)  # Assuming user has department_id
+        query = query.filter_by(department_id=user.department_id)  # Assuming user has department_id
     # Admin sees all
     
     # Filter by status if provided

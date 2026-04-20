@@ -25,14 +25,15 @@ const AssetRequestForm = ({ onRequestSubmitted }) => {
   const fetchAssetTypes = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.get(
-        `${API_URL}/api/asset-types`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
+      // const response = await axios.get(
+      //   `${API_URL}/api/asset-types`,
+      //   {
+      //     headers: {
+      //       'Authorization': `Bearer ${token}`
+      //     }
+      //   }
+      // );
+      const response = await axios.get(`${API_URL}/api/asset-types`);
       setAssetTypes(response.data.data || response.data || []);
     } catch (err) {
       console.error('Failed to fetch asset types:', err);
