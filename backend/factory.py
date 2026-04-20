@@ -9,7 +9,7 @@ import os
 # Load environment variables
 load_dotenv()
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, jwt_required, get_jwt_identity
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
@@ -247,6 +247,20 @@ def create_default_roles():
 
     db.session.commit()
     print("Default roles created successfully!")
+
+
+    @app.route('/debug/token', methods=['GET'])
+    @jwt_required()
+    def debug_token():
+        from flask_jwt_extended import get_jwt
+        current_user_id = get_jwt_identity()
+        jwt_data = get_jwt()
+        return jsonify({
+            'current_user_id': current_user_id,
+            'current_user_id_type': str(type(current_user_id)),
+            'jwt_sub': jwt_data.get('sub'),
+            'jwt_sub_type': str(type(jwt_data.get('sub')))
+        }), 200
 
 
 # app = create_app()
