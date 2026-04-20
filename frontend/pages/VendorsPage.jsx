@@ -23,8 +23,8 @@ const getErrorMessage = (action) => {
 export default function VendorsPage() {
   const dispatch = useDispatch();
   // const { data, loading, error } = useSelector((state) => state.vendors);
-  const { vendors, loading, error } = useSelector(
-    (state) => state.vendors || {}
+  const { data: vendors, loading, error } = useSelector(
+    (state) => state.vendors
   );
 
   const [search, setSearch] = useState("");
@@ -197,6 +197,7 @@ export default function VendorsPage() {
     }
   };
 
+  console.log("VENDORS FROM STATE:", vendors);
   /* =========================
      CANCEL EDIT
   ========================= */
