@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from '../../src/api/axios';
+import axios from '../src/api/axios';
 import { Container, Row, Col, Card, Table, Badge, Spinner, Alert } from 'react-bootstrap';
 import AssetRequestForm from '../src/components/AssetRequestForm';
 

@@ -146,8 +146,8 @@ def verify_email(token):
         db.session.commit()
         
         # Create JWT tokens
-        access_token = create_access_token(identity=user.id)
-        refresh_token = create_refresh_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
+        refresh_token = create_refresh_token(identity=str(user.id))
         
         return success_response({
             'access_token': access_token,
@@ -247,8 +247,8 @@ def login():
         db.session.commit()
         
         # Create tokens
-        access_token = create_access_token(identity=user.id)
-        refresh_token = create_refresh_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
+        refresh_token = create_refresh_token(identity=str(user.id))
         
         return success_response({
             'access_token': access_token,
@@ -294,7 +294,7 @@ def refresh():
         if not user or not user.is_active or not user.is_email_verified:
             return error_response("User not found or inactive", 401)
         
-        new_access_token = create_access_token(identity=user.id)
+        new_access_token = create_access_token(identity=str(user.id))
         
         return success_response({
             'access_token': new_access_token,

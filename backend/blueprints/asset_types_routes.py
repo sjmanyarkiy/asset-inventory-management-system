@@ -48,7 +48,7 @@ asset_types_bp = Blueprint('asset_types', __name__)
 
 @asset_types_bp.route('/', methods=['GET'])
 @jwt_required()
-def get_all_asset_types(current_user_id):
+def get_all_asset_types():
     current_user_id = get_jwt_identity()
     """Get all asset types"""
     try:
@@ -63,7 +63,7 @@ def get_all_asset_types(current_user_id):
 
 @asset_types_bp.route('/<int:asset_type_id>', methods=['GET'])
 @jwt_required()
-def get_asset_type(current_user_id, asset_type_id):
+def get_asset_type(asset_type_id):
     current_user_id = get_jwt_identity()
     """Get single asset type by ID"""
     try:
@@ -78,7 +78,7 @@ def get_asset_type(current_user_id, asset_type_id):
 
 @asset_types_bp.route('/', methods=['POST'])
 @jwt_required()
-def create_asset_type(current_user_id):
+def create_asset_type():
     """Create new asset type (admin only)"""
     from models.user import User
     
@@ -114,7 +114,7 @@ def create_asset_type(current_user_id):
 
 @asset_types_bp.route('/<int:asset_type_id>', methods=['PUT'])
 @jwt_required()
-def update_asset_type(current_user_id, asset_type_id):
+def update_asset_type(asset_type_id):
     """Update asset type (admin only)"""
     from models.user import User
     
@@ -144,7 +144,7 @@ def update_asset_type(current_user_id, asset_type_id):
 
 @asset_types_bp.route('/<int:asset_type_id>', methods=['DELETE'])
 @jwt_required()
-def delete_asset_type(current_user_id, asset_type_id):
+def delete_asset_type(asset_type_id):
     """Delete asset type (admin only)"""
     from models.user import User
     
