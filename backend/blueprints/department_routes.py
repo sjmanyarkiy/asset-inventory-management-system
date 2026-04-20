@@ -5,7 +5,7 @@ from sqlalchemy import or_
 
 # from app.services.safe_delete_service import check_safe_delete
 
-department_bp = Blueprint('department_bp', _name_)
+department_bp = Blueprint('department_bp', __name__)
 
 
 # =========================
