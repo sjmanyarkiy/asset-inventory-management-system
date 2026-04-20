@@ -23,20 +23,41 @@ class Vendor(db.Model):
     # Relationships
     assets = db.relationship('Asset', backref='vendor', lazy=True)
 
+    # def to_dict(self):
+    #     """Convert to dictionary for JSON response"""
+    #     return {
+    #         'id': self.id,
+    #         'name': self.name,
+    #         'vendor_code': self.vendor_code,
+    #         'email': self.email,
+    #         'phone': self.phone,
+    #         'contact_person': self.contact_person,
+    #         "postal_address": self.postal_address,
+    #         'city': self.city,
+    #         'country': self.country,
+    #         'status': self.status,
+    #         'payment_terms': self.payment_terms,
+    #         'created_at': self.created_at.isoformat() if self.created_at else None,
+    #         'updated_at': self.updated_at.isoformat() if self.updated_at else None
+    #     }
+
+
     def to_dict(self):
-        """Convert to dictionary for JSON response"""
         return {
-            'id': self.id,
-            'name': self.name,
-            'vendor_code': self.vendor_code,
-            'email': self.email,
-            'phone': self.phone,
-            'contact_person': self.contact_person,
-            'address': self.address,
-            'city': self.city,
-            'country': self.country,
-            'status': self.status,
-            'payment_terms': self.payment_terms,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            "id": self.id,
+            "name": self.name,
+            "vendor_code": self.vendor_code,
+            "email": self.email,
+            "phone": self.phone,
+            "contact_person": self.contact_person,
+
+            "address": self.address,
+            "city": self.city,
+            "country": self.country,
+
+            "status": self.status,
+            "payment_terms": self.payment_terms,
+
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
