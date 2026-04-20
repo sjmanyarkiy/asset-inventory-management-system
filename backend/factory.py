@@ -117,7 +117,7 @@ def create_app(config_object=None):
     app.register_blueprint(assets_bp, url_prefix="/api")       
     app.register_blueprint(admin_bp, url_prefix="/api")        
     app.register_blueprint(reports_bp, url_prefix="/api")      
-    app.register_blueprint(requests_bp, url_prefix="/api")    
+    app.register_blueprint(requests_bp, url_prefix="/api/requests")  
     app.register_blueprint(asset_types_bp, url_prefix="/api") 
     app.register_blueprint(review_bp, url_prefix="/api") 
 
