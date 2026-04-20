@@ -60,7 +60,7 @@ def create_asset_type():
 # =========================
 # GET ALL TYPES (FOR DROPDOWN + SEARCH)
 # =========================
-@type_bp.route('', methods=['GET'])
+@type_bp.route('/', methods=['GET'])
 def get_asset_types():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 100, type=int)

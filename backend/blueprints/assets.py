@@ -31,7 +31,7 @@ def log_action(action, asset_id, user_id, target_user_id=None, metadata=None):
 # GET ALL ASSETS (with pagination, search, filtering)
 # ----------------------------
 
-@assets_bp.route("/assets", methods=["GET"])
+@assets_bp.route("/", methods=["GET"])
 @jwt_required()
 def get_assets(current_user_id):
     current_user_id = get_jwt_identity()
@@ -75,7 +75,7 @@ def get_assets(current_user_id):
 # GET SINGLE ASSET
 # ----------------------------
 
-@assets_bp.route("/assets/<int:asset_id>", methods=["GET"])
+@assets_bp.route("/<int:asset_id>", methods=["GET"])
 @jwt_required()
 def get_asset(current_user_id, asset_id):
     current_user_id = get_jwt_identity()
@@ -95,7 +95,7 @@ def get_asset(current_user_id, asset_id):
 # ASSIGN ASSET
 # ----------------------------
 
-@assets_bp.route("/assets/<int:asset_id>/assign", methods=["POST"])
+@assets_bp.route("/<int:asset_id>/assign", methods=["POST"])
 @jwt_required()
 def assign_asset(current_user_id, asset_id):
     current_user_id = get_jwt_identity()
@@ -150,7 +150,7 @@ def assign_asset(current_user_id, asset_id):
 # RETURN / UNASSIGN ASSET
 # ----------------------------
 
-@assets_bp.route("/assets/<int:asset_id>/return", methods=["POST"])
+@assets_bp.route("/<int:asset_id>/return", methods=["POST"])
 @jwt_required()
 def return_asset(current_user_id, asset_id):
     current_user_id = get_jwt_identity()
@@ -194,7 +194,7 @@ def return_asset(current_user_id, asset_id):
 # ASSET HISTORY
 # ----------------------------
 
-@assets_bp.route("/assets/<int:asset_id>/history", methods=["GET"])
+@assets_bp.route("/<int:asset_id>/history", methods=["GET"])
 @jwt_required()
 def asset_history(current_user_id, asset_id):
     current_user_id = get_jwt_identity()
