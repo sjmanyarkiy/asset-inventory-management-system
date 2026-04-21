@@ -318,11 +318,11 @@ function AssetList({ searchTerm = "" }) {
       
 
       {/* Pagination */}
-      <div className="d-flex justify-content-between mt-3">
+      {/* <div className="d-flex justify-content-between mt-3">
         <Button disabled={page === 1} onClick={() => setPage(p => p-1)}>Previous</Button>
         <span>Page {page} of {totalPages}</span>
         <Button disabled={page === totalPages} onClick={() => setPage(p => p+1)}>Next</Button>
-      </div>
+      </div> */}
     </div>
   );
 }
