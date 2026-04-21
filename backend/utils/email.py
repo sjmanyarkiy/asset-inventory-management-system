@@ -21,7 +21,7 @@ def send_verification_email(email, token, name="User"):
         verify_url = f"{frontend_url}/check-email?token={token}"
         
         params = {
-            "from": f"Asset Inventory <noreply@resend.dev>>",
+            "from": f"Asset Inventory <noreply@resend.dev>",
             "to": email, 
             "subject": "Verify Your Email - Asset Inventory Management",
             "html": f"""
