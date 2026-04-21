@@ -81,10 +81,9 @@ const departmentSlice = createSlice({
 
       /* UPDATE */
       .addCase(updateDepartment.fulfilled, (state, action) => {
-        const index = state.data.findIndex(
-          (d) => d.id === action.payload.id
-        );
-        if (index !== -1) state.data[index] = action.payload;
+        const updated = action.payload.data;
+        const index = state.data.findIndex((d) => d.id === updated.id);
+        if (index !== -1) state.data[index] = updated;
       })
 
       /* DELETE */
