@@ -235,9 +235,12 @@ const RequestApprovalPage = () => {
                           <tr key={req.id}>
                             <td>
                               <div className="fw-500">
-                                {req.requested_by?.first_name} {req.requested_by?.last_name}
+                                {req.requested_user?.first_name || "Unknown"}{" "}
+                                {req.requested_user?.last_name || ""}
                               </div>
-                              <small className="text-muted">{req.requested_by?.email}</small>
+                              <small className="text-muted">
+                                {req.requested_user?.email || "No email"}
+                              </small>
                             </td>
                             <td>{req.asset_type?.name || 'N/A'}</td>
                             <td className="text-center">{req.quantity}</td>
