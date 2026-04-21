@@ -120,9 +120,12 @@ function AssetList({ searchTerm = "" }) {
       const res = await axios.get("/api/admin/users", {
         params: { role: "Employee" },
       });
+      // The response has { users: [...], total, pages, page }
+      console.log("API Response:", res.data);
       setEmployees(res.data.users || []);
+      console.log("✅ Employees loaded:", res.data.users?.length || 0);
     } catch (err) {
-      console.error("Employees fetch failed:", err);
+      console.error("❌ Employees fetch failed:", err);
     }
   };
 
