@@ -22,6 +22,7 @@ const RequestApprovalPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [expandedRow, setExpandedRow] = useState(null);
 
   const [approvedAssetRequests, setApprovedAssetRequests] = useState([]);
   const [approvedRepairRequests, setApprovedRepairRequests] = useState([]);
@@ -241,9 +242,27 @@ const RequestApprovalPage = () => {
                             <td>{req.asset_type?.name || 'N/A'}</td>
                             <td className="text-center">{req.quantity}</td>
                             <td>{req.department?.name || 'N/A'}</td>
-                            <td className="text-muted small">
+                            {/* <td className="text-muted small">
                               {req.reason.substring(0, 40)}
                               {req.reason.length > 40 ? '...' : ''}
+                            </td> */}
+                            {/* <td style={{ whiteSpace: "pre-wrap", maxWidth: "300px" }}>
+                              {req.reason}
+                            </td> */}
+                            <td>
+                              <div>
+                                {expandedRow === req.id ? req.reason : `${req.reason.slice(0, 50)}...`}
+                              </div>
+
+                              <Button
+                                variant="link"
+                                size="sm"
+                                onClick={() =>
+                                  setExpandedRow(expandedRow === req.id ? null : req.id)
+                                }
+                              >
+                                {expandedRow === req.id ? "Show less" : "View full"}
+                              </Button>
                             </td>
                             <td>{getUrgencyBadge(req.urgency)}</td>
                             <td>{getStatusBadge(req.status)}</td>
