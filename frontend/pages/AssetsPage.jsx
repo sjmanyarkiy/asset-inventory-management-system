@@ -117,12 +117,7 @@ const AssetsPage = () => {
       <div className="flex justify-between mb-4">
         <h1 className="text-2xl font-bold">Assets</h1>
 
-        <button
-          onClick={handleCreate}
-          className="bg-green-600 text-white px-4 py-2 rounded"
-        >
-          + Add Asset
-        </button>
+      
       </div>
 
       {/* SEARCH */}
