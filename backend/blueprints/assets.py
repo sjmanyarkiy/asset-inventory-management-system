@@ -108,7 +108,7 @@ def assign_asset(asset_id):
     """Assign asset to a user (admin/manager only)"""
     try:
         user = User.query.get(current_user_id)
-        if not user or user.role.hierarchy_level > 1:  # Admin/SuperAdmin only
+        if not user or user.role.hierarchy_level > 2:  # Admin/SuperAdmin only
             return jsonify({'error': 'Permission denied'}), 403
 
         data = request.get_json() or {}
@@ -163,7 +163,7 @@ def return_asset(asset_id):
     """Return asset (unassign from user)"""
     try:
         user = User.query.get(current_user_id)
-        if not user or user.role.hierarchy_level > 1:  # Admin/Manager
+        if not user or user.role.hierarchy_level > 2:  # Admin/Manager
             return jsonify({'error': 'Permission denied'}), 403
 
         asset = Asset.query.get(asset_id)
