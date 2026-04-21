@@ -121,7 +121,7 @@ def create_app(config_object=None):
     # app.register_blueprint(vendor_bp, url_prefix="/api/vendors")
     # app.register_blueprint(type_bp, url_prefix="/api")
 
-    app.register_blueprint(category_bp, url_prefix="/api/categories")
+    app.register_blueprint(category_bp, url_prefix="/categories")
     app.register_blueprint(type_bp, url_prefix="/api/types")
     app.register_blueprint(department_bp, url_prefix="/api/departments")
     app.register_blueprint(vendor_bp, url_prefix="/api/vendors")
