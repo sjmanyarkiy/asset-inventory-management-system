@@ -173,7 +173,7 @@ function AssetList({ searchTerm = "" }) {
       setAssets((prev) =>
         prev.map((a) => (a.id === selectedAsset.id ? res.data.asset : a))
       );
-      setShowModal(false);
+      setShowModal(false);  // Close assignment modal
     } catch (err) {
       console.error("Assign failed:", err);
     } finally {
@@ -280,65 +280,46 @@ function AssetList({ searchTerm = "" }) {
         </tbody>
       </table>
 
-      {/* Modal - unchanged */}
+      {/* Assignment Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-        {/* Your existing modal JSX */}
-        {/* Barcode Modal */}
-        {selectedAsset && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Barcode: {selectedAsset.asset_code}</h5>
-                  <button 
-                    className="btn-close" 
-                    onClick={() => setShowBarcodeModal(false)}
-                  />
-                </div>
-                <div className="modal-body text-center">
-                  <p className="text-muted mb-3">{selectedAsset.asset_name}</p>
-                  
-                  <div className="mb-4">
-                    <h6>Code128 Barcode</h6>
-                    {selectedAsset.barcode_image && (
-                      <img 
-                        src={selectedAsset.barcode_image} 
-                        alt="barcode"
-                        style={{ maxWidth: '100%', height: 'auto' }}
-                      />
-                    )}
-                  </div>
-
-                  <div className="mb-4">
-                    <h6>QR Code</h6>
-                    {selectedAsset.qr_code_image && (
-                      <img 
-                        src={selectedAsset.qr_code_image} 
-                        alt="qr-code"
-                        style={{ maxWidth: '200px', height: 'auto' }}
-                      />
-                    )}
-                  </div>
-
-                  <p className="text-muted small">
-                    Barcode: <code>{selectedAsset.barcode_data}</code>
-                  </p>
-                </div>
-                <div className="modal-footer">
-                  <button 
-                    className="btn btn-secondary"
-                    onClick={() => setShowBarcodeModal(false)}
-                  >
-                    Close
-                  </button>
-                  <button className="btn btn-primary" onClick={() => window.print()}>
-                    🖨️ Print
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <Modal.Header closeButton>
+          <Modal.Title>Assign Asset</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedAsset && (
+            <Form>
+              <Form.Group>
+                <Form.Label>Asset: {selectedAsset.asset_name}</Form.Label>
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>Select Employee</Form.Label>
+                <Form.Select 
+                  value={selectedUserId} 
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                >
+                  <option value="">-- Choose Employee --</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.first_name} {emp.last_name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Form>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancel
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={assignAsset}
+            disabled={assigning || !selectedUserId}
+          >
+            {assigning ? 'Assigning...' : 'Assign'}
+          </Button>
+        </Modal.Footer>
       </Modal>
       
 
