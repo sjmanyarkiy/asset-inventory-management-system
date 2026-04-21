@@ -227,14 +227,15 @@ function AssetList({ searchTerm = "" }) {
                       Return
                     </Button>
                   )}
-
-                  <Button
-                    size="sm"
-                    variant="outline-secondary"
-                    onClick={() => openEdit(a)}
-                  >
-                    Edit
-                  </Button>
+                  {userRole <= 2 && a.status === "Assigned" && (
+                    <Button
+                      size="sm"
+                      variant="outline-secondary"
+                      onClick={() => openEdit(a)}
+                    >
+                      Edit
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}
