@@ -285,6 +285,7 @@ def complete_repair(request_id):
 
         data = request.get_json() or {}
 
+        # ✅ Update repair request
         update_request_status(
             req,
             status="Completed",
@@ -293,10 +294,17 @@ def complete_repair(request_id):
             extra_fields={"completed_at": datetime.utcnow()}
         )
 
+        # ✅ VERY IMPORTANT: update the asset
+        asset = req.asset
+        if asset:
+            asset.unassign()  
+            asset.condition = "Good" 
+
         db.session.commit()
 
         return jsonify({"message": "Repair request completed"}), 200
 
     except Exception as e:
         db.session.rollback()
+        print(" COMPLETE REPAIR ERROR:", str(e))
         return jsonify({"error": str(e)}), 500
