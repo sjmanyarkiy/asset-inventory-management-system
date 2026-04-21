@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Table, Button, Modal, Form, Badge, Spinner, Alert } from "react-bootstrap";
-import axios from "../api/axios";
+import axios from "../src/api/axios";
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState([]);
