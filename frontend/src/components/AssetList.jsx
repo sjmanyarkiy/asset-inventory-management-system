@@ -249,13 +249,22 @@ function AssetList({ searchTerm = "" }) {
                 </Button>
               </td>
               <td>
-                {userRole >= 2 && asset.status === 'Available' && (  // Admin only
-                  <Button size="sm" className="me-1" variant="outline-primary" onClick={() => openAssignModal(asset)}>
+                {userRole <= 2 && asset.status === 'Available' && (  
+                  <Button 
+                    size="sm" 
+                    className="me-1" 
+                    variant="outline-primary" 
+                    onClick={() => openAssignModal(asset)}
+                  >
                     Assign
                   </Button>
                 )}
-                {userRole >= 1 && asset.status === 'Assigned' && (  // Manager+
-                  <Button size="sm" variant="outline-danger" onClick={() => returnAsset(asset.id)}>
+                {userRole <= 2 && asset.status === 'Assigned' && (  
+                  <Button 
+                    size="sm" 
+                    variant="outline-danger" 
+                    onClick={() => returnAsset(asset.id)}
+                  >
                     Return
                   </Button>
                 )}

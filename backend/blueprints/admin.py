@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required
 from extensions import db
 from models.user import User
 from models.role import Role
@@ -10,6 +11,7 @@ admin_bp = Blueprint("admin", __name__)
 # GET USERS (FULL CONSISTENT DATA)
 # -------------------------
 @admin_bp.route("/users", methods=["GET"])
+@jwt_required() 
 def get_users():
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", 10))
