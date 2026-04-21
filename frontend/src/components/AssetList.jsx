@@ -5,7 +5,14 @@ import { selectUser } from "../../redux/slices/authSlice";
 // import axios from "axios";
 import axios from "../../src/api/axios"
 
-function AssetList({ searchTerm = "" }) {
+function AssetList({
+  searchTerm = "",
+  assets: externalAssets,
+  loading: externalLoading,
+  onEdit,
+  onDelete,
+  onViewDetails,
+}) {
   const user = useSelector(selectUser);  // Role check
   const userRole = user?.role?.hierarchy_level || 0;  // 0=emp, 1=mgr, 2=admin
   const [assets, setAssets] = useState([]);
@@ -23,6 +30,10 @@ function AssetList({ searchTerm = "" }) {
   const [employees, setEmployees] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [assigning, setAssigning] = useState(false);
+
+  const usingExternalAssets = Array.isArray(externalAssets);
+  const displayedAssets = usingExternalAssets ? externalAssets : assets;
+  const isLoading = usingExternalAssets ? !!externalLoading : loading;
 
   // const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -126,7 +137,11 @@ function AssetList({ searchTerm = "" }) {
     }
   };
 
-  useEffect(() => { fetchAssets(); }, [searchTerm, status, page]);
+  useEffect(() => {
+    if (!usingExternalAssets) {
+      fetchAssets();
+    }
+  }, [searchTerm, status, page, usingExternalAssets]);
 
   const openAssignModal = (asset) => {
     setSelectedAsset(asset);
@@ -212,7 +227,7 @@ function AssetList({ searchTerm = "" }) {
     return badges[status] || <Badge bg="dark">{status}</Badge>;
   };
 
-  if (loading) return <div className="text-center py-5"><Spinner /> Loading...</div>;
+  if (isLoading) return <div className="text-center py-5"><Spinner /> Loading...</div>;
 
   return (
     <div className="table-responsive">
@@ -230,7 +245,7 @@ function AssetList({ searchTerm = "" }) {
           </tr>
         </thead>
         <tbody>
-          {assets.map(asset => (
+          {displayedAssets.map(asset => (
             <tr key={asset.id}>
               <td>{asset.id}</td>
               <td>{asset.asset_name}</td>
@@ -259,11 +274,35 @@ function AssetList({ searchTerm = "" }) {
                 )} */}
               </td>
               <td>
-                <Button size="sm" variant="outline-info">
+                <Button
+                  size="sm"
+                  variant="outline-info"
+                  onClick={() => onViewDetails && onViewDetails(asset)}
+                >
                   View Details
                 </Button>
               </td>
               <td>
+                {onEdit && (
+                  <Button
+                    size="sm"
+                    className="me-1"
+                    variant="outline-secondary"
+                    onClick={() => onEdit(asset)}
+                  >
+                    Edit
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    size="sm"
+                    className="me-1"
+                    variant="outline-danger"
+                    onClick={() => onDelete(asset.id)}
+                  >
+                    Delete
+                  </Button>
+                )}
                 {userRole >= 2 && asset.status === 'Available' && (  // Admin only
                   <Button size="sm" className="me-1" variant="outline-primary" onClick={() => openAssignModal(asset)}>
                     Assign

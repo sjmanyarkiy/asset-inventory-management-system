@@ -54,7 +54,7 @@ const AssetsPage = () => {
       const res = await axios.get("/api/assets", {
         params: {
           page,
-          q: search,
+          search,
           ...filters
         }
       });
@@ -109,6 +109,11 @@ const AssetsPage = () => {
     setShowForm(true);
   };
 
+  const handleViewDetails = (asset) => {
+    setSelectedAsset(asset);
+    setShowForm(false);
+  };
+
   return (
     <div className="p-6">
 
@@ -138,7 +143,18 @@ const AssetsPage = () => {
         loading={loading}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onViewDetails={handleViewDetails}
       />
+
+      {selectedAsset && !showForm && (
+        <div className="mt-4 rounded border bg-white p-4 shadow-sm">
+          <h2 className="mb-2 text-lg font-semibold">Asset Details</h2>
+          <p><strong>Name:</strong> {selectedAsset.asset_name || selectedAsset.name || "-"}</p>
+          <p><strong>Code:</strong> {selectedAsset.asset_code || "-"}</p>
+          <p><strong>Status:</strong> {selectedAsset.status || "-"}</p>
+          <p><strong>Description:</strong> {selectedAsset.description || "-"}</p>
+        </div>
+      )}
 
       {/* PAGINATION */}
       <div className="flex justify-center gap-3 mt-4">

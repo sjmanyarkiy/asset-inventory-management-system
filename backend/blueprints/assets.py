@@ -92,6 +92,141 @@ def get_asset(asset_id):
 
 
 # ----------------------------
+# CREATE ASSET
+# ----------------------------
+@assets_bp.route("/", methods=["POST"])
+@jwt_required()
+def create_asset():
+    """Create asset (admin/manager only). Accepts JSON or form-data."""
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        if not user or user.role.hierarchy_level > 1:
+            return jsonify({'error': 'Permission denied'}), 403
+
+        data = request.form if request.form else (request.get_json() or {})
+
+        asset_name = data.get('asset_name') or data.get('name')
+        asset_code = data.get('asset_code')
+        asset_type_id = data.get('asset_type_id')
+
+        if not asset_name or not asset_code or not asset_type_id:
+            return jsonify({'error': 'asset_name/name, asset_code and asset_type_id are required'}), 400
+
+        if Asset.query.filter_by(asset_code=asset_code).first():
+            return jsonify({'error': 'Asset code already exists'}), 400
+
+        asset = Asset(
+            asset_name=asset_name,
+            asset_code=asset_code,
+            asset_type_id=int(asset_type_id),
+            category_id=int(data.get('category_id')) if data.get('category_id') else None,
+            vendor_id=int(data.get('vendor_id')) if data.get('vendor_id') else None,
+            department_id=int(data.get('department_id')) if data.get('department_id') else None,
+            description=data.get('description'),
+            serial_number=data.get('serial_number'),
+            location=data.get('location'),
+            status=data.get('status') or 'Available',
+            condition=data.get('condition') or 'Good',
+            created_by=current_user_id,
+        )
+
+        db.session.add(asset)
+        db.session.commit()
+
+        return jsonify({'message': 'Asset created successfully', 'asset': asset.to_dict()}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# ----------------------------
+# UPDATE ASSET
+# ----------------------------
+@assets_bp.route("/<int:asset_id>", methods=["PUT"])
+@jwt_required()
+def update_asset(asset_id):
+    """Update asset (admin/manager only). Accepts JSON or form-data."""
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        if not user or user.role.hierarchy_level > 1:
+            return jsonify({'error': 'Permission denied'}), 403
+
+        asset = Asset.query.get(asset_id)
+        if not asset:
+            return jsonify({'error': 'Asset not found'}), 404
+
+        data = request.form if request.form else (request.get_json() or {})
+
+        new_name = data.get('asset_name') or data.get('name')
+        new_code = data.get('asset_code')
+
+        if new_name is not None:
+            asset.asset_name = new_name
+
+        if new_code is not None:
+            duplicate = Asset.query.filter(Asset.id != asset_id, Asset.asset_code == new_code).first()
+            if duplicate:
+                return jsonify({'error': 'Asset code already exists'}), 400
+            asset.asset_code = new_code
+
+        if data.get('asset_type_id') is not None and data.get('asset_type_id') != '':
+            asset.asset_type_id = int(data.get('asset_type_id'))
+        if data.get('category_id') is not None:
+            asset.category_id = int(data.get('category_id')) if data.get('category_id') else None
+        if data.get('vendor_id') is not None:
+            asset.vendor_id = int(data.get('vendor_id')) if data.get('vendor_id') else None
+        if data.get('department_id') is not None:
+            asset.department_id = int(data.get('department_id')) if data.get('department_id') else None
+        if data.get('description') is not None:
+            asset.description = data.get('description')
+        if data.get('serial_number') is not None:
+            asset.serial_number = data.get('serial_number')
+        if data.get('location') is not None:
+            asset.location = data.get('location')
+        if data.get('status') is not None and data.get('status') != '':
+            asset.status = data.get('status')
+        if data.get('condition') is not None and data.get('condition') != '':
+            asset.condition = data.get('condition')
+
+        db.session.commit()
+        return jsonify({'message': 'Asset updated successfully', 'asset': asset.to_dict()}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# ----------------------------
+# DELETE ASSET (SOFT DELETE)
+# ----------------------------
+@assets_bp.route("/<int:asset_id>", methods=["DELETE"])
+@jwt_required()
+def delete_asset(asset_id):
+    """Soft-delete asset by setting is_active=False."""
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        if not user or user.role.hierarchy_level > 1:
+            return jsonify({'error': 'Permission denied'}), 403
+
+        asset = Asset.query.get(asset_id)
+        if not asset:
+            return jsonify({'error': 'Asset not found'}), 404
+
+        asset.is_active = False
+        db.session.commit()
+
+        return jsonify({'message': 'Asset deleted successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# ----------------------------
 # ASSIGN ASSET
 # ----------------------------
 

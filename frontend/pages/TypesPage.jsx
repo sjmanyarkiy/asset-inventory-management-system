@@ -11,23 +11,15 @@ import {
   deleteAssetType,
 } from "../redux/slices/typeSlice";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  "http://127.0.0.1:5001";
-
 export default function AssetTypesPage() {
   const dispatch = useDispatch();
   const { data, loading } = useSelector((state) => state.types);
 
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState(null);
-  const [categories, setCategories] = useState([]);
 
   const [form, setForm] = useState({
     name: "",
-    type_code: "",
-    category_id: "",
     description: "",
   });
 
@@ -37,25 +29,6 @@ export default function AssetTypesPage() {
   useEffect(() => {
     dispatch(fetchAssetTypes({ page: 1, search }));
   }, [search, dispatch]);
-
-  /* =========================
-     FETCH CATEGORIES
-  ========================= */
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await fetch(
-          `${API_BASE_URL}/categories?page=1&per_page=100`
-        );
-        const data = await res.json();
-        setCategories(data.data || []);
-      } catch (err) {
-        toast.error("Failed to load categories ❌");
-      }
-    };
-
-    fetchCategories();
-  }, []);
 
   /* =========================
      SUBMIT
@@ -83,8 +56,6 @@ export default function AssetTypesPage() {
 
       setForm({
         name: "",
-        type_code: "",
-        category_id: "",
         description: "",
       });
 
@@ -105,8 +76,6 @@ export default function AssetTypesPage() {
 
     setForm({
       name: type.name,
-      type_code: type.type_code,
-      category_id: type.category_id,
       description: type.description || "",
     });
   };
@@ -152,12 +121,9 @@ export default function AssetTypesPage() {
           setEditingId(null);
           setForm({
             name: "",
-            type_code: "",
-            category_id: "",
             description: "",
           });
         }}
-        categories={categories}
         form={form}
         setForm={setForm}
       />
@@ -170,46 +136,34 @@ export default function AssetTypesPage() {
         <thead>
           <tr className="bg-gray-100">
             <th className="border p-2">Name</th>
-            <th className="border p-2">Code</th>
-            <th className="border p-2">Category</th>
             <th className="border p-2">Description</th>
             <th className="border p-2">Actions</th>
           </tr>
         </thead>
 
         <tbody>
-          {data?.map((type) => {
-            const category = categories.find(
-              (c) => c.id === type.category_id
-            );
+          {data?.map((type) => (
+            <tr key={type.id}>
+              <td className="border p-2">{type.name}</td>
+              <td className="border p-2">{type.description}</td>
 
-            return (
-              <tr key={type.id}>
-                <td className="border p-2">{type.name}</td>
-                <td className="border p-2">{type.type_code}</td>
-                <td className="border p-2">
-                  {category?.name || "Unknown"}
-                </td>
-                <td className="border p-2">{type.description}</td>
+              <td className="border p-2">
+                <button
+                  onClick={() => handleEdit(type)}
+                  className="text-blue-500 mr-3"
+                >
+                  Edit
+                </button>
 
-                <td className="border p-2">
-                  <button
-                    onClick={() => handleEdit(type)}
-                    className="text-blue-500 mr-3"
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(type.id)}
-                    className="text-red-500"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
+                <button
+                  onClick={() => handleDelete(type.id)}
+                  className="text-red-500"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
 

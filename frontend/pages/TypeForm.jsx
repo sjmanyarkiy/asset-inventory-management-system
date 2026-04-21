@@ -4,7 +4,6 @@ export default function AssetTypeForm({
   onSubmit,
   selectedType,
   clearSelection,
-  categories,
   form,
   setForm,
 }) {
@@ -31,13 +30,10 @@ export default function AssetTypeForm({
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // FINAL SAFETY FIX (CRITICAL)
-    if (!form.name || !form.type_code || !form.category_id) return;
+    if (!form.name?.trim()) return;
 
     onSubmit({
       name: form.name.trim(),
-      type_code: form.type_code.trim().toUpperCase(),
-      category_id: Number(form.category_id),
       description: form.description,
     });
   };
@@ -52,28 +48,6 @@ export default function AssetTypeForm({
         placeholder="Type Name"
         className="border p-2 w-full md:w-80"
       />
-
-      <input
-        name="type_code"
-        value={form.type_code}
-        onChange={handleChange}
-        placeholder="Type Code"
-        className="border p-2 w-full md:w-80"
-      />
-
-      <select
-        name="category_id"
-        value={form.category_id}
-        onChange={handleChange}
-        className="border p-2 w-full md:w-80"
-      >
-        <option value="">Select Category</option>
-        {categories.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
 
       <input
         name="description"
