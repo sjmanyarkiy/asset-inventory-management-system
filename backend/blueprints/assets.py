@@ -5,27 +5,12 @@ from extensions import db
 from models.asset import Asset
 from models.role import Role
 from models.user import User
-from models.audit_log import AuditLog
 from functools import wraps
 import jwt
 import os
 import json
 
 assets_bp = Blueprint("assets", __name__)
-
-def log_action(action, asset_id, user_id, target_user_id=None, metadata=None):
-    """Log asset actions to audit trail"""
-    log = AuditLog(
-        action=action,
-        asset_id=asset_id,
-        performed_by=user_id,
-        target_user=target_user_id,
-        metadata=json.dumps(metadata or {}),
-        timestamp=datetime.utcnow()
-    )
-    db.session.add(log)
-    db.session.commit()
-
 
 # ----------------------------
 # GET ALL ASSETS (with pagination, search, filtering)
