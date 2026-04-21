@@ -246,10 +246,10 @@ const RequestApprovalPage = () => {
                               {req.reason.substring(0, 40)}
                               {req.reason.length > 40 ? '...' : ''}
                             </td> */}
-                            {/* <td style={{ whiteSpace: "pre-wrap", maxWidth: "300px" }}>
+                            <td style={{ whiteSpace: "pre-wrap", maxWidth: "300px" }}>
                               {req.reason}
-                            </td> */}
-                            <td>
+                            </td>
+                            {/* <td>
                               <div>
                                 {expandedRow === req.id ? req.reason : `${req.reason.slice(0, 50)}...`}
                               </div>
@@ -263,7 +263,7 @@ const RequestApprovalPage = () => {
                               >
                                 {expandedRow === req.id ? "Show less" : "View full"}
                               </Button>
-                            </td>
+                            </td> */}
                             <td>{getUrgencyBadge(req.urgency)}</td>
                             <td>{getStatusBadge(req.status)}</td>
                             <td className="text-muted small">
