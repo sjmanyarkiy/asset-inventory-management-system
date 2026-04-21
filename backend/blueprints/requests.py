@@ -275,6 +275,10 @@ def create_repair_request():
         return jsonify({'error': 'Urgency must be Low, Medium, or High'}), 400
     
     try:
+        print("DEBUG DATA:", data)
+        print("DEBUG USER:", current_user_id)
+        print("DEBUG ASSET:", asset.id, asset.assigned_user_id)
+
         new_request = RepairRequest(
             requested_by=current_user_id,
             asset_id=data['asset_id'],
@@ -286,15 +290,16 @@ def create_repair_request():
         
         db.session.add(new_request)
         db.session.commit()
-        
+
         return jsonify({
             'message': 'Repair request created successfully',
             'request': new_request.to_dict()
         }), 201
-        
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': f'Failed to create repair request: {str(e)}'}), 500
+        print("ERROR:", str(e))  # 👈 VERY IMPORTANT
+        return jsonify({'error': str(e)}), 500
 
 
 @requests_bp.route('/repairs/<int:request_id>', methods=['GET'])
