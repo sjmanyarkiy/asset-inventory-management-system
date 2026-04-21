@@ -70,13 +70,13 @@ const RequestApprovalPage = () => {
       const headers = { Authorization: `Bearer ${token}` };
 
       const [assetRes, repairRes, approvedAssetRes, approvedRepairRes] =
-        await Promise.all([
-          axios.get(`${API_URL}/api/review/assets?status=Pending`, { headers }),
-          axios.get(`${API_URL}/api/review/repairs?status=Pending`, { headers }),
+      await Promise.all([
+        axios.get(`${API_URL}/api/requests/assets?status=Pending`, { headers }),
+        axios.get(`${API_URL}/api/requests/repairs?status=Pending`, { headers }),
 
-          axios.get(`${API_URL}/api/review/assets?status=Approved`, { headers }),
-          axios.get(`${API_URL}/api/review/repairs?status=Approved`, { headers }),
-        ]);
+        axios.get(`${API_URL}/api/requests/assets?status=Approved`, { headers }),
+        axios.get(`${API_URL}/api/requests/repairs?status=Approved`, { headers }),
+      ]);
 
       setAssetRequests(assetRes.data.requests || []);
       setRepairRequests(repairRes.data.requests || []);
