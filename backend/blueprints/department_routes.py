@@ -66,7 +66,7 @@ def get_departments():
             or_(
                 Department.name.ilike(f"%{search}%"),
                 Department.department_code.ilike(f"%{search}%"),
-                Department.location.ilike(f"%{search}%")
+                # Department.location.ilike(f"%{search}%")
             )
         )
 

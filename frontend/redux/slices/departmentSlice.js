@@ -75,7 +75,8 @@ const departmentSlice = createSlice({
 
       /* CREATE */
       .addCase(createDepartment.fulfilled, (state, action) => {
-        state.data.unshift(action.payload);
+        // state.data.unshift(action.payload);
+        state.data.unshift(action.payload.data);
       })
 
       /* UPDATE */
