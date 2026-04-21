@@ -105,6 +105,9 @@ def create_asset_request():
     except (ValueError, TypeError):
         return jsonify({'error': 'Quantity must be a positive integer'}), 400
     
+    if not user.department_id:
+        return jsonify({'error': 'User is not assigned to any department'}), 400
+    
     try:
         new_request = AssetRequest(
             requested_by=current_user_id,
@@ -112,7 +115,7 @@ def create_asset_request():
             quantity=quantity,
             reason=data['reason'],
             urgency=data['urgency'],
-            department_id=user.department_id or 1,  # Default to user's department
+            department_id = user.department_id,  # Default to user's department
             status='Pending'
         )
         
@@ -284,7 +287,7 @@ def create_repair_request():
             asset_id=data['asset_id'],
             issue_description=data['issue_description'],
             urgency=data['urgency'],
-            department_id=user.department_id or 1,
+            department_id=department_id,
             status='Pending'
         )
         
