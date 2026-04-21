@@ -27,9 +27,9 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
   useEffect(() => {
     if (selectedAsset) {
       setFormData({
-        name: selectedAsset.name || "",
+        name: selectedAsset.asset_name || "",
         asset_code: selectedAsset.asset_code || "",
-        barcode: selectedAsset.barcode || "",
+        barcode: selectedAsset.barcode_data || selectedAsset.barcode || "",
         status: selectedAsset.status || "available",
         description: selectedAsset.description || "",
         category_id: selectedAsset.category_id || "",
@@ -38,6 +38,7 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
         department_id: selectedAsset.department_id || "",
         image_url: selectedAsset.image_url || ""
       });
+
       setPreview(selectedAsset.image_url || null);
     }
   }, [selectedAsset]);
