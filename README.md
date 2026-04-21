@@ -208,7 +208,7 @@ This project is licensed under the MIT License.
 
 ## Live Links
 
-* Frontend (Live App): [https://asset-inventory-management-system.vercel.app/categories](https://asset-inventory-management-system.vercel.app/categories)
+* Frontend (Live App): [https://asset-inventory-management-system.vercel.app](https://asset-inventory-management-system.vercel.app)
 * Backend (API Base URL): [https://assetflow-asset-inventory-management.onrender.com](https://assetflow-asset-inventory-management.onrender.com)
 
 ## Author
