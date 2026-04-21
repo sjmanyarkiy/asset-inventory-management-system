@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-// import axios from "axios";
 import axios from "../src/api/axios";
 
 const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
-  // const BASE_URL = "http://127.0.0.1:5000";
+  const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [preview, setPreview] = useState(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -18,16 +19,11 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
     image_url: ""
   });
 
-  const [imageFile, setImageFile] = useState(null);
-
   const [categories, setCategories] = useState([]);
   const [types, setTypes] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [departments, setDepartments] = useState([]);
 
-  // =========================
-  // PREFILL ON EDIT
-  // =========================
   useEffect(() => {
     if (selectedAsset) {
       setFormData({
@@ -42,21 +38,19 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
         department_id: selectedAsset.department_id || "",
         image_url: selectedAsset.image_url || ""
       });
+      setPreview(selectedAsset.image_url || null);
     }
   }, [selectedAsset]);
 
-  // =========================
-  // LOAD DROPDOWNS (FIXED ROUTES)
-  // =========================
   useEffect(() => {
     const fetchData = async () => {
       try {
-          const [cat, type, ven, dep] = await Promise.all([
-            axios.get("categories"),
-            axios.get("/api/types"),
-            axios.get("/api/vendors"),
-            axios.get("/api/departments")
-          ]);
+        const [cat, type, ven, dep] = await Promise.all([
+          axios.get("categories"),
+          axios.get("/api/types"),
+          axios.get("/api/vendors"),
+          axios.get("/api/departments")
+        ]);
 
         setCategories(cat.data.data || []);
         setTypes(type.data.data || []);
@@ -70,27 +64,27 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
     fetchData();
   }, []);
 
-  // =========================
-  // HANDLE CHANGE
-  // =========================
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // =========================
-  // HANDLE SUBMIT (FIXED: FORM DATA FOR FLASK)
-  // =========================
+  const handleImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setImageFile(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       const payload = new FormData();
 
-      Object.entries(formData).forEach(([key, value]) => {
-        payload.append(key, value);
+      Object.entries(formData).forEach(([k, v]) => {
+        payload.append(k, v);
       });
 
       if (imageFile) {
@@ -98,167 +92,142 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
       }
 
       if (selectedAsset) {
-        // UPDATE
-        await axios.put(
-          `/api/assets/${selectedAsset.id}`,
-          payload
-        );
+        await axios.put(`/api/assets/${selectedAsset.id}`, payload);
       } else {
-        // CREATE
         await axios.post("/api/assets", payload);
       }
 
       onSuccess();
       onClose();
-
     } catch (err) {
       console.error("Save error:", err);
       alert("Failed to save asset");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const inputClass = "w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400";
+  const labelClass = "text-sm font-medium text-gray-600 mb-1";
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 w-[500px] space-y-3">
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md w-full max-w-2xl space-y-6">
 
-      <h2 className="text-xl font-bold">
-        {selectedAsset ? "Edit Asset" : "Create Asset"}
-      </h2>
+      {/* HEADER */}
+      <div className="border-b pb-3">
+        <h2 className="text-xl font-semibold">
+          {selectedAsset ? "Edit Asset" : "Create New Asset"}
+        </h2>
+        <p className="text-sm text-gray-500">
+          Fill in asset details carefully
+        </p>
+      </div>
 
-      <input
-        name="name"
-        placeholder="Asset Name"
-        value={formData.name}
-        onChange={handleChange}
-        className="border p-2 w-full"
-      />
+      {/* BASIC INFO */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={labelClass}>Asset Name</label>
+          <input name="name" value={formData.name} onChange={handleChange} className={inputClass} />
+        </div>
 
-      <input
-        name="asset_code"
-        placeholder="Asset Code"
-        value={formData.asset_code}
-        onChange={handleChange}
-        className="border p-2 w-full"
-      />
+        <div>
+          <label className={labelClass}>Asset Code</label>
+          <input name="asset_code" value={formData.asset_code} onChange={handleChange} className={inputClass} />
+        </div>
 
-      <input
-        name="barcode"
-        placeholder="Barcode"
-        value={formData.barcode}
-        onChange={handleChange}
-        className="border p-2 w-full"
-      />
+        <div>
+          <label className={labelClass}>Barcode</label>
+          <input name="barcode" value={formData.barcode} onChange={handleChange} className={inputClass} />
+        </div>
 
-      {/* CATEGORY */}
-      <select
-        name="category_id"
-        value={formData.category_id}
-        onChange={handleChange}
-        className="border p-2 w-full"
-      >
-        <option value="">Select Category</option>
-        {categories.map(c => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
+        <div>
+          <label className={labelClass}>Status</label>
+          <select name="status" value={formData.status} onChange={handleChange} className={inputClass}>
+            <option value="available">Available</option>
+            <option value="assigned">Assigned</option>
+            <option value="under_repair">Under Repair</option>
+            <option value="retired">Retired</option>
+          </select>
+        </div>
+      </div>
 
-      {/* TYPE */}
-      <select
-        name="asset_type_id"
-        value={formData.asset_type_id}
-        onChange={handleChange}
-        className="border p-2 w-full"
-      >
-        <option value="">Select Type</option>
-        {types.map(t => (
-          <option key={t.id} value={t.id}>
-            {t.name}
-          </option>
-        ))}
-      </select>
+      {/* CLASSIFICATION */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={labelClass}>Category</label>
+          <select name="category_id" value={formData.category_id} onChange={handleChange} className={inputClass}>
+            <option value="">Select Category</option>
+            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
 
-      {/* VENDOR */}
-      <select
-        name="vendor_id"
-        value={formData.vendor_id}
-        onChange={handleChange}
-        className="border p-2 w-full"
-      >
-        <option value="">Select Vendor</option>
-        {vendors.map(v => (
-          <option key={v.id} value={v.id}>
-            {v.name}
-          </option>
-        ))}
-      </select>
+        <div>
+          <label className={labelClass}>Type</label>
+          <select name="asset_type_id" value={formData.asset_type_id} onChange={handleChange} className={inputClass}>
+            <option value="">Select Type</option>
+            {types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </div>
 
-      {/* DEPARTMENT */}
-      <select
-        name="department_id"
-        value={formData.department_id}
-        onChange={handleChange}
-        className="border p-2 w-full"
-      >
-        <option value="">Select Department</option>
-        {departments.map(d => (
-          <option key={d.id} value={d.id}>
-            {d.name}
-          </option>
-        ))}
-      </select>
+        <div>
+          <label className={labelClass}>Vendor</label>
+          <select name="vendor_id" value={formData.vendor_id} onChange={handleChange} className={inputClass}>
+            <option value="">Select Vendor</option>
+            {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+          </select>
+        </div>
 
-      {/* STATUS */}
-      <select
-        name="status"
-        value={formData.status}
-        onChange={handleChange}
-        className="border p-2 w-full"
-      >
-        <option value="available">Available</option>
-        <option value="assigned">Assigned</option>
-        <option value="under_repair">Under Repair</option>
-        <option value="retired">Retired</option>
-      </select>
+        <div>
+          <label className={labelClass}>Department</label>
+          <select name="department_id" value={formData.department_id} onChange={handleChange} className={inputClass}>
+            <option value="">Select Department</option>
+            {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+          </select>
+        </div>
+      </div>
 
-      {/* IMAGE FILE (IMPORTANT FIX) */}
-      <input
-        type="file"
-        onChange={(e) => setImageFile(e.target.files[0])}
-        className="border p-2 w-full"
-      />
+      {/* DESCRIPTION */}
+      <div>
+        <label className={labelClass}>Description</label>
+        <textarea
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          className={`${inputClass} min-h-[100px]`}
+        />
+      </div>
 
-      <input
-        name="image_url"
-        placeholder="Image URL (optional)"
-        value={formData.image_url}
-        onChange={handleChange}
-        className="border p-2 w-full"
-      />
+      {/* IMAGE */}
+      <div className="space-y-2">
+        <label className={labelClass}>Asset Image</label>
 
-      <textarea
-        name="description"
-        placeholder="Description"
-        value={formData.description}
-        onChange={handleChange}
-        className="border p-2 w-full"
-      />
+        {preview && (
+          <img
+            src={preview}
+            alt="preview"
+            className="w-32 h-32 object-cover rounded-md border"
+          />
+        )}
+
+        <input type="file" onChange={handleImage} className={inputClass} />
+      </div>
 
       {/* ACTIONS */}
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2"
-        >
-          {selectedAsset ? "Update" : "Create"}
-        </button>
-
+      <div className="flex justify-end gap-3 pt-4 border-t">
         <button
           type="button"
           onClick={onClose}
-          className="bg-gray-400 text-white px-4 py-2"
+          className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
         >
           Cancel
+        </button>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+        >
+          {loading ? "Saving..." : selectedAsset ? "Update Asset" : "Create Asset"}
         </button>
       </div>
     </form>
