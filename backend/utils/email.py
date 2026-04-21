@@ -94,8 +94,12 @@ def send_password_reset_email(email, token, name="User"):
             """
         }
         
+        
         result = resend.Emails.send(params)
         print(f"✅ Password reset email sent! ID: {result.get('id')}")
+
+        print("ABOUT TO SEND EMAIL")
+        print("API KEY:", api_key[:6] if api_key else None)
         return True
         
     except Exception as e:
