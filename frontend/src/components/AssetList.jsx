@@ -120,12 +120,12 @@ function AssetList({ searchTerm = "" }) {
       const res = await axios.get("/api/admin/users", {
         params: { role: "Employee" },
       });
-      // The response has { users: [...], total, pages, page }
-      console.log("API Response:", res.data);
+      // Admin route returns { users: [...], total: ..., pages: ..., page: ... }
       setEmployees(res.data.users || []);
       console.log("✅ Employees loaded:", res.data.users?.length || 0);
     } catch (err) {
       console.error("❌ Employees fetch failed:", err);
+      setEmployees([]);
     }
   };
 
@@ -240,26 +240,8 @@ function AssetList({ searchTerm = "" }) {
               <td>{asset.asset_category?.name || '-'}</td>
               <td>{getStatusBadge(asset.status)}</td>
               <td>{asset.assigned_user ? `${asset.assigned_user.first_name} ${asset.assigned_user.last_name}`.trim() || '-' : '-'}</td>
-              {/* <td>
-                {asset.barcode_image ? (
-                  <Button
-                    size="sm"
-                    variant="outline-primary"
-                    onClick={() => handleViewBarcode(asset)}
-                  >
-                    📊 View
-                  </Button>
-                ) : (
-                  <span className="text-muted">No barcode</span>
-                )}
-              </td> */}
               <td>
                 <span className="text-muted">Barcode coming soon</span>
-                {/* {asset.barcode_image ? (
-                  <Button onClick={() => handleViewBarcode(asset)}>📊 View</Button>
-                ) : (
-                  <span className="text-muted">Barcode coming soon</span>
-                )} */}
               </td>
               <td>
                 <Button size="sm" variant="outline-info">
@@ -267,12 +249,12 @@ function AssetList({ searchTerm = "" }) {
                 </Button>
               </td>
               <td>
-                {userRole >= 2 && asset.status === 'Available' && (  // Admin only
+                {userRole <= 1 && asset.status === 'Available' && (  // Admin only
                   <Button size="sm" className="me-1" variant="outline-primary" onClick={() => openAssignModal(asset)}>
                     Assign
                   </Button>
                 )}
-                {userRole >= 1 && asset.status === 'Assigned' && (  // Manager+
+                {userRole <= 2 && asset.status === 'Assigned' &&  (  // Manager+
                   <Button size="sm" variant="outline-danger" onClick={() => returnAsset(asset.id)}>
                     Return
                   </Button>
