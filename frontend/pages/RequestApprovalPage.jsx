@@ -245,12 +245,9 @@ const RequestApprovalPage = () => {
                             <td>{req.asset_type?.name || 'N/A'}</td>
                             <td className="text-center">{req.quantity}</td>
                             <td>{req.department?.name || 'N/A'}</td>
-                            {/* <td className="text-muted small">
+                            <td className="text-muted small">
                               {req.reason.substring(0, 40)}
                               {req.reason.length > 40 ? '...' : ''}
-                            </td> */}
-                            <td style={{ whiteSpace: "pre-wrap", maxWidth: "300px" }}>
-                              {req.reason}
                             </td>
                             {/* <td>
                               <div>
