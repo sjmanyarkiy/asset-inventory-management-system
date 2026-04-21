@@ -191,9 +191,15 @@ def return_asset(asset_id):
             'asset': asset.to_dict()
         }), 200
 
+    # except Exception as e:
+    #     db.session.rollback()
+    #     return jsonify({'error': str(e)}), 500
+
     except Exception as e:
+        print("RETURN ERROR:", str(e))
+        print(traceback.format_exc())
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 # ----------------------------
