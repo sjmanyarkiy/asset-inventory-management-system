@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout, selectUser } from "../../redux/slices/authSlice";
 import UserProfile from "../components/UserProfile";
 
-import { Home, BarChart3, Users, LogOut, User, CheckSquare, Shield  } from "lucide-react";
+import { Home, BarChart3, Users, LogOut, User, CheckSquare, Shield, Cog, WalletCards  } from "lucide-react";
 // import { CheckSquare, Shield } from 'react-feather';
 
 function MenuBar() {
@@ -78,7 +78,13 @@ function MenuBar() {
     {
       name: "Asset Requests",
       path: "/requests",
-      icon: <BarChart3 size={18} />,
+      icon: <WalletCards size={18} />,
+      roles: ["Super Admin", "Admin", "Employee", "Manager"]
+    },
+    {
+      name: "Repair Requests",
+      path: "/repair-requests",
+      icon: <Cog size={18} />,
       roles: ["Super Admin", "Admin", "Employee", "Manager"]
     },
     {

@@ -18,6 +18,7 @@ import RequestApprovalPage from "../pages/RequestApprovalPage.jsx";
 import UserProfilePage from "../pages/UserProfilePage.jsx";
 import ForgotPasswordPage from "../pages/ForgotPasswordPage";
 import ResetPasswordPage from "../pages/ResetPasswordPage";
+import RepairRequestsPage from "./pages/RepairRequestsPage";
 
 
 import AssetsPage from "../pages/AssetsPage.jsx";
@@ -168,6 +169,15 @@ const App = () => {
                 </AppLayout>
               </ProtectedRoute>
             }
+          />
+
+          <Route path="/repair-requests" element={
+            <ProtectedRoute>
+                <AppLayout>
+                  <RepairRequestsPage />
+                </AppLayout>
+            </ProtectedRoute>
+            } 
           />
 
           <Route
