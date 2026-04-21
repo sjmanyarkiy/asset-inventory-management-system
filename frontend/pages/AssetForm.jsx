@@ -198,18 +198,38 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
       </div>
 
       {/* IMAGE */}
+      {/* IMAGE */}
       <div className="space-y-2">
         <label className={labelClass}>Asset Image</label>
 
-        {preview && (
-          <img
-            src={preview}
-            alt="preview"
-            className="w-32 h-32 object-cover rounded-md border"
-          />
-        )}
+        {/* preview container */}
+        <div className="flex items-center gap-4">
+          
+          <div className="w-32 h-32 border rounded-md overflow-hidden bg-gray-50 flex items-center justify-center">
+            {preview ? (
+              <img
+                src={preview}
+                alt="preview"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-xs text-gray-400">No image</span>
+            )}
+          </div>
 
-        <input type="file" onChange={handleImage} className={inputClass} />
+          <div className="flex-1">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImage}
+              className={inputClass}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Recommended: square image (1:1), max 2MB
+            </p>
+          </div>
+
+        </div>
       </div>
 
       {/* ACTIONS */}
