@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 // import axios from "axios";
-import axios from "../../frontend/src/api/axios";
+import axios from "../src/api/axios";
 
 const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
   // const BASE_URL = "http://127.0.0.1:5000";
