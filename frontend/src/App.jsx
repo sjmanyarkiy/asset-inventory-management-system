@@ -18,7 +18,7 @@ import RequestApprovalPage from "../pages/RequestApprovalPage.jsx";
 import UserProfilePage from "../pages/UserProfilePage.jsx";
 import ForgotPasswordPage from "../pages/ForgotPasswordPage";
 import ResetPasswordPage from "../pages/ResetPasswordPage";
-import RepairRequestsPage from "./pages/RepairRequestsPage";
+import RepairRequestsPage from "../pages/RepairRequestPage.jsx";
 
 
 import AssetsPage from "../pages/AssetsPage.jsx";
