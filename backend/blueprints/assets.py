@@ -34,7 +34,7 @@ def log_action(action, asset_id, user_id, target_user_id=None, metadata=None):
 @assets_bp.route("/", methods=["GET"])
 @jwt_required()
 def get_assets():
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     print(f"🔍 DEBUG: current_user_id = {current_user_id}, type = {type(current_user_id)}")
     """Get all assets with search and filtering"""
     try:
@@ -84,7 +84,7 @@ def get_assets():
 @assets_bp.route("/<int:asset_id>", methods=["GET"])
 @jwt_required()
 def get_asset(asset_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     """Get single asset by ID"""
     try:
         asset = Asset.query.get(asset_id)
@@ -104,7 +104,7 @@ def get_asset(asset_id):
 @assets_bp.route("/<int:asset_id>/assign", methods=["POST"])
 @jwt_required()
 def assign_asset(asset_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     """Assign asset to a user (admin/manager only)"""
     try:
         user = User.query.get(current_user_id)
@@ -133,14 +133,8 @@ def assign_asset(asset_id):
         asset.assign_to(user_id)
         db.session.commit()
 
-        # Log action
-        log_action(
-            'ASSET_ASSIGNED',
-            asset.id,
-            current_user_id,
-            user_id,
-            {'asset': asset.asset_name}
-        )
+       
+        
 
         return jsonify({
             'message': 'Asset assigned successfully',
@@ -165,7 +159,7 @@ def assign_asset(asset_id):
 @assets_bp.route("/<int:asset_id>/return", methods=["POST"])
 @jwt_required()
 def return_asset(asset_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     """Return asset (unassign from user)"""
     try:
         user = User.query.get(current_user_id)
@@ -183,14 +177,7 @@ def return_asset(asset_id):
         asset.unassign()
         db.session.commit()
 
-        # Log action
-        log_action(
-            'ASSET_RETURNED',
-            asset.id,
-            current_user_id,
-            None,
-            {'asset': asset.asset_name}
-        )
+        
 
         return jsonify({
             'message': 'Asset returned successfully',
@@ -224,7 +211,7 @@ def return_asset(asset_id):
 @assets_bp.route("/<int:asset_id>/history", methods=["GET"])
 @jwt_required()
 def asset_history(asset_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     """Get audit log history for an asset"""
     try:
         asset = Asset.query.get(asset_id)
