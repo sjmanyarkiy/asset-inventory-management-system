@@ -58,7 +58,7 @@ class AssetRequest(db.Model):
             'department': {
                 'id': self.department.id,
                 'name': self.department.name,
-                'department_code': self.department.code
+                'department_code': self.department.department_code
             } if self.department else None,
             'status': self.status,
             'reviewed_by': self.reviewed_by,
