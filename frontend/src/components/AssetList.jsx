@@ -3,7 +3,7 @@ import { Modal, Button, Form, Badge, Spinner } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/slices/authSlice";
 import axios from "../../src/api/axios";
-import AssetForm from "../assets/AssetForm"; // adjust path if needed
+import AssetForm from "../assets/AssetForm";
 
 function AssetList({ searchTerm = "" }) {
   const user = useSelector(selectUser);
@@ -17,19 +17,20 @@ function AssetList({ searchTerm = "" }) {
   const [totalPages, setTotalPages] = useState(1);
   const perPage = 10;
 
-  // =========================
-  // ADD / EDIT ASSET MODAL
-  // =========================
+  // -------------------------
+  // ASSET FORM MODAL
+  // -------------------------
   const [showAssetForm, setShowAssetForm] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
 
-  // =========================
+  // -------------------------
   // ASSIGN MODAL
-  // =========================
-  const [showModal, setShowModal] = useState(false);
+  // -------------------------
+  const [showAssignModal, setShowAssignModal] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [assigning, setAssigning] = useState(false);
+  const [assetToAssign, setAssetToAssign] = useState(null);
 
   useEffect(() => {
     setPage(1);
@@ -39,9 +40,9 @@ function AssetList({ searchTerm = "" }) {
     fetchAssets();
   }, [searchTerm, status, page]);
 
-  // =========================
+  // -------------------------
   // FETCH ASSETS
-  // =========================
+  // -------------------------
   const fetchAssets = async () => {
     setLoading(true);
     try {
@@ -63,22 +64,25 @@ function AssetList({ searchTerm = "" }) {
     }
   };
 
-  // =========================
-  // OPEN CREATE FORM
-  // =========================
-  const openCreateForm = () => {
+  // -------------------------
+  // OPEN CREATE
+  // -------------------------
+  const openCreate = () => {
     setSelectedAsset(null);
     setShowAssetForm(true);
   };
 
-  const openEditForm = (asset) => {
+  // -------------------------
+  // OPEN EDIT
+  // -------------------------
+  const openEdit = (asset) => {
     setSelectedAsset(asset);
     setShowAssetForm(true);
   };
 
-  // =========================
-  // EMPLOYEES
-  // =========================
+  // -------------------------
+  // FETCH EMPLOYEES
+  // -------------------------
   const fetchEmployees = async () => {
     try {
       const res = await axios.get("/api/users", {
@@ -90,31 +94,36 @@ function AssetList({ searchTerm = "" }) {
     }
   };
 
-  // =========================
-  // ASSIGN ASSET
-  // =========================
-  const assignAsset = async (asset) => {
-    setSelectedAsset(asset);
-    setShowModal(true);
+  // -------------------------
+  // OPEN ASSIGN MODAL
+  // -------------------------
+  const openAssign = (asset) => {
+    setAssetToAssign(asset);
     setSelectedUserId("");
+    setShowAssignModal(true);
     fetchEmployees();
   };
 
+  // -------------------------
+  // ASSIGN
+  // -------------------------
   const handleAssign = async () => {
-    if (!selectedAsset || !selectedUserId) return;
+    if (!assetToAssign || !selectedUserId) return;
 
     setAssigning(true);
     try {
       const res = await axios.post(
-        `/api/assets/${selectedAsset.id}/assign`,
+        `/api/assets/${assetToAssign.id}/assign`,
         { user_id: parseInt(selectedUserId) }
       );
 
       setAssets((prev) =>
-        prev.map((a) => (a.id === selectedAsset.id ? res.data.asset : a))
+        prev.map((a) =>
+          a.id === assetToAssign.id ? res.data.asset : a
+        )
       );
 
-      setShowModal(false);
+      setShowAssignModal(false);
     } catch (err) {
       console.error("Assign failed:", err);
     } finally {
@@ -122,61 +131,63 @@ function AssetList({ searchTerm = "" }) {
     }
   };
 
-  // =========================
-  // RETURN ASSET
-  // =========================
-  const returnAsset = async (assetId) => {
+  // -------------------------
+  // RETURN
+  // -------------------------
+  const returnAsset = async (id) => {
     try {
-      await axios.post(`/api/assets/${assetId}/return`);
+      await axios.post(`/api/assets/${id}/return`);
       fetchAssets();
     } catch (err) {
-      console.error("Return failed:", err);
+      console.error(err);
     }
   };
 
-  // =========================
+  // -------------------------
   // STATUS BADGE
-  // =========================
-  const getStatusBadge = (status) => {
+  // -------------------------
+  const badge = (status) => {
     const map = {
-      Available: <Badge bg="success">Available</Badge>,
-      Assigned: <Badge bg="primary">Assigned</Badge>,
-      Repair: <Badge bg="warning">Repair</Badge>,
-      Retired: <Badge bg="secondary">Retired</Badge>,
+      Available: "success",
+      Assigned: "primary",
+      Repair: "warning",
+      Retired: "secondary",
     };
-    return map[status] || <Badge bg="dark">{status}</Badge>;
+
+    return (
+      <Badge bg={map[status] || "dark"}>
+        {status}
+      </Badge>
+    );
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="text-center py-5">
-        <Spinner /> Loading...
+        <Spinner />
       </div>
     );
+  }
 
   return (
     <div>
 
-      {/* =========================
-          HEADER ACTIONS
-      ========================= */}
+      {/* HEADER */}
       <div className="d-flex justify-content-between mb-3">
         <h4>Assets</h4>
 
-        <Button onClick={openCreateForm}>
+        <Button onClick={openCreate}>
           + Add Asset
         </Button>
       </div>
 
-      {/* =========================
-          TABLE
-      ========================= */}
+      {/* TABLE */}
       <div className="table-responsive">
-        <table className="table table-hover">
+        <table className="table table-hover align-middle">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Name</th>
+              <th>Asset</th>
               <th>Category</th>
               <th>Status</th>
               <th>Assigned</th>
@@ -185,34 +196,33 @@ function AssetList({ searchTerm = "" }) {
           </thead>
 
           <tbody>
-            {assets.map((asset) => (
-              <tr key={asset.id}>
-                <td>{asset.id}</td>
-                <td>{asset.asset_name}</td>
-                <td>{asset.asset_category?.name || "-"}</td>
-                <td>{getStatusBadge(asset.status)}</td>
+            {assets.map((a) => (
+              <tr key={a.id}>
+                <td>{a.id}</td>
+                <td>{a.asset_name}</td>
+                <td>{a.asset_category?.name || "-"}</td>
+                <td>{badge(a.status)}</td>
                 <td>
-                  {asset.assigned_user
-                    ? `${asset.assigned_user.first_name} ${asset.assigned_user.last_name}`
+                  {a.assigned_user
+                    ? `${a.assigned_user.first_name} ${a.assigned_user.last_name}`
                     : "-"}
                 </td>
 
-                <td>
-                  {userRole <= 2 && asset.status === "Available" && (
+                <td className="d-flex gap-2">
+                  {userRole <= 2 && a.status === "Available" && (
                     <Button
                       size="sm"
-                      onClick={() => assignAsset(asset)}
-                      className="me-1"
+                      onClick={() => openAssign(a)}
                     >
                       Assign
                     </Button>
                   )}
 
-                  {userRole <= 2 && asset.status === "Assigned" && (
+                  {userRole <= 2 && a.status === "Assigned" && (
                     <Button
                       size="sm"
                       variant="danger"
-                      onClick={() => returnAsset(asset.id)}
+                      onClick={() => returnAsset(a.id)}
                     >
                       Return
                     </Button>
@@ -221,8 +231,7 @@ function AssetList({ searchTerm = "" }) {
                   <Button
                     size="sm"
                     variant="outline-secondary"
-                    onClick={() => openEditForm(asset)}
-                    className="ms-1"
+                    onClick={() => openEdit(a)}
                   >
                     Edit
                   </Button>
@@ -233,43 +242,54 @@ function AssetList({ searchTerm = "" }) {
         </table>
       </div>
 
-      {/* =========================
-          PAGINATION
-      ========================= */}
+      {/* PAGINATION */}
       <div className="d-flex justify-content-between mt-3">
-        <Button disabled={page === 1} onClick={() => setPage(page - 1)}>
+        <Button disabled={page === 1} onClick={() => setPage(p => p - 1)}>
           Prev
         </Button>
-        <span>
-          Page {page} of {totalPages}
-        </span>
+
+        <span>Page {page} / {totalPages}</span>
+
         <Button
           disabled={page === totalPages}
-          onClick={() => setPage(page + 1)}
+          onClick={() => setPage(p => p + 1)}
         >
           Next
         </Button>
       </div>
 
-      {/* =========================
-          ADD / EDIT FORM (FIXED)
-      ========================= */}
-      {showAssetForm && (
-        <Modal show onHide={() => setShowAssetForm(false)} size="lg">
-          <Modal.Body>
-            <AssetForm
-              selectedAsset={selectedAsset}
-              onClose={() => setShowAssetForm(false)}
-              onSuccess={fetchAssets}
-            />
-          </Modal.Body>
-        </Modal>
-      )}
+      {/* -------------------------
+          ASSET FORM MODAL (FIXED UX)
+      ------------------------- */}
+      <Modal
+        show={showAssetForm}
+        onHide={() => setShowAssetForm(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {selectedAsset ? "Edit Asset" : "Create Asset"}
+          </Modal.Title>
+        </Modal.Header>
 
-      {/* =========================
+        <Modal.Body>
+          <AssetForm
+            selectedAsset={selectedAsset}
+            onClose={() => setShowAssetForm(false)}
+            onSuccess={fetchAssets}
+          />
+        </Modal.Body>
+      </Modal>
+
+      {/* -------------------------
           ASSIGN MODAL
-      ========================= */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+      ------------------------- */}
+      <Modal
+        show={showAssignModal}
+        onHide={() => setShowAssignModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Assign Asset</Modal.Title>
         </Modal.Header>
@@ -279,7 +299,7 @@ function AssetList({ searchTerm = "" }) {
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
           >
-            <option value="">Select employee</option>
+            <option value="">Select Employee</option>
             {employees.map((e) => (
               <option key={e.id} value={e.id}>
                 {e.first_name} {e.last_name}
@@ -289,7 +309,13 @@ function AssetList({ searchTerm = "" }) {
         </Modal.Body>
 
         <Modal.Footer>
-          <Button onClick={() => setShowModal(false)}>Cancel</Button>
+          <Button
+            variant="secondary"
+            onClick={() => setShowAssignModal(false)}
+          >
+            Cancel
+          </Button>
+
           <Button
             disabled={assigning || !selectedUserId}
             onClick={handleAssign}
@@ -298,6 +324,7 @@ function AssetList({ searchTerm = "" }) {
           </Button>
         </Modal.Footer>
       </Modal>
+
     </div>
   );
 }
