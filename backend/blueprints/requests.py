@@ -287,7 +287,7 @@ def create_repair_request():
             asset_id=data['asset_id'],
             issue_description=data['issue_description'],
             urgency=data['urgency'],
-            department_id=department_id,
+            department_id=user.department_id,
             status='Pending'
         )
         

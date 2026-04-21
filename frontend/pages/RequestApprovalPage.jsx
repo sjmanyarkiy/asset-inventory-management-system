@@ -119,13 +119,17 @@ const RequestApprovalPage = () => {
         'Content-Type': 'application/json'
       };
 
-      const endpoint = requestType === 'asset'
-        ? `/api/review/assets/${selectedRequest.id}/${actionType}`
-        : `/api/review/repairs/${selectedRequest.id}/${actionType}`;
+      const endpoint =
+      requestType === 'asset'
+        ? `/api/requests/assets/${selectedRequest.id}/review`
+        : `/api/requests/repairs/${selectedRequest.id}/review`;
 
       const response = await axios.post(
         `${API_URL}${endpoint}`,
-        { notes: reviewNotes },
+        { 
+          status: actionType === 'approve' ? 'Approved' : 'Rejected',
+          review_notes: reviewNotes
+        },
         { headers }
       );
 
