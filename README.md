@@ -1,46 +1,216 @@
 # Asset Inventory Management System
 
-A compact, full-stack starter for asset inventory management and reporting.
+A full-stack web application for managing organizational assets, departments, users, and maintenance/repair requests. The system supports role-based access control for administrators, managers, and staff.
 
-## Quick start
+---
 
-1. Clone the repository:
+## Features
 
-```bash
-git clone https://github.com/sjmanyarkiy/asset-inventory-management-system.git
-cd asset-inventory-management-system
+* User authentication (Login/Register)
+* Role-based access control (Admin, Manager, Staff)
+* Asset management (create, update, delete, track assets)
+* Department management
+* Asset assignment to users or departments
+* Repair and maintenance request system
+* Approval workflow for managers/admins
+* Search and filtering for assets and requests
+* Responsive frontend dashboard
+
+---
+
+## Tech Stack
+
+### Frontend
+
+* React (Vite or Create React App)
+* Axios for API requests
+* React Router
+* CSS / Tailwind (if used)
+
+### Backend
+
+* Python Flask
+* Flask-JWT-Extended (Authentication)
+* SQLAlchemy ORM
+* PostgreSQL / SQLite (depending on environment)
+* Flask-CORS
+
+### Deployment
+
+* Frontend: Vercel
+* Backend: Render
+
+---
+
+## Project Structure
+
+```
+asset-inventory/
+│
+├── backend/
+│   ├── app/
+│   ├── models/
+│   ├── routes/
+│   ├── config/
+│   ├── factory.py
+│   ├── wsgi.py
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── services/
+│   └── package.json
+│
+└── README.md
 ```
 
-1. Backend (development):
+---
+
+## Installation & Setup
+
+### 1. Clone the repository
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r backend/requirements.txt
-export FLASK_APP=backend.wsgi:app
-flask run --port 5000
+git clone https://github.com/your-username/asset-inventory.git
+cd asset-inventory
 ```
 
-1. Frontend (development):
+---
+
+### 2. Backend Setup
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+pip install -r requirements.txt
+```
+
+### Set environment variables
+
+Create a `.env` file:
+
+```
+FLASK_APP=app
+FLASK_ENV=development
+DATABASE_URL=your_database_url
+JWT_SECRET_KEY=your_secret_key
+```
+
+### Run backend
+
+```bash
+flask run
+```
+
+or (production)
+
+```bash
+gunicorn wsgi:app
+```
+
+---
+
+### 3. Frontend Setup
 
 ```bash
 cd frontend
-npm ci
-npm start
+npm install
+npm run dev
 ```
 
-## Running tests
+---
 
-- Backend: `PYTHONPATH=. pytest -q backend/tests`
-- Frontend: run tests from `frontend/` with `npm test`
+## API Endpoints (Examples)
+
+### Authentication
+
+* POST `/api/auth/register`
+* POST `/api/auth/login`
+
+### Assets
+
+* GET `/api/assets`
+* POST `/api/assets`
+* PUT `/api/assets/<id>`
+* DELETE `/api/assets/<id>`
+
+### Departments
+
+* GET `/api/departments`
+* POST `/api/departments`
+
+### Requests
+
+* GET `/api/requests`
+* POST `/api/requests`
+* PUT `/api/requests/<id>/approve`
+* PUT `/api/requests/<id>/reject`
+
+---
+
+## Common Issues
+
+### CORS Errors
+
+Ensure backend CORS is configured properly:
+
+```python
+from flask_cors import CORS
+CORS(app, origins=["http://localhost:5173", "https://your-frontend-url"])
+```
+
+---
+
+### 500 Internal Server Errors
+
+Check:
+
+* Database connection
+* Missing migrations
+* Environment variables
+* Logs on Render/terminal
+
+---
+
+## Deployment
+
+### Backend (Render)
+
+* Build Command: `pip install -r requirements.txt`
+* Start Command: `gunicorn wsgi:app`
+
+### Frontend (Vercel)
+
+* Build Command: `npm run build`
+* Output Directory: `dist`
+
+---
+
+## Future Improvements
+
+* Advanced analytics dashboard
+* Email notifications for approvals
+* QR code tagging for assets
+* Audit logs for all system actions
+* Mobile application version
+
+---
 
 ## License
 
-This project is available under the MIT License. See the `LICENSE` file for details.
+This project is licensed under the MIT License.
 
-# asset-inventory-management-system
-# live link for frontend 
-https://asset-inventory-management-system-1.onrender.com
- # live link for backend
- https://asset-inventory-management-system-gkjx.onrender.com
- 
+---
+
+## Live Links
+
+* Frontend (Live App): [https://asset-inventory-management-system.vercel.app/categories](https://asset-inventory-management-system.vercel.app/categories)
+* Backend (API Base URL): [https://assetflow-asset-inventory-management.onrender.com](https://assetflow-asset-inventory-management.onrender.com)
+
+## Author
+
+Developed by Group 4
