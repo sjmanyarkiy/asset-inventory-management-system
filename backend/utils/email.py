@@ -46,3 +46,28 @@ def send_verification_email(email, token, name="User"):
     except Exception as e:
         print(f"❌ Resend error: {str(e)}")
         return False
+    
+def send_password_reset_email(email, token, name, frontend_url):
+    """Send password reset link via email"""
+    reset_url = f"{frontend_url}/reset-password/{token}"
+    
+    message = f"""
+    Hi {name},
+    
+    You requested to reset your password. Click the link below:
+    {reset_url}
+    
+    This link expires in 30 minutes.
+    
+    If you didn't request this, ignore this email.
+    
+    Best regards,
+    Asset Inventory Team
+    """
+    
+    # Use your existing email sending function (SendGrid, etc)
+    send_email(
+        to_email=email,
+        subject="Reset Your Password",
+        message=message
+    )

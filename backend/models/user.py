@@ -23,6 +23,8 @@ class User(db.Model):
     is_email_verified = db.Column(db.Boolean, default=False)
     email_verification_token = db.Column(db.String(255), unique=True, nullable=True)
     email_verification_expires = db.Column(db.DateTime, nullable=True)
+    password_reset_token = db.Column(db.String(255), nullable=True)
+    password_reset_expires = db.Column(db.DateTime, nullable=True)
 
     # Department relationships
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
@@ -76,3 +78,22 @@ class User(db.Model):
         self.email_verification_expires = datetime.utcnow() + timedelta(hours=24)
         db.session.commit()
         return self.email_verification_token
+    
+
+    def generate_password_reset_token(self, expires_in=1800):
+        """Generate password reset token (valid for 30 minutes)"""
+        import uuid
+        from datetime import datetime, timedelta
+        
+        self.password_reset_token = str(uuid.uuid4())
+        self.password_reset_expires = datetime.utcnow() + timedelta(seconds=expires_in)
+
+    def check_password_reset_token(self, token):
+        """Verify reset token is valid"""
+        from datetime import datetime
+        
+        if not token or not self.password_reset_token:
+            return False
+        if self.password_reset_expires < datetime.utcnow():
+            return False
+        return self.password_reset_token == token

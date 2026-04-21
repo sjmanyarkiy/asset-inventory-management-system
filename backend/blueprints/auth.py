@@ -350,9 +350,69 @@ def validate_token():
         return error_response("Token validation failed", 401)
     
 
-# @auth_bp.route('/test-resend', methods=['POST'])
-# def test_resend():
-#     """Test Resend email"""
-#     from utils.email import send_verification_email
-#     result = send_verification_email('sandra.manyarkiy@gmail.com', 'test-123', 'Sandra')
-#     return jsonify({'success': result})
+@auth_bp.route('/forgot-password', methods=['POST'])
+def forgot_password():
+    """Send password reset email"""
+    try:
+        data = request.get_json()
+        if not data or not data.get('email'):
+            return error_response("Email is required")
+        
+        user = User.query.filter_by(email=data['email']).first()
+        
+        # Security: Don't reveal if email exists
+        if not user:
+            return success_response(None, "If that email exists, a reset link has been sent")
+        
+        user.generate_password_reset_token()
+        db.session.commit()
+        
+        # Send email (use your existing send_verification_email function)
+        try:
+            from utils.email import send_password_reset_email
+            send_password_reset_email(
+                user.email,
+                user.password_reset_token,
+                user.first_name or user.username,
+                frontend_url=current_app.config['FRONTEND_URL']
+            )
+        except Exception as e:
+            current_app.logger.error(f"Reset email failed: {e}")
+        
+        return success_response(None, "If that email exists, a reset link has been sent")
+    
+    except Exception as e:
+        return error_response(f"Failed: {str(e)}", 500)
+
+
+@auth_bp.route('/reset-password/<token>', methods=['POST'])
+def reset_password(token):
+    """Reset password using token"""
+    try:
+        data = request.get_json()
+        if not data or not data.get('new_password'):
+            return error_response("New password is required")
+        
+        user = User.query.filter_by(password_reset_token=token).first()
+        
+        if not user:
+            return error_response("Invalid reset token", 400)
+        
+        if not user.check_password_reset_token(token):
+            return error_response("Reset token expired or invalid", 400)
+        
+        try:
+            user.set_password(data['new_password'])
+        except ValueError as e:
+            return error_response(str(e), 400)
+        
+        user.password_reset_token = None
+        user.password_reset_expires = None
+        
+        db.session.commit()
+        
+        return success_response(None, "Password reset successful. Please log in.")
+    
+    except Exception as e:
+        db.session.rollback()
+        return error_response(f"Reset failed: {str(e)}", 500)
