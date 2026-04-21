@@ -13,6 +13,8 @@ function MenuBar() {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
 
+  const normalize = (v) => (v || "").toString().trim().toLowerCase();
+
   // SAFE ROLE EXTRACTION (fixes admin disappearing issue)
   // const role =
   //   user?.role?.name?.toUpperCase() ||
@@ -117,6 +119,9 @@ function MenuBar() {
   ];
 
   console.log("USER:", user);
+  console.log("ROLE RAW:", user?.role);
+  console.log("ROLE NORMALIZED:", role);
+  console.log("MENU ROLES:", menuConfig.map(m => m.roles));
 
   return (
     <div
@@ -146,7 +151,7 @@ function MenuBar() {
           //   item.roles.includes(role)
           // )
           .filter(item =>
-            item.roles?.includes(role)
+            item.roles?.some(r => normalize(r) === role)
           )
           .map((item) => (
             <NavLink

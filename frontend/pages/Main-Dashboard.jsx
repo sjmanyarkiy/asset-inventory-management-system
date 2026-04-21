@@ -66,7 +66,7 @@ function MainDashboard() {
   return (
     <>
       <h3 className="fw-bold text-primary">Dashboard</h3>
-      <p className="text-muted">Overview of asset system</p>
+      <p className="text-muted">Overview</p>
 
       <div className="d-flex justify-content-end mb-3">
         <Button variant="primary" onClick={() => navigate("/assets")}>
