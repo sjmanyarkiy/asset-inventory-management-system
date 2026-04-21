@@ -21,11 +21,19 @@ function MenuBar() {
   //   "";
 
   // const role = user?.role.name;
+  // const role =
+  //   user?.role?.name ||
+  //   user?.role_name ||
+  //   user?.role ||
+  //   "";
   const role =
-    user?.role?.name ||
+    (user?.role?.name ||
     user?.role_name ||
     user?.role ||
-    "";
+    "")
+    .toString()
+    .trim()
+    .toLowerCase();
 
   const handleLogout = () => {
     dispatch(logout());
@@ -37,74 +45,74 @@ function MenuBar() {
       name: "Dashboard",
       path: "/dashboard",
       icon: <Home size={18} />,
-      roles: ["Super Admin", "Admin", "Employee", "Manager"],
+      roles: ["super admin", "admin", "employee", "manager"],
     },
     {
       name: "Reports",
       path: "/reports",
       icon: <BarChart3 size={18} />,
-      roles: ["Super Admin", "Admin", "Manager"],
+      roles: ["super admin", "admin", "manager"],
     },
     {
       name: "User Management",
       path: "/admin/users",
       icon: <Users size={18} />,
-      roles: ["Super Admin", "Admin"],
+      roles: ["super admin", "admin"],
     },
     {
       name: "Assets",
       path: "/assets",
       icon: <Home size={18} />,
-      roles: ["Super Admin", "Admin", "Manager"]
+      roles: ["super admin", "admin", "manager"]
     },
     {
       name: "Vendors",
       path: "/vendors",
       icon: <Users size={18} />,
-      roles: ["Super Admin", "Admin", "Manager"]
+      roles: ["super admin", "admin", "manager"]
     },
     {
       name: "Categories",
       path: "/categories",
       icon: <BarChart3 size={18} />,
-      roles: ["Super Admin", "Admin", "Manager"]
+      roles: ["super admin", "admin", "manager"]
     },
     {
       name: "Departments",
       path: "/departments",
       icon: <Users size={18} />,
-      roles: ["Super Admin", "Admin", "Manager"]
+      roles: ["super admin", "admin", "manager"]
     },
     {
       name: "Asset Requests",
       path: "/requests",
       icon: <WalletCards size={18} />,
-      roles: ["Super Admin", "Admin", "Employee", "Manager"]
+      roles: ["super admin", "admin", "employee", "manager"]
     },
     {
       name: "Repair Requests",
       path: "/repair-requests",
       icon: <Cog size={18} />,
-      roles: ["Super Admin", "Admin", "Employee", "Manager"]
+      roles: ["super admin", "admin", "employee", "manager"]
     },
     {
       name: "Request Approvals",
       path: "/approvals",
       icon: <CheckSquare size={18} />,
-      roles: ["Super Admin", "Manager"],  // Only managers and admins see this
+      roles: ["super admin", "manager"],  // Only managers and admins see this
       divider: true
     },
     {
       name: "Profile",
       path: "/profile",
       icon: <User size={18} />,
-      roles: ["Super Admin", "Admin", "Employee", "Manager"]
+      roles: ["super admin", "admin", "employee", "manager"]
     },
     {
       name: "Admin Panel",
       path: "/admin",
       icon: <Shield size={18} />,
-      roles: ["Super Admin", "Admin"]
+      roles: ["super admin", "admin"]
     },
   ];
 
