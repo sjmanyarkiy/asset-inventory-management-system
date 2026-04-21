@@ -16,6 +16,8 @@ import LandingPage from "../pages/LandingPage";
 import AssetRequestPage from "../pages/AssetRequestPage.jsx";
 import RequestApprovalPage from "../pages/RequestApprovalPage.jsx";
 import UserProfilePage from "../pages/UserProfilePage.jsx";
+import ForgotPasswordPage from "../pages/ForgotPasswordPage";
+import ResetPasswordPage from "../pages/ResetPasswordPage";
 
 
 import AssetsPage from "../pages/AssetsPage.jsx";
