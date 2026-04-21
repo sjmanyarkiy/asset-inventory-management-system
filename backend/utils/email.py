@@ -40,12 +40,14 @@ def send_verification_email(email, token, name="User"):
         }
         
         result = resend.Emails.send(params)
+        print("RESEND RESULT:", result)
         print(f"✅ Resend SUCCESS! ID: {result.get('id')}")
         return True
         
     except Exception as e:
-        print(f"❌ Resend error: {str(e)}")
-        return False
+        import traceback
+        print("❌ FULL RESET EMAIL ERROR:")
+        print(traceback.format_exc())
     
 def send_password_reset_email(email, token, name="User"):
     """Send password reset email via Resend"""

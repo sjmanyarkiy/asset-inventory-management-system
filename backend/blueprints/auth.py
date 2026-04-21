@@ -416,3 +416,10 @@ def reset_password(token):
     except Exception as e:
         db.session.rollback()
         return error_response(f"Reset failed: {str(e)}", 500)
+    
+
+@auth_bp.route('/test-email', methods=['GET'])
+def test_email():
+    from utils.email import send_password_reset_email
+    send_password_reset_email("your-real-email@gmail.com", "test-token", "Test User")
+    return "sent"
