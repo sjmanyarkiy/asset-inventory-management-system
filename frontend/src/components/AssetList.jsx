@@ -117,7 +117,7 @@ function AssetList({ searchTerm = "" }) {
 
   const fetchEmployees = async () => {
     try {
-      const res = await axios.get("/api/admin/users", {
+      const res = await axios.get("/api/users", {
         params: { role: "Employee" },
       });
       // Admin route returns { users: [...], total: ..., pages: ..., page: ... }
