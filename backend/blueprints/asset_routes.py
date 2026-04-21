@@ -158,11 +158,20 @@ def update_asset(id):
 
         # UPDATE FIELDS
         fields = [
-            "name", "asset_code", "barcode", "status",
-            "description", "image_url",
-            "category_id", "asset_type_id",
-            "vendor_id", "department_id"
-        ]
+        "asset_name",
+        "asset_code",
+        "status",
+        "description",
+        "category_id",
+        "asset_type_id",
+        "vendor_id",
+        "department_id",
+        "serial_number",
+        "location",
+        "purchase_price",
+        "depreciation_rate",
+        "current_value"
+    ]
 
         for field in fields:
             if field in data:
