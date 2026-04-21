@@ -47,27 +47,55 @@ def send_verification_email(email, token, name="User"):
         print(f"❌ Resend error: {str(e)}")
         return False
     
-def send_password_reset_email(email, token, name, frontend_url):
-    """Send password reset link via email"""
-    reset_url = f"{frontend_url}/reset-password/{token}"
+def send_password_reset_email(email, token, name="User"):
+    """Send password reset email via Resend"""
     
-    message = f"""
-    Hi {name},
+    api_key = current_app.config.get('RESEND_API_KEY')
+    if not api_key:
+        print("❌ RESEND_API_KEY missing")
+        print(f"🔗 Manual reset: {current_app.config.get('FRONTEND_URL')}/reset-password/{token}")
+        return False
     
-    You requested to reset your password. Click the link below:
-    {reset_url}
-    
-    This link expires in 30 minutes.
-    
-    If you didn't request this, ignore this email.
-    
-    Best regards,
-    Asset Inventory Team
-    """
-    
-    # Use your existing email sending function (SendGrid, etc)
-    send_email(
-        to_email=email,
-        subject="Reset Your Password",
-        message=message
-    )
+    try:
+        import resend
+        resend.api_key = api_key
+        
+        frontend_url = current_app.config.get('FRONTEND_URL', 'http://localhost:3000')
+        reset_url = f"{frontend_url}/reset-password/{token}"
+        
+        params = {
+            "from": "Asset Inventory <noreply@resend.dev>",
+            "to": email,
+            "subject": "Reset Your Password",
+            "html": f"""
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #dc2626;">Password Reset Request</h2>
+                
+                <p>Hi {name},</p>
+                
+                <p>You requested to reset your password.</p>
+                
+                <div style="text-align: center; margin: 40px 0;">
+                    <a href="{reset_url}" style="background: #dc2626; color: white; padding: 16px 32px; 
+                            text-decoration: none; border-radius: 8px; font-weight: 600;">
+                        Reset Password
+                    </a>
+                </div>
+                
+                <p style="font-size: 14px;"><strong>Or copy:</strong> {reset_url}</p>
+                
+                <p style="font-size: 13px; color: #6b7280;">
+                    This link expires in 30 minutes.<br>
+                    If you didn’t request this, you can ignore this email.
+                </p>
+            </div>
+            """
+        }
+        
+        result = resend.Emails.send(params)
+        print(f"✅ Password reset email sent! ID: {result.get('id')}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Reset email error: {str(e)}")
+        return False

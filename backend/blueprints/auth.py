@@ -350,6 +350,13 @@ def validate_token():
         return error_response("Token validation failed", 401)
     
 
+def check_password_reset_token(self, token):
+    return (
+        self.password_reset_token == token and
+        self.password_reset_expires and
+        self.password_reset_expires > datetime.utcnow()
+    )
+
 @auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
     """Send password reset email"""
@@ -373,8 +380,7 @@ def forgot_password():
             send_password_reset_email(
                 user.email,
                 user.password_reset_token,
-                user.first_name or user.username,
-                frontend_url=current_app.config['FRONTEND_URL']
+                user.first_name or user.username
             )
         except Exception as e:
             current_app.logger.error(f"Reset email failed: {e}")
