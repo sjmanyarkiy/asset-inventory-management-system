@@ -28,7 +28,7 @@ def get_asset_requests():
     - Managers: see department requests
     - Admin: see all requests
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     
     if not user:
@@ -74,7 +74,7 @@ def create_asset_request():
     - reason (string)
     - urgency (Low/Medium/High)
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     
     if not user:
@@ -133,7 +133,7 @@ def create_asset_request():
 @jwt_required()
 def get_asset_request(request_id):
     """Get a specific asset request"""
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     
     asset_req = AssetRequest.query.get_or_404(request_id)
@@ -154,7 +154,7 @@ def review_asset_request(request_id):
     - status (Approved/Rejected)
     - review_notes (optional)
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     
     # Only managers and admins can review
@@ -203,7 +203,7 @@ def get_repair_requests():
     - Managers: see department requests
     - Admin: see all requests
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     
     if not user:
@@ -248,7 +248,7 @@ def create_repair_request():
     - issue_description (string)
     - urgency (Low/Medium/High)
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     
     if not user:
@@ -301,7 +301,7 @@ def create_repair_request():
 @jwt_required()
 def get_repair_request(request_id):
     """Get a specific repair request"""
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     
     repair_req = RepairRequest.query.get_or_404(request_id)
@@ -323,7 +323,7 @@ def review_repair_request(request_id):
     - review_notes (optional)
     - completion_notes (optional, for Completed status)
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     
     # Only managers and admins can review
