@@ -13,6 +13,30 @@ import json
 
 assets_bp = Blueprint("assets", __name__)
 
+
+def _normalize_status(status_value):
+    if not status_value:
+        return None
+    normalized = str(status_value).strip().lower()
+    mapping = {
+        "available": "Available",
+        "assigned": "Assigned",
+        "repair": "Repair",
+        "under_repair": "Repair",
+        "retired": "Retired",
+    }
+    return mapping.get(normalized, str(status_value).strip())
+
+
+def _generate_asset_code():
+    latest = Asset.query.order_by(Asset.id.desc()).first()
+    next_num = (latest.id + 1) if latest else 1
+    candidate = f"AST-{next_num:04d}"
+    while Asset.query.filter_by(asset_code=candidate).first():
+        next_num += 1
+        candidate = f"AST-{next_num:04d}"
+    return candidate
+
 def log_action(action, asset_id, user_id, target_user_id=None, metadata=None):
     """Log asset actions to audit trail"""
     log = AuditLog(
@@ -40,7 +64,11 @@ def get_assets():
         page = int(request.args.get("page", 1))
         per_page = int(request.args.get("per_page", 10))
         search = request.args.get("search", "").lower()
-        status = request.args.get("status", "").lower()
+        status = request.args.get("status", "")
+        category_id = request.args.get("category_id", type=int)
+        asset_type_id = request.args.get("asset_type_id", type=int)
+        vendor_id = request.args.get("vendor_id", type=int)
+        department_id = request.args.get("department_id", type=int)
 
         # Base query
         query = Asset.query.filter_by(is_active=True)
@@ -53,8 +81,19 @@ def get_assets():
             )
 
         # Filter by status
-        if status:
-            query = query.filter(Asset.status.ilike(status))
+        normalized_status = _normalize_status(status)
+        if normalized_status:
+            query = query.filter(Asset.status == normalized_status)
+
+        # Optional FK filters
+        if category_id is not None:
+            query = query.filter(Asset.category_id == category_id)
+        if asset_type_id is not None:
+            query = query.filter(Asset.asset_type_id == asset_type_id)
+        if vendor_id is not None:
+            query = query.filter(Asset.vendor_id == vendor_id)
+        if department_id is not None:
+            query = query.filter(Asset.department_id == department_id)
 
         # Paginate
         paginated = query.paginate(page=page, per_page=per_page, error_out=False)
@@ -107,11 +146,11 @@ def create_asset():
         data = request.form if request.form else (request.get_json() or {})
 
         asset_name = data.get('asset_name') or data.get('name')
-        asset_code = data.get('asset_code')
+        asset_code = data.get('asset_code') or data.get('serial_number') or _generate_asset_code()
         asset_type_id = data.get('asset_type_id')
 
-        if not asset_name or not asset_code or not asset_type_id:
-            return jsonify({'error': 'asset_name/name, asset_code and asset_type_id are required'}), 400
+        if not asset_name or not asset_type_id:
+            return jsonify({'error': 'asset_name/name and asset_type_id are required'}), 400
 
         if Asset.query.filter_by(asset_code=asset_code).first():
             return jsonify({'error': 'Asset code already exists'}), 400
@@ -126,8 +165,9 @@ def create_asset():
             description=data.get('description'),
             serial_number=data.get('serial_number'),
             location=data.get('location'),
-            status=data.get('status') or 'Available',
+            status=_normalize_status(data.get('status')) or 'Available',
             condition=data.get('condition') or 'Good',
+            assigned_to=int(data.get('assigned_to')) if data.get('assigned_to') not in (None, '') else None,
             created_by=current_user_id,
         )
 
@@ -187,9 +227,11 @@ def update_asset(asset_id):
         if data.get('location') is not None:
             asset.location = data.get('location')
         if data.get('status') is not None and data.get('status') != '':
-            asset.status = data.get('status')
+            asset.status = _normalize_status(data.get('status')) or asset.status
         if data.get('condition') is not None and data.get('condition') != '':
             asset.condition = data.get('condition')
+        if data.get('assigned_to') is not None:
+            asset.assigned_to = int(data.get('assigned_to')) if data.get('assigned_to') != '' else None
 
         db.session.commit()
         return jsonify({'message': 'Asset updated successfully', 'asset': asset.to_dict()}), 200

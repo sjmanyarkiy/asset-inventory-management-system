@@ -132,6 +132,8 @@ class Asset(db.Model):
 
     def to_dict(self):
         """Safe frontend-friendly serialization"""
+        barcode_data = getattr(self, 'barcode_data', None)
+        barcode_image = getattr(self, 'barcode_image', None)
         return {
             "id": self.id,
             "asset_name": self.asset_name,
@@ -162,8 +164,8 @@ class Asset(db.Model):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "created_by": self.created_by,
-            'barcode_data': self.barcode_data,
-            'barcode_image': f"data:image/png;base64,{self.get_barcode_base64()}" if self.barcode_image else None,
+            'barcode_data': barcode_data,
+            'barcode_image': f"data:image/png;base64,{self.get_barcode_base64()}" if barcode_image else None,
             'qr_code_image': f"data:image/png;base64,{self.get_qr_code_base64()}" if self.qr_code_image else None,
         }
 

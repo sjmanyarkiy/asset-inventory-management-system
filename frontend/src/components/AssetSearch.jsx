@@ -59,7 +59,7 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
     }, 400);
 
     return () => clearTimeout(delay);
-  }, [localSearch]);
+  }, [localSearch, setSearch]);
 
   // =========================
   // FILTER CHANGE
@@ -159,6 +159,20 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
               {d.name}
             </option>
           ))}
+        </select>
+
+        {/* STATUS */}
+        <select
+          name="status"
+          value={filters.status}
+          onChange={handleChange}
+          className="border p-2 rounded"
+        >
+          <option value="">All Statuses</option>
+          <option value="Available">Available</option>
+          <option value="Assigned">Assigned</option>
+          <option value="Repair">Repair</option>
+          <option value="Retired">Retired</option>
         </select>
 
       </div>

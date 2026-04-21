@@ -58,7 +58,7 @@ const AssetsPage = () => {
           ...filters
         }
       });
-      setAssets(res.data.data || []);
+      setAssets(res.data.assets || res.data.data || []);
     } catch (err) {
       console.error("Fetch assets error:", err);
     }
@@ -106,6 +106,7 @@ const AssetsPage = () => {
   // =========================
   const handleCreate = () => {
     setSelectedAsset(null);
+    setPage(1);
     setShowForm(true);
   };
 
@@ -174,9 +175,13 @@ const AssetsPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
           <AssetForm
             selectedAsset={selectedAsset}
-            onClose={() => setShowForm(false)}
+            onClose={() => {
+              setShowForm(false);
+              setSelectedAsset(null);
+            }}
             onSuccess={() => {
               setShowForm(false);
+              setSelectedAsset(null);
               fetchAssets();
             }}
           />

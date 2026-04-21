@@ -8,8 +8,9 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: "",
     asset_code: "",
-    barcode: "",
-    status: "available",
+    serial_number: "",
+    assigned_to: "",
+    status: "Available",
     description: "",
     category_id: "",
     asset_type_id: "",
@@ -17,8 +18,6 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
     department_id: "",
     image_url: ""
   });
-
-  const [imageFile, setImageFile] = useState(null);
 
   const [categories, setCategories] = useState([]);
   const [types, setTypes] = useState([]);
@@ -31,16 +30,31 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
   useEffect(() => {
     if (selectedAsset) {
       setFormData({
-        name: selectedAsset.name || "",
+        name: selectedAsset.asset_name || selectedAsset.name || "",
         asset_code: selectedAsset.asset_code || "",
-        barcode: selectedAsset.barcode || "",
-        status: selectedAsset.status || "available",
+        serial_number: selectedAsset.serial_number || "",
+        assigned_to: selectedAsset.assigned_to || "",
+        status: selectedAsset.status || "Available",
         description: selectedAsset.description || "",
         category_id: selectedAsset.category_id || "",
         asset_type_id: selectedAsset.asset_type_id || "",
         vendor_id: selectedAsset.vendor_id || "",
         department_id: selectedAsset.department_id || "",
         image_url: selectedAsset.image_url || ""
+      });
+    } else {
+      setFormData({
+        name: "",
+        asset_code: "",
+        serial_number: "",
+        assigned_to: "",
+        status: "Available",
+        description: "",
+        category_id: "",
+        asset_type_id: "",
+        vendor_id: "",
+        department_id: "",
+        image_url: ""
       });
     }
   }, [selectedAsset]);
@@ -81,30 +95,29 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
   };
 
   // =========================
-  // HANDLE SUBMIT (FIXED: FORM DATA FOR FLASK)
+  // HANDLE SUBMIT
   // =========================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const payload = new FormData();
-
-      Object.entries(formData).forEach(([key, value]) => {
-        payload.append(key, value);
-      });
-
-      if (imageFile) {
-        payload.append("image_file", imageFile);
-      }
+      const payload = {
+        name: formData.name,
+        asset_code: formData.asset_code,
+        asset_type_id: formData.asset_type_id,
+        status: formData.status,
+        serial_number: formData.serial_number,
+        assigned_to: formData.assigned_to || null,
+        description: formData.description,
+        category_id: formData.category_id || null,
+        vendor_id: formData.vendor_id || null,
+        department_id: formData.department_id || null,
+        image_url: formData.image_url || null,
+      };
 
       if (selectedAsset) {
-        // UPDATE
-        await axios.put(
-          `/api/assets/${selectedAsset.id}`,
-          payload
-        );
+        await axios.put(`/api/assets/${selectedAsset.id}`, payload);
       } else {
-        // CREATE
         await axios.post("/api/assets", payload);
       }
 
@@ -141,9 +154,17 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
       />
 
       <input
-        name="barcode"
-        placeholder="Barcode"
-        value={formData.barcode}
+        name="serial_number"
+        placeholder="Serial Number"
+        value={formData.serial_number}
+        onChange={handleChange}
+        className="border p-2 w-full"
+      />
+
+      <input
+        name="assigned_to"
+        placeholder="Assigned User ID (optional)"
+        value={formData.assigned_to}
         onChange={handleChange}
         className="border p-2 w-full"
       />
@@ -215,18 +236,11 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
         onChange={handleChange}
         className="border p-2 w-full"
       >
-        <option value="available">Available</option>
-        <option value="assigned">Assigned</option>
-        <option value="under_repair">Under Repair</option>
-        <option value="retired">Retired</option>
+        <option value="Available">Available</option>
+        <option value="Assigned">Assigned</option>
+        <option value="Repair">Repair</option>
+        <option value="Retired">Retired</option>
       </select>
-
-      {/* IMAGE FILE (IMPORTANT FIX) */}
-      <input
-        type="file"
-        onChange={(e) => setImageFile(e.target.files[0])}
-        className="border p-2 w-full"
-      />
 
       <input
         name="image_url"
