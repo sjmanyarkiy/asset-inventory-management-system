@@ -8,6 +8,7 @@ const instance = axios.create({
 // attach token if present
 instance.interceptors.request.use((config) => {
   const token = localStorage.getItem("access_token");
+  console.log("🔑 Token in interceptor:", token ? "✅ Present" : "❌ Missing");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
