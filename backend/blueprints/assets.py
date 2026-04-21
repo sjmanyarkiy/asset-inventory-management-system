@@ -35,6 +35,7 @@ def log_action(action, asset_id, user_id, target_user_id=None, metadata=None):
 @jwt_required()
 def get_assets():
     current_user_id = get_jwt_identity()
+    print(f"🔍 DEBUG: current_user_id = {current_user_id}, type = {type(current_user_id)}")
     """Get all assets with search and filtering"""
     try:
         page = int(request.args.get("page", 1))
