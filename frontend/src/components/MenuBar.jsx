@@ -138,7 +138,8 @@ function MenuBar() {
           //   item.roles.includes(role)
           // )
           .filter((item) =>
-            Array.isArray(item.roles) && item.roles.includes(role)
+            Array.isArray(item.roles) &&
+            item.roles.some(r => r.toLowerCase() === role.toLowerCase())
           )
           .map((item) => (
             <NavLink

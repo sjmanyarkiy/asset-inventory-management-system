@@ -9,29 +9,16 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
 
   const [localSearch, setLocalSearch] = useState(search);
 
-  // const BASE_URL = "http://127.0.0.1:5000";
+  const extractData = (res) => res?.data?.data || res?.data || [];
 
-  // const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-
-  // =========================
-  // SAFE API RESPONSE HANDLER
-  // =========================
-  const extractData = (res) => {
-    return res?.data?.data || res?.data || [];
-  };
-
-  // =========================
-  // LOAD DROPDOWN DATA
-  // =========================
   const fetchDropdownData = async () => {
     try {
       const [catRes, typeRes, vendorRes, deptRes] = await Promise.all([
-      axios.get("/categories"),
-      axios.get("/api/types"),
-      axios.get("/api/vendors"),
-      axios.get("/api/departments")
-    ]);
+        axios.get("/categories"),
+        axios.get("/api/types"),
+        axios.get("/api/vendors"),
+        axios.get("/api/departments")
+      ]);
 
       setCategories(extractData(catRes));
       setTypes(extractData(typeRes));
@@ -39,10 +26,6 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
       setDepartments(extractData(deptRes));
     } catch (err) {
       console.error("Dropdown load error:", err);
-      setCategories([]);
-      setTypes([]);
-      setVendors([]);
-      setDepartments([]);
     }
   };
 
@@ -50,30 +33,21 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
     fetchDropdownData();
   }, []);
 
-  // =========================
-  // DEBOUNCED SEARCH
-  // =========================
   useEffect(() => {
     const delay = setTimeout(() => {
-      setSearch(localSearch);
+      setSearch(localSearch.trim());
     }, 400);
 
     return () => clearTimeout(delay);
   }, [localSearch]);
 
-  // =========================
-  // FILTER CHANGE
-  // =========================
   const handleChange = (e) => {
     setFilters({
       ...filters,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value ? Number(e.target.value) : ""
     });
   };
 
-  // =========================
-  // RESET
-  // =========================
   const resetFilters = () => {
     setLocalSearch("");
     setSearch("");
@@ -92,7 +66,6 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
 
-        {/* SEARCH */}
         <input
           type="text"
           placeholder="Search assets..."
@@ -101,69 +74,36 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
           className="border p-2 rounded col-span-2"
         />
 
-        {/* CATEGORY */}
-        <select
-          name="category_id"
-          value={filters.category_id}
-          onChange={handleChange}
-          className="border p-2 rounded"
-        >
+        <select name="category_id" value={filters.category_id} onChange={handleChange} className="border p-2 rounded">
           <option value="">All Categories</option>
           {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
+            <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
 
-        {/* TYPE */}
-        <select
-          name="asset_type_id"
-          value={filters.asset_type_id}
-          onChange={handleChange}
-          className="border p-2 rounded"
-        >
+        <select name="asset_type_id" value={filters.asset_type_id} onChange={handleChange} className="border p-2 rounded">
           <option value="">All Types</option>
           {types.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
+            <option key={t.id} value={t.id}>{t.name}</option>
           ))}
         </select>
 
-        {/* VENDOR */}
-        <select
-          name="vendor_id"
-          value={filters.vendor_id}
-          onChange={handleChange}
-          className="border p-2 rounded"
-        >
+        <select name="vendor_id" value={filters.vendor_id} onChange={handleChange} className="border p-2 rounded">
           <option value="">All Vendors</option>
           {vendors.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.name}
-            </option>
+            <option key={v.id} value={v.id}>{v.name}</option>
           ))}
         </select>
 
-        {/* DEPARTMENT */}
-        <select
-          name="department_id"
-          value={filters.department_id}
-          onChange={handleChange}
-          className="border p-2 rounded"
-        >
+        <select name="department_id" value={filters.department_id} onChange={handleChange} className="border p-2 rounded">
           <option value="">All Departments</option>
           {departments.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
+            <option key={d.id} value={d.id}>{d.name}</option>
           ))}
         </select>
 
       </div>
 
-      {/* RESET */}
       <div className="mt-3">
         <button
           onClick={resetFilters}
@@ -172,6 +112,7 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
           Reset Filters
         </button>
       </div>
+
     </div>
   );
 };
