@@ -214,7 +214,7 @@ const App = () => {
           } /> */}
 
           {/* Root redirect */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* <Route path="/" element={<Navigate to="/dashboard" replace />} /> */}
 
           {/* fallback */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

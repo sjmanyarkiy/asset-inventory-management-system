@@ -97,3 +97,11 @@ class User(db.Model):
         if self.password_reset_expires < datetime.utcnow():
             return False
         return self.password_reset_token == token
+    
+
+    def check_password_reset_token(self, token):
+        return (
+            self.password_reset_token == token and
+            self.password_reset_expires and
+            self.password_reset_expires > datetime.utcnow()
+        )
