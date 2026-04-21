@@ -27,7 +27,7 @@ const AssetSearch = ({ search, setSearch, filters, setFilters }) => {
   const fetchDropdownData = async () => {
     try {
       const [catRes, typeRes, vendorRes, deptRes] = await Promise.all([
-      axios.get("/api/categories"),
+      axios.get("/categories"),
       axios.get("/api/types"),
       axios.get("/api/vendors"),
       axios.get("/api/departments")

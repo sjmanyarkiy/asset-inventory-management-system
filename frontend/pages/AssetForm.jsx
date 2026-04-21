@@ -52,7 +52,7 @@ const AssetForm = ({ selectedAsset, onClose, onSuccess }) => {
     const fetchData = async () => {
       try {
           const [cat, type, ven, dep] = await Promise.all([
-            axios.get("/api/categories"),
+            axios.get("categories"),
             axios.get("/api/types"),
             axios.get("/api/vendors"),
             axios.get("/api/departments")
