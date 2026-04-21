@@ -7,6 +7,7 @@ export default function DepartmentsPage() {
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
 
   const BASE_URL = `${import.meta.env.VITE_API_URL}/api/departments`;
 
@@ -16,14 +17,14 @@ export default function DepartmentsPage() {
   });
 
   // =========================
-  // FETCH
+  // FETCH FUNCTION
   // =========================
-  const fetchDepartments = async (search = "") => {
+  const fetchDepartments = async (searchText = "") => {
     setLoading(true);
 
     try {
       const res = await fetch(
-        `${BASE_URL}?page=1&search=${encodeURIComponent(search)}`,
+        `${BASE_URL}?page=1&search=${encodeURIComponent(searchText)}`,
         {
           headers: getAuthHeaders(),
         }
@@ -45,15 +46,26 @@ export default function DepartmentsPage() {
     }
   };
 
+  // =========================
+  // INITIAL LOAD
+  // =========================
   useEffect(() => {
     fetchDepartments();
   }, []);
 
   // =========================
-  // SEARCH
+  // DEBOUNCED SEARCH
   // =========================
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchDepartments(search);
+    }, 400);
+
+    return () => clearTimeout(delay);
+  }, [search]);
+
   const handleSearch = (text) => {
-    fetchDepartments(text);
+    setSearch(text);
   };
 
   // =========================
@@ -90,14 +102,14 @@ export default function DepartmentsPage() {
         return;
       }
 
-      toast.success(selectedDepartment
-        ? "Department updated"
-        : "Department created"
+      toast.success(
+        selectedDepartment
+          ? "Department updated"
+          : "Department created"
       );
 
       setSelectedDepartment(null);
-      fetchDepartments();
-
+      fetchDepartments(search); // keep current filter
     } catch (err) {
       console.error(err);
       toast.error("Something went wrong");
@@ -125,8 +137,7 @@ export default function DepartmentsPage() {
       }
 
       toast.success("Department deleted");
-      fetchDepartments();
-
+      fetchDepartments(search);
     } catch (err) {
       console.error(err);
       toast.error("Delete error");
@@ -162,8 +173,12 @@ export default function DepartmentsPage() {
             departments.map((dept) => (
               <tr key={dept.id}>
                 <td className="border p-2">{dept.name}</td>
-                <td className="border p-2">{dept.department_code}</td>
-                <td className="border p-2">{dept.location}</td>
+                <td className="border p-2">
+                  {dept.department_code || "-"}
+                </td>
+                <td className="border p-2">
+                  {dept.location || "-"}
+                </td>
 
                 <td className="border p-2">
                   <button

@@ -1,24 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function DepartmentSearch({ onSearch }) {
   const [input, setInput] = useState("");
 
-  // 🔥 LIVE SEARCH with debounce (prevents API spam)
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      onSearch(input);
-    }, 400); // wait 400ms after user stops typing
-
-    return () => clearTimeout(delay);
-  }, [input, onSearch]);
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setInput(value);
+    onSearch(value); // pass value up immediately
+  };
 
   return (
     <div className="flex items-center border rounded overflow-hidden w-full md:w-80">
-      {/* Input */}
       <input
         type="text"
         value={input}
-        onChange={(e) => setInput(e.target.value)}
+        onChange={handleChange}
         placeholder="Search departments..."
         className="w-full px-3 py-2 outline-none"
       />
