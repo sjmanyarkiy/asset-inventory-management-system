@@ -48,7 +48,7 @@ def create_app(config_object=None):
     # CORS Configuration - Allow both local development and Render URLs
     allowed_origins = os.getenv(
         "CORS_ORIGINS",
-        "http://localhost:5173,http://localhost:3000, https://asset-inventory-management-system.vercel.app/"
+        "http://localhost:5173,http://localhost:3000,https://asset-inventory-management-system.vercel.app"
     ).split(",")
 
     CORS(

@@ -3,7 +3,7 @@ from extensions import db
 from models.department import Department
 from sqlalchemy import or_
 
-# from app.services.safe_delete_service import check_safe_delete
+# from services.safe_delete_service import check_safe_delete
 
 department_bp = Blueprint('department_bp', __name__)
 
@@ -147,7 +147,7 @@ def delete_department(id):
         dept = Department.query.get_or_404(id)
 
         # 🔥 GLOBAL SAFE DELETE CHECK
-        safe, msg = check_safe_delete("department", id)
+        # safe, msg = check_safe_delete("department", id)
 
         if not safe:
             return jsonify({
