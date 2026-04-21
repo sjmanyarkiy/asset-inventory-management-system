@@ -153,7 +153,8 @@ function LoginPage() {
                   <p className="text-muted mb-2">
                     Don't have an account? <Link to="/register" className="text-primary fw-bold text-decoration-none">Create one</Link>
                   </p>
-                  <Link to="/forgot-password" className="text-muted text-decoration-none small">Forgot password?</Link>
+                  {/* <Link to="/forgot-password" className="text-muted text-decoration-none small">Forgot password?</Link> */}
+                  <a href="/forgot-password">Forgot password?</a>
                 </div>
               </div>
             </div>
