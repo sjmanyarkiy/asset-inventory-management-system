@@ -60,6 +60,8 @@ def get_assets():
         # Paginate
         paginated = query.paginate(page=page, per_page=per_page, error_out=False)
 
+        print(f"✅ Assets found: {len(paginated.items)}")
+
         return jsonify({
             "assets": [a.to_dict() for a in paginated.items],
             "total": paginated.total,
@@ -69,6 +71,9 @@ def get_assets():
         }), 200
 
     except Exception as e:
+        import traceback
+        print(f"❌ ERROR in get_assets: {str(e)}")
+        print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
 
