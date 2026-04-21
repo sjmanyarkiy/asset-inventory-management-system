@@ -173,10 +173,12 @@ function AssetList({ searchTerm = "" }) {
         { user_id: parseInt(selectedUserId) }
       );
 
+      // Update the asset in the list with the new data
       setAssets((prev) =>
         prev.map((a) => (a.id === selectedAsset.id ? res.data.asset : a))
       );
-      setShowModal(false);  // Close assignment modal
+      setShowModal(false);
+      setSelectedAsset(null);  // ✅ Clear selection
     } catch (err) {
       console.error("Assign failed:", err);
     } finally {
