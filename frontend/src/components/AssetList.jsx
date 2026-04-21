@@ -3,7 +3,7 @@ import { Modal, Button, Form, Badge, Spinner } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/slices/authSlice";
 import axios from "../../src/api/axios";
-import AssetForm from "../assets/AssetForm";
+import AssetForm from "../../pages/AssetForm";
 
 function AssetList({ searchTerm = "" }) {
   const user = useSelector(selectUser);
