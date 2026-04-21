@@ -147,7 +147,13 @@ def assign_asset(asset_id):
             'asset': asset.to_dict()
         }), 200
 
+    # except Exception as e:
+    #     db.session.rollback()
+    #     return jsonify({'error': str(e)}), 500
     except Exception as e:
+        import traceback
+        print("❌ ASSIGN ASSET ERROR:", str(e))
+        print(traceback.format_exc())
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
@@ -196,10 +202,19 @@ def return_asset(asset_id):
     #     return jsonify({'error': str(e)}), 500
 
     except Exception as e:
+        import traceback
         print("RETURN ERROR:", str(e))
         print(traceback.format_exc())
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+    
+    except Exception as e:
+        import traceback
+        print("❌ RETURN ASSET ERROR:", str(e))
+        print(traceback.format_exc())
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+    
 
 
 # ----------------------------

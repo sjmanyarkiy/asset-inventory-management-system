@@ -60,77 +60,6 @@ class Asset(db.Model):
     creator = db.relationship('User', foreign_keys=[created_by], backref='created_assets')
     department = db.relationship("Department", back_populates="assets")
 
-
-    def generate_barcode(self):
-        """Generate Code128 barcode for this asset"""
-        try:
-            # Use asset_code as barcode data
-            barcode_value = self.asset_code
-            
-            # Generate Code128 barcode
-            barcode_instance = barcode.get('code128', barcode_value, module_width=0.5)
-            
-            # Save to bytes buffer
-            buffer = BytesIO()
-            barcode_instance.write(buffer, options={'module_height': 15})
-            buffer.seek(0)
-            
-            # Store as binary
-            self.barcode_image = buffer.getvalue()
-            self.barcode_data = barcode_value
-            self.barcode_generated = True
-            
-            print(f"✓ Generated barcode for {self.asset_code}")
-            return True
-        except Exception as e:
-            print(f"❌ Error generating barcode: {str(e)}")
-            return False
-    
-    def generate_qr_code(self):
-        """Generate QR code for this asset"""
-        try:
-            # QR code contains asset info as JSON
-            qr_data = f"asset://{self.asset_code}/id/{self.id}/name/{self.asset_name}"
-            
-            # Generate QR code
-            qr = qrcode.QRCode(
-                version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
-                box_size=10,
-                border=2,
-            )
-            qr.add_data(qr_data)
-            qr.make(fit=True)
-            
-            # Create image
-            img = qr.make_image(fill_color="black", back_color="white")
-            
-            # Save to bytes buffer
-            buffer = BytesIO()
-            img.save(buffer, format='PNG')
-            buffer.seek(0)
-            
-            # Store as binary
-            self.qr_code_image = buffer.getvalue()
-            
-            print(f"✓ Generated QR code for {self.asset_code}")
-            return True
-        except Exception as e:
-            print(f"❌ Error generating QR code: {str(e)}")
-            return False
-    
-    def get_barcode_base64(self):
-        """Return barcode as base64 for frontend display"""
-        if self.barcode_image:
-            return base64.b64encode(self.barcode_image).decode('utf-8')
-        return None
-    
-    def get_qr_code_base64(self):
-        """Return QR code as base64 for frontend display"""
-        if self.qr_code_image:
-            return base64.b64encode(self.qr_code_image).decode('utf-8')
-        return None
-
     def to_dict(self):
         """Safe frontend-friendly serialization"""
         return {
@@ -175,6 +104,8 @@ class Asset(db.Model):
         self.updated_at = datetime.utcnow()
 
     def unassign(self):
+        if self.assigned_to is None:
+            return
         self.assigned_to = None
         self.status = "Available"
         self.assigned_at = None
