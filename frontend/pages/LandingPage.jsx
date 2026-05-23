@@ -133,7 +133,7 @@ export default function LandingPage() {
 
       {/* FOOTER */}
       <footer style={styles.footer}>
-        © {new Date().getFullYear()} 2025
+        © {new Date().getFullYear()}
       </footer>
     </div>
   );
