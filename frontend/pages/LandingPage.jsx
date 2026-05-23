@@ -133,7 +133,7 @@ export default function LandingPage() {
 
       {/* FOOTER */}
       <footer style={styles.footer}>
-        © {new Date().getFullYear()} Group 4 Moringa
+        © {new Date().getFullYear()} 2025
       </footer>
     </div>
   );
